@@ -1608,6 +1608,13 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
   let opened = false;
   const open = () => {
     if (opened) return; opened = true;
+    if (typeof win !== 'undefined') {
+      win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+      doc.body.classList.add('invitation-unveiled');
+      if (typeof win.__updateRoyalDockVisibility === 'function') {
+        win.__updateRoyalDockVisibility();
+      }
+    }
     if (bindi) bindi.classList.add('t9-burst');
     firePhuljhadi();
     if (entry) {

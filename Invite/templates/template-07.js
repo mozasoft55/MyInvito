@@ -1,30 +1,44 @@
 /* ==========================================================================
-   Blush Editorial — "Envelope & Arch" Wedding Invitation  (template 7)
-   Light ivory-paper luxury stationery look. Wax-sealed envelope entry, arch
-   photo frames, editorial numbered story, mini wedding calendar, vertical
-   timeline, masonry moments + lightbox, pill-toggle RSVP, dark finale.
+   AARAV & ZOYA / PURUSHOTTAM & SANJUKTA — Royal Ivory & Gold Wedding Suite (Template 07)
+   Master-Level Royal Indian Wedding Invitation Crafted with Editorial Precision:
+   - Act I: Royal Sliding Double Doors Entry Gate:
+     - Starting unlit (nocturnal lights-off) with dark royal palace gates and starry sky.
+     - Swaying illuminated brass lantern with radial light halo.
+     - "A CELEBRATION OF LOVE" + dynamic couple names in royal typography.
+     - Guest welcome card: "Cordially Invited", Guest Name, "Family Invitation · X Persons".
+     - Prominent "✨ OPEN" button with glowing pulse ("✦ Tap to open the invitation ✦").
+   - Act II: Lights On & Phuljhari / Crackers pyrotechnics:
+     - On tap, lights softly turn on illuminating the golden palace doors!
+     - Web Audio API crackle sounds + HTML5 canvas fireworks/sparkler burst.
+     - Double palace doors physically slide open slowly ("dhire dhire" over 2.6s) to the sides!
+   - Act III: Grand 2nd Screen Hero Stage revealed behind the parting doors:
+     - Grand Floral & Golden Lantern Archway (`template-07-arch.webp`) framing a glowing
+       spotlight couple portrait inside the palace doorway.
+     - Auspicious Invocation ("|| শ্রী শ্রী প্রজাপতয়ে নমঃ ||" / Arabic / Vedic) with Lotus Flourish.
+     - Couple names in majestic royal Cinzel typography with parent blessing & invitation copy.
+     - Hero Royal Guest Box ("Cordially Invited", Guest Name, "Family Invitation · X Persons").
+     - Animated royal procession frieze (horses, carts, palanquin, elephants).
+   - Rich Background:
+     - Master-level ultra-subtle Royal Mughal Jali Lattice watermark pattern.
+     - Ambient golden lighting vignettes and layered antique pearl-ivory paper texture.
+     - Royal gold corner arabesques and embossed double-hairline borders on all cards.
+   - Complete Template-06 Feature Suite:
+     - Sacred Story & Journey section with 3 numbered zigzag chapters & golden medallions.
+     - Save the Date & Live Countdown card with complete 7-day calendar grid and Google Calendar sync.
+     - Auspicious Rituals Timeline with authentic photography, time pills, venue, dress codes, and RSVP.
+     - Interactive Scratch & Reveal Surprise Card with secret couple message.
+     - Moments of Love Polaroid photo gallery with lightbox zoom.
+     - Royal Palace Venue Showcase with arched photo, address, valet notes, and Google Maps navigation.
+     - Royal Letter RSVP envelope with stamp & postmark + Royal RSVP Pop-Up Modal dialog.
+     - Royal Finale ("Forever Begins", family signature, procession frieze).
+     - Global 4-Tab Floating Bottom Dock starts hidden on 1st screen and smoothly slides up on 2nd screen.
 
    Contract:
      export default function render({ guest, wedding, events }) -> html string
      export function mount(root, { guest, wedding, events }) -> cleanup()
-   render() alone is a complete, readable static invitation (no JS needed).
-
-   wedding fields (all optional, nothing is hard-coded):
-     bride_name, groom_name, name_order ('bride_first'), date, time,
-     timezone_offset (default +05:30), venue, address, city, map_url,
-     invocation, invite_text, families | footer_text, poem, hashtag,
-     hero_image, venue_image, rsvp_number, rsvp_contacts,
-     story: [{title,text,image}] (array or JSON string, max 3),
-     travel_info, stay_info, music_url,
-     theme: 'blush'(default)|'sage'|'lavender'|'terracotta'|'sky',
-     accent_color, accent2_color, paper_color  ('#RRGGBB' overrides),
-     gallery: [https urls] (array / JSON string / ';'-separated)
-   events[]: event_name, event_date, event_time, venue, address, description,
-     dress_code, dress_color, local_name, image_url
-   guest: name, with_family
    ========================================================================== */
 
-/* ---------- helpers ---------- */
+/* ---------- Helpers ---------- */
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
@@ -35,6 +49,7 @@ const safeImg = u => {
   if (/^https?:\/\/[^\s'"<>]+$/i.test(s)) return s;
   if (/^blob:[^\s'"<>]+$/i.test(s)) return s;
   if (/^\.?\/?assets\/[^\s'"<>]+$/i.test(s)) return s;
+  if (/^[a-z0-9_-]+\.(jpg|jpeg|png|webp|svg)$/i.test(s)) return `./assets/${s}`;
   if (s.startsWith('data:image/') && s.includes(';base64,')) {
     if (!/[\s'"<>]/.test(s.slice(0, 50))) return s;
   }
@@ -58,24 +73,24 @@ const pad = n => String(n).padStart(2, '0');
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const ORD = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN'];
-const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500;600&family=Noto+Serif+Devanagari:wght@400;600&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap';
+const ORD = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven'];
+const FONT_HREF = 'https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Galada&family=Hind+Siliguri:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tiro+Bangla:ital@0;1&display=swap';
 
 function dparts(v) {
   const raw = clean(v);
   let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|[T\s])/), y, mo, d;
   if (m) [y, mo, d] = [+m[1], +m[2], +m[3]];
   else if ((m = raw.match(/^(\d{1,2})[\s/-]+([A-Za-z]{3,9})[\s/-]+(\d{4})$/))) {
-    mo = MONTHS.findIndex(n => n.slice(0, 3).toLowerCase() === m[2].slice(0, 3).toLowerCase()) + 1; [y, d] = [+m[3], +m[1]];
-  } else if ((m = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/))) [y, mo, d] = [+m[3], +m[2], +m[1]];
-  else return null;
+    mo = MONTHS.findIndex(n => n.slice(0, 3).toLowerCase() === m[2].slice(0, 3).toLowerCase()) + 1;
+    [y, d] = [+m[3], +m[1]];
+  } else if ((m = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/))) {
+    [y, mo, d] = [+m[3], +m[2], +m[1]];
+  } else return null;
   if (!mo) return null;
   const t = new Date(Date.UTC(y, mo - 1, d));
   return t.getUTCFullYear() === y && t.getUTCMonth() === mo - 1 && t.getUTCDate() === d ? { y, mo, d } : null;
 }
 const weekday = p => DAYS[new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay()];
-const longDate = p => `${pad(p.d)} ${MONTHS[p.mo - 1]} ${p.y}`;
-const shortDate = p => `${pad(p.d)} ${MONTHS[p.mo - 1].slice(0, 3)} ${p.y}`;
 
 function fmtTime(v) {
   const raw = clean(v);
@@ -110,803 +125,1880 @@ function parseWhen(dv, tv, offset = '+05:30') {
   return Number.isNaN(ts) ? null : ts;
 }
 
-/* ---------- dynamic theme ---------- */
-const PRESETS = {
-  maroon: { a: '#8e1b34', a2: '#c99e32', paper: '#fdf9f4', ink: '#20050a' },
-  royal: { a: '#8e1b34', a2: '#c99e32', paper: '#fdf9f4', ink: '#20050a' },
-  emerald: { a: '#0c5238', a2: '#d4af37', paper: '#f4f8f5', ink: '#041d14' },
-  navy: { a: '#142e5d', a2: '#dfb85f', paper: '#f4f6fb', ink: '#050f24' },
-  rose: { a: '#99224f', a2: '#d49a50', paper: '#fdf5f8', ink: '#250412' },
-  blush: { a: '#b4566b', a2: '#7d8f69', paper: '#fbf6ef', ink: '#281317' },
-  sage: { a: '#5f7a61', a2: '#c08a6a', paper: '#f7f7f0', ink: '#1c251c' },
-  lavender: { a: '#7a63a8', a2: '#c5a46a', paper: '#f8f5fb', ink: '#211833' },
-  terracotta: { a: '#b5593c', a2: '#6b7f6a', paper: '#fbf4ec', ink: '#2c140d' },
-  sky: { a: '#3f6f9f', a2: '#c9a66b', paper: '#f4f8fb', ink: '#0e1f30' }
-};
-const hex6 = v => {
-  const m = clean(v).match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-  if (!m) return null;
-  return '#' + (m[1].length === 3 ? m[1].split('').map(c => c + c).join('') : m[1]).toLowerCase();
-};
-const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-const hexOf = a => '#' + a.map(c => pad(Math.max(0, Math.min(255, Math.round(c))).toString(16))).join('');
-const scale = (h, k) => hexOf(rgbOf(h).map(c => c * k));
-const mix = (h1, h2, t) => { const a = rgbOf(h1), b = rgbOf(h2); return hexOf(a.map((c, i) => c + (b[i] - c) * t)); };
-const lumOf = h => { const [r, g, b] = rgbOf(h); return 0.299 * r + 0.587 * g + 0.114 * b; };
-
-function themeVars(w) {
-  const p = PRESETS[clean(w.theme || w.theme_name).toLowerCase()] || PRESETS.maroon || PRESETS.blush;
-  const a = hex6(w.accent_color) || p.a, a2 = hex6(w.accent2_color) || p.a2;
-  const paperCand = hex6(w.paper_color);
-  // Protect template 07 paper: must remain light luxury stationery (lum >= 65)
-  const paper = (paperCand && lumOf(paperCand) >= 65) ? paperCand : p.paper;
-  const ink = p.ink || scale(a, .22);
-  const dark = scale(a, .7), soft = mix(a, '#ffffff', .82), mid = mix(a, '#ffffff', .6), paper2 = mix(paper, a, .07);
-  const rgb = h => rgbOf(h).join(',');
-  return `--paper:${paper};--paper2:${paper2};--ink:${ink};--a:${a};--a-dark:${dark};--a-soft:${soft};--a-mid:${mid};--a2:${a2};--a-rgb:${rgb(a)};--a2-rgb:${rgb(a2)};--ink-rgb:${rgb(ink)};--paper-rgb:${rgb(paper)}`;
-}
-
-/* ---------- imagery (Unsplash; every <img> has a fallback) ---------- */
-const U = (id, w = 800) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
+/* ---------- Content & Icon Helpers ---------- */
 const KINDS = [
-  { re: /haldi|ubtan|pithi|gaye\s*holud/i, icon: '🌼', img: '1606216794074-735e91aa2c92', alt: '1599661046827-dacff0c0f09a', dress: '#f4c542' },
-  { re: /mehendi|mehndi|henna/i, icon: '🌿', img: '1583939003579-730e3918a45a', alt: '1465495976277-4387d4b0b4c6', dress: '#187653' },
-  { re: /sangeet|cocktail|music|garba|dandiya/i, icon: '🎶', img: '1469371670807-013ccf25f16a', alt: '1511795409834-ef04bbd61622', dress: '#7444a1' },
-  { re: /baraat|barat|procession/i, icon: '🐎', img: '1519167758481-83f550bb49b3', alt: '1606216794074-735e91aa2c92', dress: '#e88aab' },
-  { re: /jaimala|varmala|engagement|sagai|tilak|ring/i, icon: '💐', img: '1519225421980-715cb0215aed', alt: '1465495976277-4387d4b0b4c6', dress: '#d8b56e' },
-  { re: /phere|pheras|nikah|wedding|vivah|shaadi|biye|ceremony|saptapadi/i, icon: '🔥', img: '1465495976277-4387d4b0b4c6', alt: '1519741497674-611481863552', dress: '#8e1e32' },
-  { re: /reception|walima|dinner|aashirbaad|aashirvad|blessing/i, icon: '✨', img: '1511795409834-ef04bbd61622', alt: '1469371670807-013ccf25f16a', dress: '#e6cbd3' }
+  { re: /gaye\s*holud/i, icon: 'flower', asset: 'template-06-gaye-holud.jpg', dress: 'Yellow & Marigold', c: '#f4c542' },
+  { re: /biye|shubho\s*bibaho/i, icon: 'kalash', asset: 'template-06-shubho-bibaho.jpg', dress: 'Red, White & Gold', c: '#b5121b' },
+  { re: /bou\s*bhat|boubhat|bhaat/i, icon: 'feast', asset: 'template-06-boubhat.jpg', dress: 'Banarasi & Dhuti Elegance', c: '#8e2a45' },
+  { re: /ashirbad|aashirbad/i, icon: 'garland', asset: 'template-06-ashirbad.jpg', dress: 'Traditional Silk', c: '#d8b56e' },
+  { re: /haldi|ubtan|pithi/i, icon: 'flower', asset: 'template-06-haldi.jpg', dress: 'Yellow & Marigold', c: '#f4c542' },
+  { re: /phere|saat\s*paak|sampradan|sindoor|vivah|wedding|ceremony|kanyadan/i, icon: 'kalash', asset: 'template-06-phere.jpg', dress: 'Red, White & Gold', c: '#b5121b' },
+  { re: /reception|dinner|bhoj|feast/i, icon: 'feast', asset: 'template-06-reception.jpg', dress: 'Banarasi & Formal Elegance', c: '#8e2a45' },
+  { re: /mehendi|mehndi|henna/i, icon: 'leaf', asset: 'template-06-mehendi.jpg', dress: 'Green & Pastels', c: '#3f8f3a' },
+  { re: /sangeet|cocktail|music|dhak|dandiya|garba/i, icon: 'music', asset: 'template-06-sangeet.jpg', dress: 'Festive & Colourful', c: '#7a2a6a' },
+  { re: /milaad|milad|nikah/i, icon: 'lamp', asset: 'template-06-milad-sharif.jpg', dress: 'Traditional Formal', c: '#2e7d32' },
+  { re: /walima/i, icon: 'feast', asset: 'template-06-boubhat.jpg', dress: 'Royal Reception Elegance', c: '#8e2a45' },
+  { re: /baraat|bor\s*boron|boron/i, icon: 'lamp', asset: 'template-06-baraat.jpg', dress: 'Royal Festive', c: '#c8281e' },
+  { re: /jaimala|varmala|mala\s*badal/i, icon: 'garland', asset: 'template-06-jaimala.jpg', dress: 'Traditional Silk', c: '#d8b56e' }
 ];
-const DEFAULT_KIND = { icon: '✦', img: '1519741497674-611481863552', alt: '1522413452208-996ff3f3e740', dress: '#d9b8a8' };
+const DEFAULT_KIND = { icon: 'flower', asset: 'template-06-phere.jpg', dress: 'Traditional Festive', c: '#d4af37' };
 const kindOf = name => KINDS.find(k => k.re.test(name)) || DEFAULT_KIND;
 
 const DEFAULT_STORY = [
-  { title: 'How We Met', text: 'One unexpected hello became a thousand conversations, shared dreams, and a friendship that felt like home.', image: U('1529636798458-92182e662485', 700), alt: U('1519741497674-611481863552', 700) },
-  { title: 'The Proposal', text: 'With happy tears and hearts full of hope, we chose each other—and all the beautiful tomorrows still to come.', image: U('1519741497674-611481863552', 700), alt: U('1522413452208-996ff3f3e740', 700) },
-  { title: 'The Big Day', text: 'Now, surrounded by the people we love, we cannot wait to celebrate the beginning of our forever with you.', image: U('1520854221256-17451cc331bf', 700), alt: U('1606216794074-735e91aa2c92', 700) }
+  { title: 'How We Met', text: 'One unexpected hello became a thousand conversations, shared dreams, and a friendship that felt like home.' },
+  { title: 'The Promise', text: 'With happy tears and hearts full of hope, we chose each other — and all the beautiful tomorrows still to come.' },
+  { title: 'The Big Day', text: 'Now, surrounded by the people we love, we cannot wait to celebrate the beginning of our forever with you.' }
 ];
-function readStory(raw) {
-  let a = raw;
-  if (typeof a === 'string') { try { a = JSON.parse(a); } catch { a = null; } }
-  if (!Array.isArray(a) || !a.length) return DEFAULT_STORY;
-  return a.slice(0, 3).map((s, i) => ({
-    title: clean(s?.title) || DEFAULT_STORY[i % 3].title,
-    text: clean(s?.text) || DEFAULT_STORY[i % 3].text,
-    image: safeImg(s?.image) || DEFAULT_STORY[i % 3].image,
-    alt: DEFAULT_STORY[i % 3].alt
-  }));
+
+/* ---------- Scaled Vector Frieze & Flourishes ---------- */
+const spokes = [0, 45, 90, 135].map(a => `<path d="M-26 0H26" stroke="#8a5a12" stroke-width="2.4" transform="rotate(${a})"/>`).join('');
+
+const man = (x, s = 1, o = {}) => `<g transform="translate(${x} ${o.y ?? 172}) scale(${s * (o.flip ? -1 : 1)} ${s})">
+<ellipse cx="0" cy="-94" rx="13" ry="6.5" fill="${o.turban || '#881A2B'}"/><path d="M-9-96C-8-110 8-110 9-96Z" fill="${o.turban || '#63101D'}"/>
+<circle cx="0" cy="-84" r="9.5" fill="#e6a56d"/><path d="M-5-85h2.4M2.6-85H5" stroke="#2b1a17" stroke-width="1.4" stroke-linecap="round"/><path d="M-4-80Q0-78 4-80" stroke="#2b1a17" stroke-width="1.2" fill="none"/>
+<path d="M-13-73L13-73L17-30L-17-30Z" fill="${o.shirt || '#C69C47'}"/><path d="M-13-73L-8-30M13-73L8-30" stroke="#967128" stroke-width="1.4"/>
+${o.torso ? '' : '<path d="M-17-34H17L21 0H-21Z" fill="#FFFDF7"/><path d="M-21-5H21" stroke="#881A2B" stroke-width="3"/><path d="M-15 0h11v-4h-11zM4 0h11v-4H4z" fill="#e6a56d"/>'}
+${o.prop || ''}</g>`;
+const SPEAR = '<path d="M21-6V-128" stroke="#6b3a1e" stroke-width="3"/><path d="M21-128l-5 13h10z" fill="#bfc3c8"/><path d="M13-62L21-60" stroke="#e6a56d" stroke-width="5" stroke-linecap="round"/>';
+const STICK = '<path d="M20 0L24-104" stroke="#6b3a1e" stroke-width="3.5"/><path d="M13-62L22-60" stroke="#e6a56d" stroke-width="5" stroke-linecap="round"/>';
+const HORN = '<path d="M7-84L56-100Q66-102 70-92L60-82Q52-84 7-80Z" fill="#e8b02a" stroke="#a97a12" stroke-width="1.2"/><path d="M12-62L-4-78" stroke="#e6a56d" stroke-width="5" stroke-linecap="round"/>';
+const horse = (x, s = 1) => `<g transform="translate(${x} 172) scale(${s})">
+<path d="M6-56C-12-52-14-30-8-14" stroke="#881A2B" stroke-width="7" fill="none" stroke-linecap="round"/>
+<rect x="16" y="-34" width="9" height="34" rx="3" fill="#881A2B"/><rect x="30" y="-34" width="9" height="34" rx="3" fill="#63101D"/><rect x="70" y="-34" width="9" height="34" rx="3" fill="#881A2B"/><rect x="84" y="-34" width="9" height="34" rx="3" fill="#63101D"/>
+<path d="M16 0h9v-5h-9zM30 0h9v-5h-9zM70 0h9v-5h-9zM84 0h9v-5h-9z" fill="#3a1a10"/>
+<ellipse cx="55" cy="-50" rx="46" ry="23" fill="#881A2B"/><path d="M84-62L106-98L120-93L104-52Z" fill="#881A2B"/><path d="M100-98L108-111L114-96Z" fill="#63101D"/>
+<ellipse cx="122" cy="-91" rx="14" ry="8" transform="rotate(28 122 -91)" fill="#881A2B"/><circle cx="124" cy="-95" r="1.7" fill="#1a0f0a"/>
+<path d="M86-62C94-78 100-86 104-98" stroke="#4a0812" stroke-width="5" fill="none"/>
+<rect x="40" y="-67" width="40" height="22" rx="4" fill="#C69C47"/><path d="M40-56H80" stroke="#881A2B" stroke-width="3"/><path d="M44-48h32" stroke="#881A2B" stroke-width="1.5" stroke-dasharray="3 3"/>
+<path d="M88-70L112-97M98-58L121-87" stroke="#fff" stroke-width="2" opacity=".85"/></g>`;
+const cart = (x, s = 1, inner = '') => `<g transform="translate(${x} 172) scale(${s})">
+<path d="M-26-44H4" stroke="#7a4a22" stroke-width="5"/><rect x="0" y="-52" width="116" height="9" rx="2" fill="#a8621f"/>${inner}
+${[28, 92].map(cx => `<g transform="translate(${cx} -26)"><circle r="26" fill="#C69C47" stroke="#8a5a12" stroke-width="4"/><circle r="5" fill="#8a5a12"/>${spokes}</g>`).join('')}</g>`;
+const DOLI = '<rect x="12" y="-100" width="84" height="48" rx="3" fill="#881A2B"/><path d="M10-100Q54-128 98-100Z" fill="#63101D"/><path d="M26-52V-88Q54-104 82-88V-52Z" fill="#3D0912"/><circle cx="54" cy="-74" r="8" fill="#e6a56d"/><path d="M42-62Q54-52 66-62V-52H42Z" fill="#C69C47"/><path d="M45-80Q54-94 63-80Z" fill="#881A2B"/><path d="M10-100H98" stroke="#E5C16C" stroke-width="3"/><circle cx="54" cy="-116" r="3" fill="#E5C16C"/>';
+const elephant = (x, s = 1) => `<g transform="translate(${x} 172) scale(${s})">
+<rect x="22" y="-52" width="26" height="52" rx="8" fill="#7e4527"/><rect x="60" y="-52" width="26" height="52" rx="8" fill="#6d3b20"/><rect x="116" y="-52" width="26" height="52" rx="8" fill="#7e4527"/><rect x="150" y="-52" width="26" height="52" rx="8" fill="#6d3b20"/>
+<path d="M26 0h18M64 0h18M120 0h18M154 0h18" stroke="#f1e6cf" stroke-width="3" stroke-linecap="round"/>
+<rect x="8" y="-124" width="160" height="88" rx="42" fill="#8f4f2c"/><circle cx="178" cy="-98" r="34" fill="#8f4f2c"/>
+<path d="M198-84C216-70 216-30 200-12C193-5 184-10 191-19C202-35 200-62 188-72Z" fill="#8f4f2c"/>
+<ellipse cx="152" cy="-92" rx="16" ry="26" fill="#7e4527"/><path d="M188-66C200-60 208-64 212-72" stroke="#f6efdc" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="188" cy="-108" r="2.4" fill="#1a0f0a"/>
+<path d="M20-124Q88-152 156-124L150-68Q88-84 26-68Z" fill="#881A2B"/><path d="M20-124Q88-152 156-124" stroke="#E5C16C" stroke-width="5" fill="none"/><path d="M30-78Q88-92 146-78" stroke="#E5C16C" stroke-width="3" stroke-dasharray="4 5" fill="none"/>
+<path d="M170-124Q178-138 188-124" stroke="#E5C16C" stroke-width="4" fill="none"/>
+${man(0, .78, { torso: true, y: 0, prop: '' }).replace('translate(0 0)', 'translate(88 -118)')}</g>`;
+const FRIEZE = `<g id="t07-fz">${horse(4, .95)}${cart(124, .95, DOLI)}${man(300, 1, { prop: SPEAR })}${elephant(340, .9)}${man(570, 1, { prop: STICK })}${man(624, 1, { prop: STICK, flip: true })}${horse(700, .95)}${cart(820, .95)}${man(890, .92, { y: 172 - 50 * .95, prop: HORN })}${man(1010, 1, { prop: SPEAR })}${man(1066, 1, { prop: STICK, flip: true })}
+<g fill="#C69C47" opacity=".9">${[[270, 168], [560, 170], [1130, 168], [1170, 160]].map(([x, y]) => `<path transform="translate(${x} ${y})" d="M0 0Q4-8 8 0Q4 6 0 0Z"/>`).join('')}</g></g>`;
+
+const DEFS = `<svg class="t07-defs" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<linearGradient id="t07-gold-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2DDA4"/><stop offset=".45" stop-color="#C69C47"/><stop offset="1" stop-color="#967128"/></linearGradient>
+<linearGradient id="t07-maroon-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#881A2B"/><stop offset=".6" stop-color="#63101D"/><stop offset="1" stop-color="#3D0912"/></linearGradient>
+${FRIEZE}</defs></svg>`;
+
+/* Authentic Royal Lotus Flourish Divider */
+const LOTUS_DIVIDER_SVG = `<svg class="t07-lotus-flourish" viewBox="0 0 240 44" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M120 4c-5 12-14 20-22 22 10 1 17-6 22-18 5 12 12 19 22 18-8-2-17-10-22-22z" fill="#C69C47" stroke="none"/>
+  <path d="M120 16c-3 8-9 13-15 14 7 1 11-4 15-11 4 7 8 12 15 11-6-1-12-6-15-14z" fill="#881A2B" stroke="none"/>
+  <circle cx="120" cy="33" r="3" fill="#C69C47"/>
+  <circle cx="120" cy="40" r="1.5" fill="#C69C47"/>
+  <path d="M96 26C80 26 65 14 50 20c-12 5-18 16-32 16M144 26c16 0 31-12 46-6 12 5 18 16 32 16" stroke="#C69C47" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="18" cy="36" r="2.5" fill="#C69C47"/>
+  <circle cx="222" cy="36" r="2.5" fill="#C69C47"/>
+  <circle cx="6" cy="36" r="1.5" fill="#C69C47"/>
+  <circle cx="234" cy="36" r="1.5" fill="#C69C47"/>
+</svg>`;
+
+/* Authentic Bengali / Royal Alpona Divider */
+const ALPONA = `<svg class="t07-alp" viewBox="0 0 340 40" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+<g fill="none" stroke="#C69C47" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M170 8C160 16 160 28 170 34C180 28 180 16 170 8Z"/>
+  <path d="M170 34C156 32 148 24 150 14C160 15 168 22 170 34"/>
+  <path d="M170 34C184 32 192 24 190 14C180 15 172 22 170 34"/>
+  <path d="M142 24C126 24 118 14 104 16C92 18 88 28 78 26C70 24 70 18 62 18H12"/>
+  <path d="M198 24C214 24 222 14 236 16C248 18 252 28 262 26C270 24 270 18 278 18H328"/>
+  <circle cx="8" cy="18" r="2.5"/>
+  <circle cx="332" cy="18" r="2.5"/>
+  <path d="M112 16C110 9 116 5 122 7M228 16C230 9 224 5 218 7"/>
+</g></svg>`;
+
+/* Stamp & Postmark */
+function stampSvg(en) {
+  const W = 62, H = 74, r = 2.7, gap = 7.4;
+  let holes = '';
+  for (let x = gap / 2; x < W; x += gap) holes += `<circle cx="${x}" cy="0" r="${r}"/><circle cx="${x}" cy="${H}" r="${r}"/>`;
+  for (let y = gap / 2; y < H; y += gap) holes += `<circle cx="0" cy="${y}" r="${r}"/><circle cx="${W}" cy="${y}" r="${r}"/>`;
+  return `<svg class="t07-stamp" viewBox="-3 -3 ${W + 6} ${H + 6}" aria-label="${esc(en)}" role="img"><defs><mask id="t07-stm"><rect x="-3" y="-3" width="${W + 6}" height="${H + 6}" fill="#fff"/><g fill="#000">${holes}</g></mask></defs>
+  <rect x="0" y="0" width="${W}" height="${H}" fill="#881A2B" mask="url(#t07-stm)"/><rect x="7" y="7" width="${W - 14}" height="${H - 14}" rx="1.5" fill="none" stroke="rgba(242,221,164,.65)" stroke-width=".8"/>
+  <path d="M14 16Q31 8 48 16" stroke="rgba(242,221,164,.5)" stroke-width=".8" fill="none"/>
+  <text x="31" y="44" class="t07-st">${esc(en)}</text>
+  <path d="M20 56H42" stroke="rgba(242,221,164,.6)" stroke-width=".8"/><circle cx="31" cy="62" r="1.6" fill="rgba(242,221,164,.75)"/></svg>`;
 }
-function readGallery(raw) {
-  let a = raw;
-  if (typeof a === 'string') { try { a = JSON.parse(a); } catch { a = lines(a); } }
-  if (!Array.isArray(a)) return [];
-  return a.map(x => safeImg(typeof x === 'string' ? x : (x?.image || x?.url))).filter(Boolean).slice(0, 9);
+function postmark(city, date) {
+  const txt = `${city} ✦ ${date} ✦`;
+  return `<svg class="t07-postmark" viewBox="0 0 80 80" aria-hidden="true" focusable="false"><defs><path id="t07-pm" d="M40 40m-27 0a27 27 0 1 1 54 0a27 27 0 1 1-54 0"/></defs><g fill="none" stroke="#881A2B" stroke-width="1.2"><circle cx="40" cy="40" r="35"/><circle cx="40" cy="40" r="20"/></g><text font-size="7.6" font-weight="600" letter-spacing="1.2" fill="#881A2B" font-family="'Cinzel',serif"><textPath href="#t07-pm">${esc(txt.toUpperCase())}</textPath></text><path d="M30 40h20M32 44h16" stroke="#881A2B" stroke-width="1.2"/></svg>`;
 }
 
-/* mini month calendar for the wedding month (events days get a dot) */
-function calendarHtml(day, evDates) {
-  const first = new Date(Date.UTC(day.y, day.mo - 1, 1)).getUTCDay();
-  const dim = new Date(Date.UTC(day.y, day.mo, 0)).getUTCDate();
-  const dots = new Set(evDates.map(dparts).filter(p => p && p.y === day.y && p.mo === day.mo).map(p => p.d));
-  const head = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(c => `<span class="t7-cal-h">${c}</span>`).join('');
-  let cells = '';
-  for (let i = 0; i < first; i++) cells += '<span></span>';
-  for (let d = 1; d <= dim; d++) {
-    cells += d === day.d
-      ? `<span class="t7-cal-d t7-cal-on" aria-label="Wedding day"><b>${d}</b></span>`
-      : `<span class="t7-cal-d${dots.has(d) ? ' t7-cal-dot' : ''}">${d}</span>`;
-  }
-  return `<div class="t7-cal-grid" role="img" aria-label="${esc(MONTHS[day.mo - 1])} ${day.y} calendar">${head}${cells}</div>`;
-}
+const CHECK_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+const WHATSAPP_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3.5 20.5l1.3-4.3A8.5 8.5 0 1 1 8 19.3z" stroke-linejoin="round"/><path d="M9 8.5c.2 3 3 5.8 6 6l1.2-1.4-2-1-.9.8c-.9-.4-1.7-1.2-2.1-2.1l.8-.9-1-2z" fill="currentColor" stroke="none"/></svg>';
 
-const BRANCH = `<svg viewBox="0 0 120 220" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M60 214C58 160 64 110 52 6"/><path d="M59 180c-22-6-34-22-38-40 22 2 36 14 38 40z" fill="currentColor" fill-opacity=".16"/><path d="M60 150c22-4 36-20 40-40-22 0-37 14-40 40z" fill="currentColor" fill-opacity=".16"/><path d="M57 118c-20-4-30-18-34-34 20 2 32 12 34 34z" fill="currentColor" fill-opacity=".16"/><path d="M57 88c18-4 28-16 31-32-18 0-29 12-31 32z" fill="currentColor" fill-opacity=".16"/><path d="M54 56c-13-4-20-13-22-25 14 1 21 9 22 25z" fill="currentColor" fill-opacity=".16"/></g><g fill="currentColor"><circle cx="52" cy="8" r="3"/><circle cx="26" cy="66" r="2"/><circle cx="96" cy="130" r="2"/><circle cx="18" cy="148" r="2"/></g></svg>`;
-
-/* ---------- styles (scoped under .t7; colours come from theme variables) ---------- */
+/* ---------- Complete Master Stylesheet ---------- */
 const STYLE = `
-.t7,.t7 *,.t7 *:before,.t7 *:after{box-sizing:border-box}
-.t7{--paper:#fbf6ef;--paper2:#f4ece0;--ink:#281317;--a:#b4566b;--a-dark:#7e3c4b;--a-soft:#f4e3e7;--a-mid:#e1b8c1;--a2:#7d8f69;--a-rgb:180,86,107;--a2-rgb:125,143,105;--ink-rgb:40,19,23;--paper-rgb:251,246,239;
-  --f-disp:Italiana,"Playfair Display",serif;--f-serif:"Playfair Display",Georgia,serif;--f-script:"Pinyon Script",cursive;--f-sans:Jost,system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);
-  position:relative;width:100%;min-height:100vh;overflow-x:clip;overflow-anchor:none;color:var(--ink);font:300 15px/1.75 var(--f-sans);-webkit-font-smoothing:antialiased;
-  background:radial-gradient(ellipse 70% 30% at 85% 0,rgba(var(--a-rgb),.08),transparent 70%),radial-gradient(ellipse 60% 25% at 5% 40%,rgba(var(--a2-rgb),.07),transparent 70%),var(--paper)}
-.t7.t7-locked{height:100vh!important;height:100svh!important;max-height:100vh!important;max-height:100svh!important;overflow:hidden!important}
-.t7 h1,.t7 h2,.t7 h3,.t7 p,.t7 figure{margin-top:0}
-.t7 img{display:block;max-width:100%}
-.t7 button{font:inherit;color:inherit;cursor:pointer}
-.t7 a{color:inherit}
-.t7 :focus-visible{outline:2px solid var(--a);outline-offset:3px}
-.t7-progress{position:fixed;top:0;left:0;height:3px;width:100%;z-index:998;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--a2),var(--a))}
-.t7-wrap{position:relative;width:100%;max-width:1080px;margin:0 auto;padding:0 22px}
-.t7 section{position:relative;padding:92px 0}
-.t7-eyebrow{font:500 10.5px var(--f-sans);letter-spacing:.36em;text-transform:uppercase;color:var(--a);margin-bottom:12px}
-.t7-head{text-align:center;margin-bottom:50px}
-.t7-head h2{font:400 clamp(32px,7vw,54px)/1.1 var(--f-disp);letter-spacing:.06em;margin:0 0 12px;text-transform:uppercase}
-.t7-head p{max-width:440px;margin:0 auto;color:rgba(var(--ink-rgb),.7);font-size:14px}
-.t7-orn{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--a);margin:18px auto 0;font-size:11px}
-.t7-orn:before,.t7-orn:after{content:"";height:1px;width:56px;background:linear-gradient(90deg,transparent,var(--a))}
-.t7-orn:after{transform:scaleX(-1)}
-.t7-ph{background:linear-gradient(135deg,var(--a-soft),var(--paper2))}
-.t7 img.t7-fi{opacity:0;transition:opacity .9s ease}
-.t7 img.t7-fi.t7-loaded{opacity:1}
-.t7 img.t7-failed{opacity:0!important}
-.t7-reveal{opacity:0;transform:translateY(32px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
-.t7-reveal.t7-in{opacity:1;transform:none}
-.t7-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 28px;border-radius:40px;border:1px solid var(--a);text-decoration:none;font:500 11px var(--f-sans);letter-spacing:.22em;text-transform:uppercase;position:relative;overflow:hidden;color:#fff;background:var(--a);transition:transform .35s var(--ease),background .35s,color .35s}
-.t7-btn:hover{transform:translateY(-3px);background:var(--a-dark)}
-.t7-btn.t7-ghost{background:transparent;color:var(--a)}
-.t7-btn.t7-ghost:hover{background:var(--a);color:#fff}
-/* entry: envelope */
-.t7-entry{position:fixed;inset:0;width:100%;z-index:900;display:grid;place-items:center;padding:clamp(12px,2.5vh,24px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;background:radial-gradient(ellipse at 50% 38%,var(--paper) 0,var(--paper2) 75%);transition:opacity .8s ease,transform .8s var(--ease)}
-.t7-entry.t7-leaving{opacity:0;transform:scale(1.06);pointer-events:none}
-.t7-entry-in{display:flex;flex-direction:column;align-items:center;gap:clamp(12px,2.6vh,24px);margin:auto;text-align:center;max-width:94vw;transition:opacity .9s var(--ease),transform .9s var(--ease)}
-.t7-boot .t7-entry-in{opacity:1;transform:none}
-.t7-kicker{font:500 10px var(--f-sans);letter-spacing:.4em;color:var(--a)}
-.t7-env{--w:min(84vw,400px,calc(46vh*1.47));position:relative;width:var(--w);height:calc(var(--w)*.68);margin-top:clamp(36px,11vh,96px);perspective:1200px;filter:drop-shadow(0 22px 26px rgba(var(--ink-rgb),.22))}
-.t7-env-back{position:absolute;inset:0;background:linear-gradient(160deg,var(--a-mid),var(--a));border-radius:4px}
-.t7-letter{position:absolute;left:7%;right:7%;top:9%;bottom:9%;z-index:1;display:grid;place-content:center;text-align:center;padding:0 8px;background:linear-gradient(180deg,#fffdf9,var(--paper));border-radius:3px;box-shadow:0 1px 3px rgba(var(--ink-rgb),.2);transition:transform 1s var(--ease) .45s}
-.t7-letter small{font:500 calc(var(--w)*.024) var(--f-sans);letter-spacing:.34em;color:var(--a)}
-.t7-letter b{display:block;font:400 calc(var(--w)*.1)/1.1 var(--f-script);color:var(--ink);margin:4px 0}
-.t7-letter em{font:italic 400 calc(var(--w)*.036) var(--f-serif);color:rgba(var(--ink-rgb),.7)}
-.t7-pocket{position:absolute;inset:0;z-index:2;pointer-events:none}
-.t7-pocket i{position:absolute;inset:0}
-.t7-pocket i:nth-child(1){background:linear-gradient(120deg,var(--a-soft),var(--a-mid));clip-path:polygon(0 0,52% 56%,0 100%)}
-.t7-pocket i:nth-child(2){background:linear-gradient(240deg,var(--a-soft),var(--a-mid));clip-path:polygon(100% 0,48% 56%,100% 100%)}
-.t7-pocket i:nth-child(3){background:linear-gradient(0deg,var(--a-mid),var(--a-soft));clip-path:polygon(0 100%,50% 44%,100% 100%)}
-.t7-flap{position:absolute;left:0;right:0;top:0;height:58%;z-index:3;transform-origin:50% 0;background:linear-gradient(180deg,var(--a-soft),var(--a-mid));clip-path:polygon(0 0,100% 0,50% 100%);transition:transform .8s var(--ease),z-index 0s .38s}
-.t7-open .t7-flap{transform:rotateX(180deg);z-index:0}
-.t7-open .t7-letter{transform:translateY(-52%)}
-.t7-seal{position:absolute;z-index:4;left:50%;top:58%;width:clamp(58px,calc(var(--w)*.19),82px);aspect-ratio:1;margin:0;transform:translate(-50%,-50%);border:0;border-radius:50%;display:grid;place-content:center;color:var(--a-soft);
-  background:radial-gradient(circle at 34% 28%,var(--a),var(--a-dark) 80%);box-shadow:inset 0 2px 2px rgba(255,255,255,.35),inset 0 -5px 8px rgba(0,0,0,.3),0 8px 14px rgba(var(--ink-rgb),.35);animation:t7-bob 3s ease-in-out infinite;will-change:transform}
-.t7-seal:before{content:"";position:absolute;inset:5px;border-radius:50%;border:1px solid rgba(255,255,255,.4)}
-.t7-seal:after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 26px rgba(var(--a-rgb),.9);opacity:0;animation:t7-glow 3s ease-in-out infinite;pointer-events:none}
-.t7-seal b{font:400 calc(var(--w)*.062)/1 var(--f-disp);letter-spacing:.02em}
-.t7-seal.t7-burst{animation:t7-burst .5s ease-in forwards}
-@keyframes t7-bob{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.07)}}
-@keyframes t7-glow{0%,100%{opacity:0}50%{opacity:1}}
-@keyframes t7-burst{40%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(0);opacity:0}}
-.t7-guest-line{font:italic 400 clamp(15px,2.3vh,18px) var(--f-serif);color:var(--ink)}
-.t7-entry-note{font:500 10px var(--f-sans);letter-spacing:.3em;text-transform:uppercase;color:rgba(var(--ink-rgb),.6);cursor:pointer}
-/* hero */
-.t7-hero{position:relative;min-height:100vh;min-height:100svh;display:grid;place-items:center;overflow:hidden;padding:clamp(60px,9vh,96px) 20px clamp(70px,10vh,100px);text-align:center;isolation:isolate}
-.t7-branch{position:absolute;color:var(--a2);opacity:.55;width:clamp(70px,16vw,150px);pointer-events:none;z-index:0}
-.t7-branch svg{display:block;width:100%;height:auto}
-.t7-branch.t7-b1{top:-10px;left:-6px;transform:rotate(18deg)}
-.t7-branch.t7-b2{bottom:-10px;right:-6px;transform:rotate(198deg);color:var(--a)}
-.t7-petals{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
-.t7-petal{position:absolute;top:-24px;left:var(--l,50%);width:var(--s,10px);height:calc(var(--s,10px)*1.4);border-radius:150% 0 150% 0;background:var(--a-mid);opacity:0;animation:t7-fall var(--d,12s) linear infinite;animation-delay:var(--dl,0s)}
-@keyframes t7-fall{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}10%{opacity:.8}90%{opacity:.7}100%{transform:translate3d(var(--x,40px),108vh,0) rotate(540deg);opacity:0}}
-.t7-hero-in{position:relative;z-index:2;max-width:640px;width:100%}
-.t7-invoc{font:italic 400 14px var(--f-serif);color:var(--a-dark);margin-bottom:4px}
-.t7-arch{--aw:min(72vw,290px);position:relative;width:var(--aw);margin:clamp(14px,2.4vh,24px) auto clamp(8px,1.6vh,16px)}
-.t7-arch:before{content:"";position:absolute;inset:-12px;border:1px solid var(--a);border-radius:calc(var(--aw)/2 + 12px) calc(var(--aw)/2 + 12px) 4px 4px;opacity:.55;pointer-events:none}
-.t7-arch-img{position:relative;aspect-ratio:3/4;overflow:hidden;border-radius:calc(var(--aw)/2) calc(var(--aw)/2) 0 0;box-shadow:0 26px 50px rgba(var(--ink-rgb),.25)}
-.t7-hero-img{position:absolute;inset:-6% 0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;transform:translate3d(0,0,0) scale(1.08);will-change:transform}
-.t7-hero-img.t7-on{opacity:1}
-.t7-names{font:400 clamp(54px,15vw,112px)/.95 var(--f-script);color:var(--a);margin:clamp(14px,2.4vh,26px) 0 0}
-.t7-names span{display:block;font:400 .34em var(--f-disp);color:var(--a2);letter-spacing:.3em;margin:2px 0}
-.t7-hero-copy{max-width:400px;margin:12px auto 0;font:italic 400 15px var(--f-serif);color:rgba(var(--ink-rgb),.78)}
-.t7-datebar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;max-width:420px;margin:clamp(16px,3vh,26px) auto 0}
-.t7-datebar>div{font:500 11px var(--f-sans);letter-spacing:.3em;text-transform:uppercase;color:var(--a-dark);border-top:1px solid var(--a);border-bottom:1px solid var(--a);padding:9px 0}
-.t7-datebar strong{font:400 clamp(46px,11vw,66px)/1 var(--f-disp);color:var(--ink)}
-.t7-where{font:italic 400 14px var(--f-serif);margin-top:12px;color:rgba(var(--ink-rgb),.75)}
-.t7-cd{display:none;justify-content:center;gap:10px;margin-top:18px}
-.t7-cd.t7-live{display:flex}
-.t7-cd div{min-width:62px;padding:10px 6px 8px;border:1px solid var(--a-mid);border-radius:14px;background:rgba(255,255,255,.55);overflow:hidden}
-.t7-cd b{display:block;font:400 26px/1.1 var(--f-disp);color:var(--a);font-variant-numeric:tabular-nums}
-.t7-cd b.t7-tick{animation:t7-tick .5s var(--ease)}
-@keyframes t7-tick{from{transform:translateY(-35%);opacity:0}to{transform:none;opacity:1}}
-.t7-cd small{font:500 8px var(--f-sans);letter-spacing:.2em;color:rgba(var(--ink-rgb),.6)}
-.t7-cd-done{font:italic 400 15px var(--f-serif);color:var(--a)}
-.t7-pill{display:inline-block;margin-top:16px;padding:8px 20px;border-radius:30px;border:1px solid var(--a-mid);background:rgba(255,255,255,.6);font:500 10px var(--f-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--a-dark)}
-.t7-cta{margin-top:clamp(16px,3vh,28px)}
-.t7-cue{position:absolute;bottom:20px;left:0;right:0;z-index:2;font:500 9px var(--f-sans);letter-spacing:.3em;color:var(--a);text-transform:uppercase}
-.t7-cue i{display:block;width:1px;height:36px;margin:8px auto 0;background:linear-gradient(var(--a),transparent);transform-origin:top;animation:t7-drip 2s ease-in-out infinite}
-@keyframes t7-drip{0%{transform:scaleY(0)}60%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
-.t7-intro .t7-hero-in>*{animation:t7-up 1.1s var(--ease) both;animation-delay:calc(var(--i,0)*.1s)}
-.t7-intro .t7-branch{animation:t7-fadein 1.6s ease .3s both}
-@keyframes t7-up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
-@keyframes t7-fadein{from{opacity:0}}
-/* invitation quote */
-.t7-quote{text-align:center;max-width:620px;margin:0 auto}
-.t7-quote:before{content:"“";display:block;font:400 96px/.6 var(--f-script);color:var(--a-mid);height:46px}
-.t7-quote p{font:italic 400 clamp(20px,4.6vw,28px)/1.7 var(--f-serif);margin:0 0 18px}
-.t7-quote small{display:block;font:500 11px var(--f-sans);letter-spacing:.3em;color:var(--a);text-transform:uppercase}
-/* story: editorial rows */
-.t7-chap{display:grid;gap:26px;align-items:center;justify-items:center;margin-bottom:76px;text-align:center}
-.t7-chap:last-child{margin-bottom:0}
-.t7-chap-img{--aw:min(70vw,250px);width:var(--aw);aspect-ratio:3/4;position:relative;overflow:hidden;border-radius:calc(var(--aw)/2) calc(var(--aw)/2) 8px 8px;box-shadow:0 22px 44px rgba(var(--ink-rgb),.22)}
-.t7-chap-img img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease)}
-.t7-chap:hover .t7-chap-img img{transform:scale(1.06)}
-.t7-num{font:400 clamp(64px,16vw,104px)/1 var(--f-disp);color:transparent;-webkit-text-stroke:1px var(--a);display:block}
-.t7-chap h3{font:400 clamp(34px,8vw,46px)/1.1 var(--f-script);color:var(--a);margin:-8px 0 10px}
-.t7-chap p{max-width:380px;margin:0 auto;color:rgba(var(--ink-rgb),.78);font-size:14.5px}
-/* calendar */
-.t7-calcard{max-width:420px;margin:0 auto;padding:34px 26px 30px;border-radius:26px;text-align:center;background:linear-gradient(180deg,#fff,var(--paper));border:1px solid var(--a-mid);box-shadow:0 30px 60px rgba(var(--ink-rgb),.14)}
-.t7-calcard h3{font:400 28px var(--f-disp);letter-spacing:.2em;text-transform:uppercase;color:var(--a);margin:0 0 4px}
-.t7-calcard small{display:block;font:500 11px var(--f-sans);letter-spacing:.3em;color:rgba(var(--ink-rgb),.6);margin-bottom:20px}
-.t7-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px 0;justify-items:center}
-.t7-cal-h{font:500 10px var(--f-sans);letter-spacing:.1em;color:var(--a2);padding-bottom:6px}
-.t7-cal-d{position:relative;width:34px;height:34px;display:grid;place-items:center;font:400 14px var(--f-sans);font-variant-numeric:tabular-nums}
-.t7-cal-dot:after{content:"";position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--a2)}
-.t7-cal-on{color:#fff}
-.t7-cal-on b{position:relative;z-index:1;font-weight:600}
-.t7-cal-on:before{content:"";position:absolute;inset:-3px;border-radius:50%;background:var(--a);box-shadow:0 6px 16px rgba(var(--a-rgb),.5)}
-.t7-cal-on:after{content:"♥";position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--a)}
-.t7-calcard .t7-btn{margin-top:26px}
-/* timeline */
-.t7-day{display:block;margin:46px 0 26px 52px;font:500 11px var(--f-sans);letter-spacing:.3em;text-transform:uppercase;color:var(--a)}
-.t7-day:first-of-type{margin-top:0}
-.t7-tl{position:relative}
-.t7-tl:before{content:"";position:absolute;left:19px;top:0;bottom:0;width:1px;background:linear-gradient(transparent,var(--a-mid) 6%,var(--a-mid) 94%,transparent)}
-.t7-tl-item{position:relative;padding-left:52px;margin-bottom:34px}
-.t7-tl-dot{position:absolute;left:11px;top:4px;width:17px;height:17px;border-radius:50%;background:var(--paper);border:1px solid var(--a);box-shadow:0 0 0 5px var(--paper)}
-.t7-tl-dot:after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--a)}
-.t7-tl-time{font:400 20px var(--f-disp);letter-spacing:.14em;color:var(--a);margin-bottom:8px}
-.t7-tl-card{overflow:hidden;border-radius:20px;background:#fff;border:1px solid rgba(var(--a-rgb),.2);box-shadow:0 18px 40px rgba(var(--ink-rgb),.1);transition:transform .5s var(--ease),box-shadow .5s}
-.t7-tl-card:hover{transform:translateY(-4px);box-shadow:0 26px 50px rgba(var(--ink-rgb),.16)}
-.t7-tl-img{position:relative;height:150px;overflow:hidden}
-.t7-tl-img img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease)}
-.t7-tl-card:hover .t7-tl-img img{transform:scale(1.07)}
-.t7-tl-ic{position:absolute;right:12px;bottom:-16px;z-index:2;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#fff;font-size:18px;box-shadow:0 6px 14px rgba(var(--ink-rgb),.2)}
-.t7-tl-b{padding:20px 20px 20px}
-.t7-tl-b h3{font:400 24px/1.15 var(--f-disp);letter-spacing:.06em;margin:0}
-.t7-tl-b small{display:block;font:400 12.5px "Noto Serif Devanagari",serif;color:var(--a2);margin:3px 0 8px}
-.t7-tl-meta{font-size:12.5px;color:rgba(var(--ink-rgb),.75);margin:8px 0}
-.t7-tl-meta b{color:var(--a);font-weight:500;margin-right:5px}
-.t7-tl-b p{font-size:13px;color:rgba(var(--ink-rgb),.7);margin:0 0 12px}
-.t7-dress{display:inline-flex;align-items:center;gap:9px;padding:6px 14px 6px 8px;border-radius:30px;border:1px solid var(--a-mid);font-size:11px;letter-spacing:.04em}
-.t7-sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(var(--ink-rgb),.25)}
-/* moments */
-.t7-masonry{column-count:2;column-gap:12px}
-.t7-masonry figure{position:relative;margin:0 0 12px;break-inside:avoid;overflow:hidden;border-radius:18px;cursor:zoom-in;box-shadow:0 14px 30px rgba(var(--ink-rgb),.14)}
-.t7-masonry figure:nth-child(3n+1){aspect-ratio:4/5}.t7-masonry figure:nth-child(3n+2){aspect-ratio:1/1}.t7-masonry figure:nth-child(3n){aspect-ratio:3/4}
-.t7-masonry img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease)}
-.t7-masonry figure:hover img{transform:scale(1.07)}
-.t7-lb{position:fixed;inset:0;z-index:960;display:grid;place-items:center;padding:20px;background:rgba(var(--ink-rgb),.92);cursor:zoom-out;animation:t7-fadein .3s ease}
-.t7-lb img{max-width:min(94vw,900px);max-height:88vh;border-radius:10px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
-/* venue */
-.t7-venue-grid{display:grid;gap:22px}
-.t7-venue-photo{position:relative;height:clamp(250px,56vw,420px);margin:0;border-radius:200px 200px 24px 24px;overflow:hidden;box-shadow:0 30px 60px rgba(var(--ink-rgb),.22)}
-.t7-venue-photo img{width:100%;height:100%;object-fit:cover;transition:transform 1.6s var(--ease)}
-.t7-venue-photo:hover img{transform:scale(1.06)}
-.t7-vcard{padding:34px 26px;border-radius:24px;text-align:center;background:#fff;border:1px solid rgba(var(--a-rgb),.22);box-shadow:0 22px 50px rgba(var(--ink-rgb),.1)}
-.t7-vcard h3{font:400 clamp(26px,6vw,36px)/1.15 var(--f-disp);letter-spacing:.06em;color:var(--a);margin:4px 0 10px}
-.t7-vcard p{font-size:14px;color:rgba(var(--ink-rgb),.75);margin:0 0 22px}
-.t7-vbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
-.t7-chips{display:grid;gap:12px;margin-top:18px}
-.t7-chip{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:16px 18px;border-radius:18px;background:var(--a-soft);font-size:13px;color:rgba(var(--ink-rgb),.8)}
-.t7-chip span{font-size:20px;color:var(--a)}
-.t7-chip p{margin:0}
-/* dark finale: rsvp + footer */
-.t7-dark{background:radial-gradient(ellipse 70% 40% at 50% 0,rgba(var(--a-rgb),.35),transparent 70%),var(--ink);color:var(--paper)}
-.t7-dark .t7-head h2{color:var(--a-mid)}
-.t7-dark .t7-head p{color:rgba(var(--paper-rgb),.7)}
-.t7-dark .t7-eyebrow{color:var(--a-mid)}
-.t7-rsvp{position:relative;max-width:540px;margin:0 auto;padding:42px 28px 34px;border-radius:28px;color:var(--ink);background:linear-gradient(180deg,#fffdf9,var(--paper));box-shadow:0 40px 90px rgba(0,0,0,.45)}
-.t7-rsvp h2{text-align:center;font:400 clamp(26px,6vw,34px)/1.2 var(--f-disp);letter-spacing:.05em;color:var(--a);margin:0 0 10px}
-.t7-rsvp-intro{text-align:center;font-size:13.5px;color:rgba(var(--ink-rgb),.72);margin:0 0 26px}
-.t7-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:40px;background:var(--a-soft)}
-.t7-seg button{min-height:46px;border:0;border-radius:36px;background:transparent;font:500 10.5px var(--f-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--a-dark);transition:background .35s,color .35s,box-shadow .35s}
-.t7-seg button[aria-pressed="true"]{background:var(--a);color:#fff;box-shadow:0 8px 18px rgba(var(--a-rgb),.4)}
-.t7-field{position:relative;margin:22px 0}
-.t7-field label{display:block;font:500 10px var(--f-sans);letter-spacing:.24em;color:var(--a);margin-bottom:4px}
-.t7-field input,.t7-field textarea{width:100%;display:block;background:transparent;border:0;border-bottom:1px solid var(--a-mid);border-radius:0;padding:9px 0 10px;font:inherit;font-size:15px;color:var(--ink);outline:none;-webkit-appearance:none;appearance:none}
-.t7-field textarea{resize:none;min-height:60px}
-.t7-field input::placeholder,.t7-field textarea::placeholder{color:rgba(var(--ink-rgb),.4)}
-.t7-field:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--a);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease);pointer-events:none}
-.t7-field:focus-within:after{transform:scaleX(1)}
-.t7-stepper{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.t7-stepper>div{display:flex;align-items:center;gap:6px}
-.t7-stepper button{width:40px;height:40px;border-radius:50%;border:1px solid var(--a);background:transparent;color:var(--a);font-size:20px;line-height:1;transition:background .3s,color .3s}
-.t7-stepper button:hover{background:var(--a);color:#fff}
-.t7-stepper output{min-width:34px;text-align:center;font:400 24px var(--f-disp);color:var(--ink)}
-.t7-send{width:100%;margin-top:10px;min-height:56px;border:0;border-radius:40px;position:relative;overflow:hidden;color:#fff;font:600 11px var(--f-sans);letter-spacing:.22em;text-transform:uppercase;background:linear-gradient(120deg,var(--a-dark),var(--a));box-shadow:0 14px 30px rgba(var(--a-rgb),.45);transition:transform .35s var(--ease)}
-.t7-send:hover{transform:translateY(-3px)}
-.t7-send:active{transform:scale(.98)}
-.t7-send:after{content:"";position:absolute;top:0;bottom:0;width:34%;left:-50%;transform:skewX(-22deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:t7-sweep 4s ease-in-out infinite;will-change:transform}
-@keyframes t7-sweep{0%,55%{transform:skewX(-22deg) translateX(0)}100%{transform:skewX(-22deg) translateX(600%)}}
-.t7-status{min-height:20px;margin:14px 0 0;font-size:12px;text-align:center;color:var(--a)}
-.t7-contacts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
-.t7-contact{display:inline-block;padding:9px 16px;border-radius:30px;border:1px solid var(--a-mid);text-decoration:none;font-size:12px;color:var(--a-dark)}
-.t7-end{text-align:center;padding:70px 22px 80px}
-.t7-mono{width:112px;height:112px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(var(--paper-rgb),.4);box-shadow:0 0 0 8px rgba(var(--paper-rgb),.06);font:400 38px var(--f-script);color:var(--a-mid)}
-.t7-end h3{font:400 clamp(30px,7vw,44px)/1.15 var(--f-script);color:var(--paper);margin:0 0 8px}
-.t7-end p{font:500 10px var(--f-sans);letter-spacing:.3em;color:rgba(var(--paper-rgb),.65);margin:8px 0 0;text-transform:uppercase}
-.t7-end .t7-tag{font:italic 400 17px var(--f-serif);letter-spacing:.02em;text-transform:none;color:var(--a-mid)}
-.t7-music{display:none;position:fixed;z-index:50;right:16px;bottom:16px;width:46px;height:46px;border-radius:50%;border:1px solid var(--a);background:rgba(var(--paper-rgb),.92);color:var(--a);font-size:17px;box-shadow:0 8px 22px rgba(var(--ink-rgb),.25)}
-.t7-js .t7-music.t7-has{display:block}
-.t7-music[aria-pressed="true"]{background:var(--a);color:#fff}
-@media(min-width:820px){
-  .t7 section{padding:124px 0}
-  .t7-chap{grid-template-columns:1fr 1fr;gap:64px;text-align:left;justify-items:stretch}
-  .t7-chap .t7-chap-img{justify-self:center}
-  .t7-chap .t7-chap-txt{max-width:400px}
-  .t7-chap:nth-child(even) .t7-chap-img{order:2}
-  .t7-chap:nth-child(even) .t7-chap-txt{justify-self:end}
-  .t7-chap p{margin:0}
-  .t7-tl:before{left:50%}
-  .t7-day{display:table;margin:50px auto 30px;padding:6px 22px;background:var(--paper);position:relative;z-index:1}
-  .t7-tl-item{padding:0;display:grid;grid-template-columns:1fr 1fr;column-gap:76px;align-items:start}
-  .t7-tl-dot{left:50%;transform:translateX(-50%);top:6px}
-  .t7-tl-item.t7-l{grid-template-areas:"card time"}
-  .t7-tl-item.t7-r{grid-template-areas:"time card"}
-  .t7-tl-card{grid-area:card}
-  .t7-tl-time{grid-area:time;margin:2px 0 0;font-size:26px}
-  .t7-tl-item.t7-r .t7-tl-time{text-align:right}
-  .t7-masonry{column-count:3;column-gap:16px}
-  .t7-masonry figure{margin-bottom:16px}
-  .t7-venue-grid{grid-template-columns:1.05fr 1fr;align-items:center;gap:40px}
-  .t7-rsvp{padding:52px 48px 42px}
+.t07-root, .t07-root *, .t07-root *:before, .t07-root *:after { box-sizing: border-box; }
+.t07-root {
+  --ivory: #FFFDF9;
+  --ivory-warm: #FAF4E8;
+  --ivory-soft: #F5ECE0;
+  --maroon: #881A2B;
+  --maroon-dark: #63101D;
+  --maroon-deep: #3D0912;
+  --gold: #C69C47;
+  --gold-bright: #E5C16C;
+  --gold-light: #F2DDA4;
+  --gold-dark: #967128;
+  --ink: #2C1017;
+  --muted: #6B4E54;
+  --f-title: "Cinzel", Georgia, serif;
+  --f-head: "Cormorant Garamond", "Tiro Bangla", Georgia, serif;
+  --f-body: "Plus Jakarta Sans", "Hind Siliguri", system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--ink);
+  font: 500 16.5px/1.7 var(--f-body);
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--ivory);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath d='M40 0 L80 40 L40 80 L0 40 Z' fill='none' stroke='%23C69C47' stroke-width='0.8' stroke-opacity='0.08'/%3E%3Ccircle cx='40' cy='40' r='14' fill='none' stroke='%23C69C47' stroke-width='0.8' stroke-opacity='0.06'/%3E%3Cpath d='M40 16 C30 26 30 54 40 64 C50 54 50 26 40 16 Z' fill='none' stroke='%23C69C47' stroke-width='0.6' stroke-opacity='0.07'/%3E%3Cpath d='M16 40 C26 30 54 30 64 40 C54 50 26 50 16 40 Z' fill='none' stroke='%23C69C47' stroke-width='0.6' stroke-opacity='0.07'/%3E%3Ccircle cx='0' cy='0' r='8' fill='none' stroke='%23C69C47' stroke-width='0.6' stroke-opacity='0.05'/%3E%3Ccircle cx='80' cy='0' r='8' fill='none' stroke='%23C69C47' stroke-width='0.6' stroke-opacity='0.05'/%3E%3Ccircle cx='0' cy='80' r='8' fill='none' stroke='%23C69C47' stroke-width='0.6' stroke-opacity='0.05'/%3E%3Ccircle cx='80' cy='80' r='8' fill='none' stroke='%23C69C47' stroke-width='0.6' stroke-opacity='0.05'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(226, 188, 104, 0.18) 0%, transparent 70%),
+    radial-gradient(circle at 10% 30%, rgba(136, 26, 43, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 90% 70%, rgba(198, 156, 71, 0.06) 0%, transparent 50%),
+    linear-gradient(180deg, #FFFDF9 0%, #FAF4E8 50%, #FFFDF9 100%);
+  padding-bottom: 120px;
 }
-@media(max-width:360px){.t7-wrap{padding:0 16px}.t7-cd div{min-width:54px}.t7-cd{gap:6px}}
-@media(prefers-reduced-motion:reduce){.t7 *,.t7 *:before,.t7 *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.t7-js .t7-reveal{opacity:1!important;transform:none!important}}
-@media print{.t7-progress,.t7-entry,.t7-music,.t7-cue,.t7-petals{display:none!important}.t7-js .t7-reveal{opacity:1!important;transform:none!important}.t7-js img.t7-fi{opacity:1!important}}
+.t07-root h1, .t07-root h2, .t07-root h3, .t07-root p, .t07-root figure { margin-top: 0; }
+.t07-root img { display: block; max-width: 100%; }
+.t07-root button { font: inherit; color: inherit; cursor: pointer; }
+.t07-root a { color: inherit; }
+.t07-root [hidden] { display: none !important; }
+
+/* Progress bar */
+.t07-progress {
+  position: fixed; top: 0; left: 0; height: 3.5px; width: 100%; z-index: 998;
+  transform-origin: left; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--gold-bright), var(--maroon), var(--gold));
+}
+.t07-wrap { position: relative; width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+.t07-root section { position: relative; padding: 84px 0; }
+
+.t07-eyebrow {
+  font: 700 11.5px var(--f-title); letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--gold-dark); margin-bottom: 8px; text-align: center;
+}
+.t07-head { text-align: center; margin-bottom: 40px; position: relative; z-index: 2; }
+.t07-head h2 {
+  font: 700 clamp(30px, 6.5vw, 48px)/1.15 var(--f-title); color: var(--maroon);
+  margin: 0 0 10px; letter-spacing: 0.02em;
+}
+.t07-head p { max-width: 540px; margin: 0 auto; color: var(--muted); font-size: 17px; }
+
+/* Flourish Dividers */
+.t07-lotus-flourish, .t07-alp {
+  display: block; width: min(280px, 75%); height: auto; margin: 14px auto 0;
+  color: var(--gold); opacity: 0.95;
+}
+
+/* ==========================================================================
+   ACT I: ROYAL SLIDING DOUBLE DOORS GATE (PHYSICALLY SEEN OPENING "DHIRE DHIRE")
+   ========================================================================== */
+.t07-entry {
+  position: fixed !important; inset: 0 !important; width: 100% !important;
+  height: 100vh !important; height: 100svh !important; z-index: 990 !important;
+  overflow: hidden !important; background: #0c0205 !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  transition: opacity 0.8s ease, visibility 0.8s ease, background 0.6s ease;
+}
+.t07-entry.t07-open {
+  pointer-events: none !important;
+  background: transparent !important;
+}
+.t07-entry.t07-doors-cleared {
+  display: none !important; pointer-events: none !important;
+}
+
+.t07-doors-portal {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  overflow: hidden; z-index: 2; pointer-events: none;
+}
+.t07-cur {
+  position: absolute; top: 0; bottom: 0; width: 50.1%; height: 100%;
+  overflow: hidden; transition: transform 2.6s cubic-bezier(0.65, 0, 0.25, 1);
+  will-change: transform; z-index: 2; pointer-events: auto;
+}
+.t07-cur.t07-cl {
+  left: 0; border-right: 2px solid rgba(229, 193, 108, 0.9);
+  box-shadow: 4px 0 28px rgba(0, 0, 0, 0.75);
+}
+.t07-cur.t07-cr {
+  right: 0; border-left: 2px solid rgba(229, 193, 108, 0.9);
+  box-shadow: -4px 0 28px rgba(0, 0, 0, 0.75);
+}
+
+.t07-door-panel {
+  position: absolute; top: 0; height: 100%; width: 200%;
+  display: flex; align-items: center; justify-content: center;
+}
+.t07-door-left { left: 0; }
+.t07-door-right { left: -100%; }
+
+.t07-door {
+  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  display: block; transition: filter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Initial Lights Off: Dark, nocturnal palace gate at night */
+.t07-unlit .t07-door {
+  filter: brightness(0.24) contrast(1.22) saturate(0.6);
+}
+.t07-unlit .t07-doors-portal:after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(20, 4, 8, 0.45) 0%, rgba(10, 2, 4, 0.92) 100%);
+  pointer-events: none; transition: opacity 1.0s ease; z-index: 3;
+}
+
+/* Lights On: Radiant golden illumination across the doors */
+.t07-lit .t07-door {
+  filter: brightness(1.15) contrast(1.08) saturate(1.12) drop-shadow(0 0 32px rgba(229, 193, 108, 0.75));
+}
+.t07-lit .t07-doors-portal:after {
+  opacity: 0;
+}
+
+/* Double Doors Sliding Open Slowly to Left & Right ("dhire dhire") */
+.t07-open .t07-cl {
+  transform: translateX(-104%) skewX(-1.5deg);
+}
+.t07-open .t07-cr {
+  transform: translateX(104%) skewX(1.5deg);
+}
+.t07-open .t07-doors-portal {
+  pointer-events: none;
+}
+
+/* Center Gate Welcome Card (Sits on top of the closed doors) */
+.t07-gate-in {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: clamp(10px, 2vh, 24px) 16px; overflow-y: auto; touch-action: pan-y;
+  transition: opacity 0.6s ease, transform 0.6s ease; pointer-events: auto; text-align: center;
+}
+.t07-open .t07-gate-in {
+  opacity: 0; transform: scale(1.06); pointer-events: none;
+}
+
+.t07-lantern-wrap {
+  display: flex; flex-direction: column; align-items: center; cursor: pointer;
+  outline: none; user-select: none; margin-bottom: 1.25rem;
+}
+@keyframes t07Sway {
+  0%, 100% { transform: rotate(-3.5deg); }
+  50% { transform: rotate(3.5deg); }
+}
+.t07-lantern-sway {
+  transform-origin: top center; animation: t07Sway 3.6s ease-in-out infinite;
+}
+@keyframes t07HaloPulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+.t07-lantern-halo { animation: t07HaloPulse 2.6s ease-in-out infinite; }
+
+@keyframes t07Twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50% { opacity: 0.95; transform: scale(1.25); }
+}
+.t07-star-dot {
+  position: absolute; border-radius: 50%; background: #F2DDA4;
+  animation: t07Twinkle var(--dur, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes t07BtnPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 8px 30px rgba(198,156,71,0.4), 0 0 20px rgba(136,26,43,0.6); }
+  50% { transform: scale(1.03); box-shadow: 0 12px 38px rgba(198,156,71,0.6), 0 0 28px rgba(136,26,43,0.85); }
+}
+.t07-open-btn {
+  animation: t07BtnPulse 2.8s ease-in-out infinite;
+}
+.t07-open-btn:hover { transform: scale(1.05) translateY(-2px) !important; }
+
+/* ==========================================================================
+   ACT II: 2ND SCREEN HERO STAGE (REVEALED BEHIND OPENING DOORS)
+   ========================================================================== */
+.t07-hero {
+  position: relative; width: 100%; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: clamp(32px, 5vh, 60px) 16px clamp(90px, 12vh, 130px);
+  overflow: hidden;
+}
+.t07-hero-arch-container {
+  position: relative; width: 100%; max-width: min(580px, 92vw); max-height: min(68vh, 540px);
+  margin: 0 auto; aspect-ratio: 958/1024; display: flex; align-items: center; justify-content: center;
+}
+.t07-hero-arch-img {
+  position: relative; z-index: 10; width: 100%; height: 100%;
+  object-fit: contain; pointer-events: none; user-select: none;
+  filter: drop-shadow(0 16px 36px rgba(136,26,43,0.22));
+}
+
+/* Spotlight Couple Portrait framed inside Open Arch Portal */
+.t07-portal-couple-frame {
+  position: absolute; left: 30%; right: 30%; top: 38%; bottom: 12%;
+  z-index: 5; border-radius: 120px 120px 18px 18px; overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(136,26,43,0.35), 0 12px 28px rgba(0,0,0,0.25);
+  background: radial-gradient(ellipse at 50% 50%, #FFFDF7 40%, #FBF0DF 100%);
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(198,156,71,0.65);
+}
+.t07-portal-couple-img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center 15%;
+  display: block; transition: transform 0.6s var(--ease);
+}
+.t07-hero-arch-container:hover .t07-portal-couple-img {
+  transform: scale(1.04);
+}
+
+/* Hero Typography Block */
+.t07-hero-content {
+  position: relative; z-index: 15; width: 100%; max-width: 680px; margin: -16px auto 0;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
+}
+.t07-hero-names {
+  font: 700 clamp(32px, 6.5vw, 54px)/1.1 var(--f-title); color: var(--maroon);
+  margin: 4px 0 2px; letter-spacing: 0.04em;
+  text-shadow: 0 1.5px 0 rgba(255,255,255,0.85);
+}
+.t07-hero-names i {
+  display: inline-block; font: italic 400 0.72em var(--f-head); color: var(--gold);
+  margin: 0 8px;
+}
+.t07-hero-parents {
+  font: 500 clamp(12px, 1.8vw, 15px) var(--f-head); color: var(--muted);
+  margin: 0; letter-spacing: 0.02em;
+}
+.t07-hero-copy {
+  max-width: 520px; margin: 6px auto 0;
+  font: italic 500 clamp(15px, 2.2vw, 18px)/1.5 var(--f-head); color: var(--muted);
+}
+
+/* Hero Guest Box */
+.t07-hero-guest-box {
+  width: 100%; max-width: 420px; margin: 16px auto 0;
+  padding: 14px 22px; border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,253,249,0.96), rgba(251,245,232,0.96));
+  border: 1.5px solid rgba(198,156,71,0.75);
+  box-shadow: 0 8px 24px rgba(136,26,43,0.1), inset 0 1px 0 rgba(255,255,255,0.95);
+  text-align: center;
+}
+.t07-hero-guest-sal {
+  display: block; font: 700 11px var(--f-title); letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--gold-dark); margin-bottom: 3px;
+}
+.t07-hero-guest-name {
+  font: 700 clamp(20px, 3.8vw, 26px)/1.2 var(--f-title); color: var(--maroon);
+  margin: 0 0 4px;
+}
+.t07-hero-guest-pill {
+  display: inline-block; padding: 3px 16px; border-radius: 16px;
+  background: rgba(198,156,71,0.2); border: 1px solid rgba(198,156,71,0.55);
+  font: 600 12px var(--f-body); color: #5C4116;
+}
+
+/* Frieze animation */
+.t07-frieze {
+  position: absolute; left: 0; right: 0; bottom: 0; height: clamp(48px, 6.5vh, 72px);
+  overflow: hidden; z-index: 3; pointer-events: none;
+}
+.t07-fz-track {
+  display: flex; height: 100%; width: max-content; animation: t07March 70s linear infinite;
+}
+.t07-fz-track svg { flex: 0 0 auto; height: 100%; width: auto; aspect-ratio: 1200/190; }
+@keyframes t07March { from { transform: translate3d(-50%,0,0); } to { transform: translate3d(0,0,0); } }
+
+/* Story / Journey Section */
+section[data-sec="story"] {
+  background: radial-gradient(ellipse 70% 30% at 50% 0%, rgba(255,255,255,0.8), transparent 70%),
+              linear-gradient(180deg, var(--ivory), var(--ivory-warm) 50%, var(--ivory));
+  padding: 80px 0;
+}
+.t07-poem {
+  max-width: 660px; margin: 0 auto 44px; padding: 28px 24px; text-align: center;
+  border-radius: 24px; background: linear-gradient(180deg, rgba(255,253,249,0.96), rgba(251,245,232,0.94));
+  border: 1.5px solid rgba(198,156,71,0.6); box-shadow: 0 16px 36px rgba(136,26,43,0.08);
+}
+.t07-poem p {
+  margin: 0; font: italic 600 clamp(18px, 3.2vw, 23px)/1.65 var(--f-head); color: var(--maroon);
+}
+.t07-poem small {
+  display: block; margin-top: 10px; font: 700 12px var(--f-title);
+  letter-spacing: 0.24em; color: var(--gold-dark); text-transform: uppercase;
+}
+
+.t07-chap {
+  display: grid; grid-template-columns: clamp(100px, 26vw, 160px) 1fr;
+  gap: clamp(16px, 4vw, 36px); align-items: center; text-align: left;
+  max-width: 680px; margin: 0 auto 44px;
+}
+.t07-chap:last-child { margin-bottom: 0; }
+.t07-chap.t07-chap-rev {
+  grid-template-columns: 1fr clamp(100px, 26vw, 160px); text-align: right;
+}
+.t07-chap.t07-chap-rev .t07-medal { order: 2; justify-self: end; }
+.t07-chap.t07-chap-rev .t07-chap-txt { order: 1; text-align: right; align-items: flex-end; }
+
+.t07-medal {
+  position: relative; width: 100%; max-width: 160px; aspect-ratio: 1/1;
+  border-radius: 50%; padding: 6px;
+  background: conic-gradient(from 0deg, var(--gold), #FFF0AA, var(--gold), #FAE6AA, var(--gold));
+  box-shadow: 0 12px 30px rgba(136,26,43,0.18), 0 0 0 3px rgba(198,156,71,0.4);
+  flex-shrink: 0;
+}
+.t07-medal > div {
+  position: relative; width: 100%; height: 100%; border-radius: 50%;
+  overflow: hidden; border: 3px solid #FFFDF7; background: #F8EEDC;
+}
+.t07-medal img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+.t07-num {
+  font: 700 clamp(32px, 6.5vw, 48px)/1 var(--f-title); color: transparent;
+  -webkit-text-stroke: 1.3px var(--gold-dark); margin-bottom: 2px; display: inline-block;
+}
+.t07-chap h3 {
+  font: 700 clamp(19px, 3.6vw, 26px)/1.2 var(--f-title); color: var(--maroon); margin: 0 0 6px;
+}
+.t07-chap p {
+  margin: 0; color: var(--muted); font: 500 clamp(14px, 2.2vw, 16px)/1.55 var(--f-head); max-width: 440px;
+}
+
+/* Save the Date Section */
+.t07-sec-date {
+  background: radial-gradient(ellipse 70% 30% at 50% 0%, rgba(255,255,255,0.7), transparent 70%),
+              linear-gradient(180deg, var(--ivory), var(--ivory-warm) 50%, var(--ivory));
+  padding: 70px 0 90px;
+}
+.t07-datecard {
+  position: relative; max-width: 540px; margin: 0 auto; padding: 40px 24px 34px;
+  border-radius: 28px; background: linear-gradient(180deg, #FFFDF9, #FBF4E7);
+  border: 1.5px solid rgba(198,156,71,0.65);
+  box-shadow: 0 22px 50px rgba(136,26,43,0.12), 0 0 0 6px rgba(255,253,249,0.8);
+  text-align: center;
+}
+.t07-cal-m {
+  font: 700 clamp(24px, 5.5vw, 34px) var(--f-title); color: var(--maroon);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.t07-cal-y { font: italic 600 22px var(--f-head); color: var(--gold-dark); margin-top: -2px; }
+.t07-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+  max-width: 340px; margin: 22px auto 0; font: 600 15px var(--f-title);
+}
+.t07-cal-h { font: 700 12px var(--f-body); color: var(--muted); padding: 4px 0; }
+.t07-cal-d {
+  aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%;
+  color: var(--ink); transition: background 0.2s;
+}
+.t07-cal-on {
+  background: var(--maroon) !important; color: #fff !important;
+  box-shadow: 0 4px 14px rgba(136,26,43,0.35);
+}
+.t07-cal-dot { position: relative; }
+.t07-cal-dot:after {
+  content: ""; position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--gold-dark); transform: translateX(-50%);
+}
+.t07-cal-time { margin: 26px 0 0; font: italic 600 19px var(--f-head); color: var(--maroon); }
+
+.t07-cd { display: flex; justify-content: center; gap: 8px; margin: 20px 0 0; }
+.t07-cd div {
+  min-width: 66px; padding: 10px 6px 8px; border: 1.8px solid rgba(198,156,71,0.65);
+  border-radius: 18px; background: rgba(255,253,249,0.9); overflow: hidden;
+}
+.t07-cd b {
+  display: block; font: 700 28px/1.1 var(--f-title); color: var(--maroon);
+  font-variant-numeric: tabular-nums;
+}
+.t07-cd small {
+  font: 700 11px var(--f-body); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted);
+}
+.t07-btn-gcal {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 28px; font-size: clamp(14px, 2.5vw, 16px); font-weight: 700;
+  border-radius: 999px; background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+  color: #FFFDF7 !important; box-shadow: 0 8px 24px rgba(136,26,43,0.35), 0 0 0 2px rgba(198,156,71,0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease; text-decoration: none; margin-top: 22px;
+}
+.t07-btn-gcal:hover {
+  transform: translateY(-2px); box-shadow: 0 12px 28px rgba(136,26,43,0.45);
+}
+
+/* Auspicious Rituals Timeline */
+.t07-sec-ev {
+  background: radial-gradient(ellipse 60% 20% at 70% 10%, rgba(255,255,255,0.7), transparent 70%),
+              linear-gradient(180deg, var(--ivory-warm), #F5E8D2 60%, var(--ivory-warm));
+}
+.t07-day {
+  display: block; margin: 34px 0 16px; font: 700 15px var(--f-title);
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-dark); text-align: center;
+}
+.t07-day:first-of-type { margin-top: 0; }
+.t07-evs { display: grid; gap: 24px; }
+.t07-evcard {
+  border-radius: 22px; overflow: hidden; background: linear-gradient(180deg, #FFFDF9, #FBF4E7);
+  border: 1px solid rgba(198,156,71,0.55); box-shadow: 0 16px 36px rgba(136,26,43,0.08);
+  transition: transform 0.4s var(--ease), box-shadow 0.4s;
+}
+.t07-evcard:hover { transform: translateY(-3px); box-shadow: 0 22px 46px rgba(136,26,43,0.14); }
+.t07-evimg {
+  height: clamp(220px, 42vw, 300px); overflow: hidden; position: relative;
+  background: linear-gradient(135deg, #FCF2E3, #F5DED0);
+}
+.t07-evimg img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center 15%;
+  transition: transform 1.2s var(--ease);
+}
+.t07-evcard:hover .t07-evimg img { transform: scale(1.05); }
+.t07-evtop { display: flex; align-items: center; gap: 16px; padding: 18px 20px 0; }
+.t07-evdate {
+  flex: 0 0 auto; width: 64px; padding: 8px 0 6px; text-align: center;
+  border-radius: 14px; background: var(--maroon); color: #fff;
+  box-shadow: 0 6px 14px rgba(136,26,43,0.28);
+}
+.t07-evdate b { display: block; font: 700 24px/1 var(--f-title); }
+.t07-evdate small { font: 600 11px var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.t07-evtop h3 {
+  font: 700 clamp(21px, 5vw, 27px)/1.2 var(--f-title); color: var(--maroon); margin: 0;
+}
+.t07-evb { padding: 12px 20px 20px; }
+.t07-meta { font: 600 16px var(--f-head); color: var(--ink); margin: 4px 0; }
+.t07-meta b { color: var(--maroon); margin-right: 8px; font-weight: 700; }
+.t07-desc { font-size: 16px; color: var(--muted); margin: 8px 0 12px; }
+.t07-dress {
+  display: inline-flex; align-items: center; gap: 9px; padding: 6px 16px 6px 10px;
+  border-radius: 30px; border: 1.6px solid rgba(198,156,71,0.5);
+  background: rgba(255,253,249,0.85); font: 600 14px var(--f-head);
+}
+.t07-sw { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); }
+
+/* Scratch & Reveal Surprise Card */
+.t07-sec-reveal {
+  background: linear-gradient(180deg, var(--ivory), #FEF5ED 50%, var(--ivory)); padding: 84px 0;
+}
+.t07-scratch-card {
+  position: relative; width: 100%; max-width: 440px; margin: 0 auto; min-height: 220px;
+  border-radius: 24px; border: 1.5px solid rgba(198,156,71,0.6);
+  box-shadow: 0 20px 48px rgba(136,26,43,0.12), 0 0 0 5px rgba(255,253,249,0.8);
+  overflow: hidden; background: linear-gradient(180deg, #FFFDF9, #FFF8EE);
+}
+.t07-scratch-secret {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 26px 20px; text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, #FFFAF2 40%, #FBF0DF 100%);
+}
+.t07-scratch-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3;
+  touch-action: none; cursor: crosshair; transition: opacity 0.6s ease;
+}
+.t07-scratch-overlay {
+  position: absolute; inset: 0; z-index: 4; display: grid; place-items: center;
+  background: linear-gradient(135deg, rgba(136,26,43,0.95), rgba(99,16,29,0.96));
+  color: #fff; pointer-events: none; transition: opacity 0.5s ease;
+}
+.t07-scratch-card.t07-active .t07-scratch-overlay { opacity: 0; }
+.t07-scratch-card.t07-cleared .t07-scratch-canvas { opacity: 0; pointer-events: none; }
+
+/* Moments of Love Gallery */
+.t07-flow {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 20px 24px 30px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.t07-flow::-webkit-scrollbar { display: none; }
+.t07-flow figure {
+  flex: 0 0 min(68vw, 290px); aspect-ratio: 3/4; margin: 0; position: relative;
+  padding: 10px 10px 32px; scroll-snap-align: center; cursor: zoom-in;
+  background: #FFFDF9; border: 1px solid rgba(198,156,71,0.6); border-radius: 6px;
+  box-shadow: 0 16px 36px rgba(136,26,43,0.12); transition: transform 0.4s var(--ease);
+}
+.t07-flow figure:nth-child(odd) { transform: rotate(-1.4deg); }
+.t07-flow figure:nth-child(even) { transform: rotate(1.2deg); }
+.t07-flow figure:hover { transform: rotate(0) translateY(-6px); }
+.t07-flow figure:before {
+  content: ""; position: absolute; top: -10px; left: 50%; width: 70px; height: 22px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: repeating-linear-gradient(45deg, rgba(198,156,71,0.75) 0 6px, rgba(242,221,164,0.75) 6px 12px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.t07-flow img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
+.t07-lb {
+  position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center;
+  padding: 20px; background: rgba(30,8,13,0.92); cursor: zoom-out;
+}
+.t07-lb img { max-width: min(94vw, 900px); max-height: 88vh; border-radius: 8px; }
+
+/* Royal Palace Venue */
+.t07-venue-grid {
+  display: grid; gap: 24px; max-width: 900px; margin: 0 auto;
+}
+@media (min-width: 820px) {
+  .t07-venue-grid { grid-template-columns: 1fr 1fr; align-items: center; }
+}
+.t07-venue-photo {
+  position: relative; height: clamp(240px, 50vw, 360px); margin: 0;
+  border-radius: 200px 200px 22px 22px; overflow: hidden;
+  border: 1.5px solid var(--gold); box-shadow: 0 24px 56px rgba(136,26,43,0.18);
+}
+.t07-venue-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.t07-vcard {
+  padding: 32px 24px; text-align: center; border-radius: 26px;
+  background: linear-gradient(180deg, #FFFDF9, #FBF4E7); border: 1px solid rgba(198,156,71,0.6);
+  box-shadow: 0 20px 48px rgba(136,26,43,0.1);
+}
+.t07-vcard h3 {
+  font: 700 clamp(24px, 5.5vw, 32px)/1.2 var(--f-title); color: var(--maroon); margin: 4px 0 8px;
+}
+.t07-vcard p { font-size: 16.5px; color: var(--muted); margin: 0 0 20px; }
+
+/* RSVP Section & Ornate Letter */
+.t07-sec-rsvp {
+  background: radial-gradient(ellipse at 50% 50%, rgba(198,156,71,0.08), transparent 70%),
+              linear-gradient(180deg, var(--ivory-warm), #F5E8D2);
+  padding-bottom: 70px;
+}
+.t07-rsvp-launch-btn {
+  display: inline-flex; align-items: center; gap: 16px; min-height: 68px; padding: 12px 32px;
+  border-radius: 38px; background: linear-gradient(135deg, var(--maroon), var(--maroon-dark));
+  color: #fff; border: 2px solid var(--gold); box-shadow: 0 16px 36px rgba(136,26,43,0.35);
+  cursor: pointer; transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+.t07-rsvp-launch-btn:hover {
+  transform: translateY(-3px); box-shadow: 0 22px 48px rgba(136,26,43,0.45);
+}
+
+/* Royal RSVP Modal Dialog */
+.t07-rsvp-modal {
+  position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh;
+  margin: 0; padding: 20px 14px; border: 0; background: rgba(28, 8, 13, 0.88);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999;
+}
+.t07-rsvp-modal:not([open]) { display: none; }
+.t07-rsvp-modal[open] { display: grid; place-items: center; }
+.t07-modal-card {
+  position: relative; width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
+  padding: 32px 24px 28px; border-radius: 28px; background: linear-gradient(180deg, #FFFDF9, #FBF4E7);
+  border: 1.8px solid var(--gold); box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+}
+.t07-modal-close {
+  position: absolute; top: 16px; right: 18px; width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid rgba(198,156,71,0.6); background: #FFFDF9; color: var(--ink);
+  font-size: 18px; font-weight: 700; cursor: pointer; display: grid; place-items: center;
+}
+.t07-modal-close:hover { background: var(--maroon); color: #fff; }
+
+.t07-rsvp {
+  position: relative; max-width: 440px; margin: 0 auto; padding: 36px 22px 22px;
+  border-radius: 30px; background: linear-gradient(180deg, #FFFDF9, #FBF4E7);
+  border: 1px solid rgba(198,156,71,0.6); box-shadow: 0 24px 50px rgba(136,26,43,0.18);
+}
+.t07-stamp {
+  position: absolute; top: -22px; right: 14px; width: 66px; height: auto;
+  transform: rotate(6deg); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); z-index: 3;
+}
+.t07-st { font: 700 20px "Cinzel", serif; fill: #FFFDF9; text-anchor: middle; }
+.t07-postmark {
+  position: absolute; top: -10px; right: 62px; width: 78px; height: 78px;
+  transform: rotate(-14deg); opacity: 0.45; z-index: 2; pointer-events: none;
+}
+
+.t07-lab { display: block; font: 600 18px var(--f-head); color: var(--ink); margin: 0 0 8px; }
+.t07-fld { margin: 0 0 20px; position: relative; }
+.t07-input {
+  width: 100%; height: 52px; border-radius: 16px; border: 1.8px solid rgba(198,156,71,0.6);
+  background: rgba(255,253,249,0.9); padding: 0 16px; font: 500 18px var(--f-body);
+  color: var(--ink); outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+}
+textarea.t07-input { height: 100px; padding: 12px 16px; resize: none; line-height: 1.5; }
+.t07-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 4px rgba(136,26,43,0.15); }
+.t07-input-readonly { background: #F3EAE0 !important; cursor: not-allowed; }
+
+.t07-opt {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px;
+  margin: 0 0 10px; padding: 0 16px; border-radius: 16px;
+  border: 1.8px solid rgba(198,156,71,0.6); background: rgba(255,253,249,0.9);
+  font: 700 18px var(--f-head); color: var(--ink); text-align: left;
+}
+.t07-rd {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid rgba(198,156,71,0.6); display: grid; place-items: center;
+}
+.t07-rd svg { opacity: 0; transform: scale(0.4); transition: all 0.25s var(--ease); }
+.t07-opt[aria-pressed="true"] {
+  background: var(--maroon); border-color: var(--maroon); color: #fff;
+}
+.t07-opt[aria-pressed="true"] .t07-rd { background: #fff; border-color: #fff; color: var(--maroon); }
+.t07-opt[aria-pressed="true"] .t07-rd svg, .t07-chip[aria-pressed="true"] .t07-rd svg { opacity: 1; transform: none; }
+
+.t07-chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.t07-chip {
+  flex: 1 1 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 42px;
+  padding: 0 14px 0 8px; border-radius: 24px; border: 1.6px solid rgba(198,156,71,0.6);
+  background: transparent; font: 700 16px var(--f-head); color: var(--ink);
+}
+.t07-chip .t07-rd { width: 22px; height: 22px; }
+.t07-chip[aria-pressed="true"] {
+  border-color: var(--maroon); background: rgba(136,26,43,0.1);
+}
+.t07-chip[aria-pressed="true"] .t07-rd { background: var(--maroon); border-color: var(--maroon); color: #fff; }
+
+.t07-send {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; height: 54px; margin-top: 6px; border: 0; border-radius: 30px;
+  background: var(--maroon); color: #fff; font: 700 18px var(--f-title);
+  box-shadow: 0 14px 26px rgba(136,26,43,0.35); transition: transform 0.3s var(--ease);
+}
+.t07-send:hover { transform: translateY(-2px); }
+
+/* Finale */
+.t07-end {
+  position: relative; text-align: center; padding: 70px 22px 140px;
+  background: linear-gradient(180deg, #F5E8D2, var(--ivory) 40%); overflow: hidden;
+}
+.t07-end h2 {
+  font: 700 clamp(36px, 7vw, 60px)/1.15 var(--f-title); color: var(--maroon); margin: 0;
+}
+.t07-end p {
+  font: 700 13px var(--f-title); letter-spacing: 0.22em; color: var(--gold-dark);
+  margin: 10px 0 0; text-transform: uppercase;
+}
+
+/* Golden Pulse Highlight for Dates section */
+@keyframes t07DatesHighlight {
+  0% { box-shadow: 0 0 0 0 rgba(198,156,71,0.65); }
+  50% { box-shadow: 0 0 0 16px rgba(198,156,71,0); border-color: #C69C47; }
+  100% { box-shadow: 0 0 0 0 rgba(198,156,71,0); }
+}
+.t07-dates-highlight-pulse {
+  animation: t07DatesHighlight 1.6s ease-out 2;
+}
 `;
 
-/* ---------- render ---------- */
-export default function render({ guest, wedding, events = [] } = {}) {
+/* ---------- Render Function ---------- */
+export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
   const w = wedding || {};
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo');
   const g = guest || {};
-  const evs = Array.isArray(events) ? events : [];
-  const offset = clean(w.timezone_offset) || '+05:30';
+  const assetBase = clean(w.asset_base) || './assets/';
 
-  const rawBride = clean(w.bride_name) || 'Bride';
-  const rawGroom = clean(w.groom_name) || 'Groom';
+  const storedBride = getStoredPhoto('wedding-bride-photo') || getStoredPhoto('wedding_bride_photo') || getStoredPhoto('onboard-bride-photo');
+  const storedGroom = getStoredPhoto('wedding-groom-photo') || getStoredPhoto('wedding_groom_photo') || getStoredPhoto('onboard-groom-photo');
+  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
+  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo') || getStoredPhoto('venue_photo') || getStoredPhoto('banquet_photo');
+
+  const rawBride = clean(w.bride_name) || 'Sanjukta';
+  const rawGroom = clean(w.groom_name) || 'Purushottam';
   const brideFirst = clean(w.name_order) === 'bride_first';
-  const [rawFirst, rawSecond] = brideFirst ? [rawBride, rawGroom] : [rawGroom, rawBride];
-  const first = esc(rawFirst), second = esc(rawSecond);
-  const initials = `${rawFirst.charAt(0)} &amp; ${rawSecond.charAt(0)}`.toUpperCase();
-  const monoInit = `${esc(rawFirst.charAt(0).toUpperCase())}&amp;${esc(rawSecond.charAt(0).toUpperCase())}`;
-  const guestName = esc(clean(guest?.name) || 'Respected Guest');
-  const guestLine = guest?.with_family ? `${guestName} &amp; Family` : guestName;
-  const invocation = esc(clean(w.invocation) || 'Shree Ganeshaya Namah');
-  const venue = esc(clean(w.venue) || 'Wedding Venue');
-  const address = esc(clean(w.address));
-  const city = esc(clean(w.city));
-  const where = [venue, city].filter(Boolean).join(', ');
-  const families = clean(w.families);
-  const signature = esc(clean(w.footer_text) || families || `The ${clean(w.bride_name).split(/\s+/).pop() || 'Bride'} & ${clean(w.groom_name).split(/\s+/).pop() || 'Groom'} Families`);
-  const poem = esc(clean(w.poem) || 'Two hearts, one beautiful story, one promise, a lifetime of love. May every tomorrow shine brighter together.');
-  const inviteText = esc(clean(w.invite_text) || 'Request the pleasure of your company as they begin their beautiful journey together.');
-  const hashtag = esc(clean(w.hashtag));
+  const [fName, sName] = brideFirst ? [rawBride, rawGroom] : [rawGroom, rawBride];
 
+  const hasFamily = Boolean(g.with_family || (g.persons && Number(g.persons) > 1));
+  const guestName = clean(g.name) || (hasFamily ? 'Respected Guest & Family' : 'Respected Guest');
+  const guestPersons = Number(g.persons) || (hasFamily ? 4 : 1);
+  const guestBadgeText = hasFamily
+    ? (guestPersons > 1 ? `Family Invitation · ${guestPersons} Persons` : 'Family Invitation')
+    : 'Personal Invitation · 1 Person';
+
+  // Invocation
+  const rawInvoc = clean(w.invocation) || '|| শ্রী শ্রী প্রজাপতয়ে নমঃ ||';
+  const isArabicInvoc = /[\u0600-\u06FF]/.test(rawInvoc);
+  const invocSub = clean(w.invocation_sub) || 'WITH THE BLESSINGS OF ALMIGHTY & ELDERS';
+
+  // Palace Venue
+  const venueTitleText = clean(w.venue) || clean(w.venue_title) || clean(w.hall) || clean(w.banquet) || 'The Royal Heritage Banquet Palace';
+  const venueAddress = clean(w.address) || clean(w.city) || '14 Palace Courtyard Road, Alipore, Kolkata — 700027';
+  const venueComment = clean(w.comment && w.comment !== clean(w.venue) ? w.comment : (clean(w.venue_comment) || clean(w.note) || 'Gate No. 2 • Complimentary Royal Valet Parking Available for All Guests'));
+  const mapUrl = safeUrl(w.map_url) || (venueTitleText ? esc(`https://maps.google.com/?q=${encodeURIComponent(venueTitleText + ', ' + venueAddress)}`) : '');
+
+  // Wedding Date & Time
   const day = dparts(w.date);
-  const dateLong = day ? longDate(day) : 'Date to be announced';
-  const dayName = day ? weekday(day) : '';
-  const timeText = fmtTime(w.time);
-  const whenTs = parseWhen(w.date, w.time, offset);
+  const dateStr = day ? `${pad(day.d)} ${MONTHS[day.mo - 1]} ${day.y}` : '20 – 28 November 2026';
+  const timeFormatted = fmtTime(w.time) || '7:00 PM onwards';
+  const dayName = day ? weekday(day) : 'Friday';
+  const offset = clean(w.timezone_offset) || '+05:30';
+  const whenTs = parseWhen(w.date, w.time, offset) || Date.now() + 86400000 * 7;
 
-  const mapUrl = safeUrl(w.map_url) || (clean(w.venue) || clean(w.address)
-    ? esc(`https://www.google.com/maps/search/?${new URLSearchParams({ api: '1', query: [w.venue, w.address].filter(Boolean).join(', ') })}`) : '');
-  const iso = t => new Date(t).toISOString().replace(/[-:]|\.\d{3}/g, '');
-  const calUrl = (whenTs && clean(w.time))
-    ? esc(`https://calendar.google.com/calendar/render?${new URLSearchParams({ action: 'TEMPLATE', text: `Wedding of ${rawFirst} & ${rawSecond}`, dates: `${iso(whenTs)}/${iso(whenTs + 4 * 3600e3)}`, location: [w.venue, w.address, w.city].map(clean).filter(Boolean).join(', ') })}`) : '';
-  const contacts = lines(w.rsvp_contacts);
-  const phoneRaw = clean(w.rsvp_number) || contacts[0] || '';
-  const digits = phoneRaw.replace(/\D/g, '');
-  const wa = digits.length === 10 ? `91${digits}` : digits;
-  const canRsvp = wa.length >= 10;
+  // Google Calendar URL
+  const calDates = whenTs ? `${new Date(whenTs).toISOString().replace(/[-:]|\.\d{3}/g, '')}/${new Date(whenTs + 4 * 3600000).toISOString().replace(/[-:]|\.\d{3}/g, '')}` : '20261128T133000Z/20261128T173000Z';
+  const calUrl = esc(`https://calendar.google.com/calendar/render?${new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Wedding of ${fName} & ${sName}`,
+    dates: calDates,
+    details: `Wedding Celebrations of ${fName} & ${sName}. Venue: ${venueTitleText}, ${venueAddress}`,
+    location: `${venueTitleText}, ${venueAddress}`
+  })}`);
 
-  const heroImg = safeImg(w.hero_image);
-  const heroList = [heroImg, U('1519741497674-611481863552', 1200), U('1465495976277-4387d4b0b4c6', 1200), U('1522413452208-996ff3f3e740', 1200)].filter(Boolean);
-  const venueImg = safeImg(w.venue_image) || U('1477587458883-47145ed94245', 1200);
-  const story = readStory(w.story);
-  const gallery = readGallery(w.gallery);
+  // Parents & Copy
+  const brideParents = clean(w.bride_parents);
+  const groomParents = clean(w.groom_parents);
+  const inviteText = clean(w.invite_text) || 'Request the pleasure of your company as they begin their sacred journey together.';
+  const poem = clean(w.poem) || 'Two souls united by destiny, blessed with eternal love, walking seven sacred steps toward a lifetime of happiness.';
+  const families = clean(w.families) || `The ${rawBride.split(/\s+/).pop() || 'Bride'} & ${rawGroom.split(/\s+/).pop() || 'Groom'} Families`;
 
-  /* events grouped by day, sorted */
+  // Photos & Assets
+  const heroCoupleImg = safeImg(w.couple_photo) || safeImg(w.hero_image) || safeImg(storedCouple) || `${assetBase}template-06-couple.webp`;
+  const brideImg = safeImg(w.bride_photo) || safeImg(storedBride) || `${assetBase}template-06-bride.webp`;
+  const groomImg = safeImg(w.groom_photo) || safeImg(storedGroom) || `${assetBase}template-06-groom.webp`;
+  const venueImg = safeImg(w.venue_photo) || safeImg(storedVenue) || `${assetBase}template-06-palace.jpg`;
+  const archImg = './assets/template-07-arch.webp';
+  const doorClosedImg = './assets/template-07-gate-closed.webp';
+
+  // Events
+  const defaultEvents = [
+    { event_name: 'Grand Reception', event_date: clean(w.date) || '2026-11-20', event_time: '19:00', venue: venueTitleText, description: 'Royal feast, musical celebration, and heartfelt blessings.' },
+    { event_name: 'Gaye Holud', event_date: clean(w.date) || '2026-11-28', event_time: '10:30', venue: 'Marigold Courtyard', description: 'Traditional turmeric ceremony, alpana, laughter and music.' },
+    { event_name: 'Mehdi & Sangeet', event_date: clean(w.date) || '2026-11-28', event_time: '15:30', venue: 'Gulab Mahal', description: 'Henna artistry, festive folk dance, and royal cocktails.' },
+    { event_name: 'Biye / Shubho Bibaho', event_date: clean(w.date) || '2026-11-28', event_time: '20:00', venue: venueTitleText, description: 'Sacred Vedic wedding rituals, saat paak, and kanyadan vows.' }
+  ];
+  const evs = (Array.isArray(events) && events.length) ? events : defaultEvents;
+
+  // Group events
   const stamp = e => parseWhen(e.event_date, e.event_time, offset) ?? (dparts(e.event_date) ? Date.UTC(dparts(e.event_date).y, dparts(e.event_date).mo - 1, dparts(e.event_date).d) : Infinity);
-  const sorted = [...evs].sort((a, b) => stamp(a) - stamp(b));
+  const sortedEvs = [...evs].sort((a, b) => stamp(a) - stamp(b));
   const groups = [];
-  sorted.forEach(e => {
+  sortedEvs.forEach(e => {
     const p = dparts(e.event_date);
     const key = p ? `${p.y}-${p.mo}-${p.d}` : 'tbd';
-    let g = groups.find(x => x.key === key);
-    if (!g) groups.push(g = { key, p, items: [] });
-    g.items.push(e);
+    let gGroup = groups.find(x => x.key === key);
+    if (!gGroup) groups.push(gGroup = { key, p, items: [] });
+    gGroup.items.push(e);
   });
-  let n = 0;
-  const eventsHtml = groups.map((g, gi) => {
-    const label = `Day ${ORD[gi] || gi + 1}${g.p ? ` · ${weekday(g.p)}, ${shortDate(g.p)}` : ''}`;
-    const items = g.items.map(e => {
-      const name = clean(e.event_name) || 'Celebration';
-      const k = kindOf(name);
-      const side = n++ % 2 === 0 ? 't7-l' : 't7-r';
-      const img = safeImg(e.image_url) || U(k.img);
-      const loc = clean(e.venue || e.address) || clean(w.venue);
-      const t = fmtTime(e.event_time);
-      const color = /^#[0-9a-f]{3,8}$/i.test(clean(e.dress_color)) ? clean(e.dress_color) : k.dress;
-      return `<article class="t7-tl-item ${side} t7-reveal">
-        <span class="t7-tl-dot" aria-hidden="true"></span>
-        <div class="t7-tl-time">${t ? esc(t) : '✦'}</div>
-        <div class="t7-tl-card">
-          <div class="t7-tl-img t7-ph"><img class="t7-fi" src="${esc(img)}" data-fallback="${esc(U(k.alt))}" alt="${esc(name)}" loading="lazy" decoding="async"><span class="t7-tl-ic" aria-hidden="true">${k.icon}</span></div>
-          <div class="t7-tl-b"><h3>${esc(name)}</h3>${clean(e.local_name) ? `<small>${esc(e.local_name)}</small>` : ''}
-            ${loc ? `<div class="t7-tl-meta"><b>⌖</b>${esc(loc)}</div>` : ''}
-            ${clean(e.description) ? `<p>${esc(e.description)}</p>` : ''}
-            ${clean(e.dress_code) ? `<div class="t7-dress"><span class="t7-sw" style="background:${color}"></span>Dress code: ${esc(e.dress_code)}</div>` : ''}
-          </div></div></article>`;
+
+  const eventsHtml = groups.map((gGroup, gi) => {
+    const dayLabel = gGroup.p
+      ? `Day ${ORD[gi] || gi + 1} · ${DAYS[new Date(Date.UTC(gGroup.p.y, gGroup.p.mo - 1, gGroup.p.d)).getUTCDay()]}, ${pad(gGroup.p.d)} ${MONTHS[gGroup.p.mo - 1].slice(0, 3)} ${gGroup.p.y}`
+      : `Day ${ORD[gi] || gi + 1}`;
+    const cards = gGroup.items.map(e => {
+      const eName = clean(e.event_name || e.name || e.title || 'Celebration');
+      const k = kindOf(eName);
+      const eImg = safeImg(e.image) || safeImg(e.event_image) || (k.asset ? `${assetBase}${k.asset}` : '');
+      const eLoc = clean(e.venue || e.address || venueTitleText);
+      const eTime = fmtTime(e.event_time) || timeFormatted;
+      const p = dparts(e.event_date);
+      const dress = clean(e.dress_code) || k.dress;
+      const color = /^#[0-9a-f]{3,8}$/i.test(clean(e.dress_color)) ? clean(e.dress_color) : k.c;
+      const desc = clean(e.description || e.comment || e.note || '');
+
+      return `
+        <article class="t07-evcard">
+          ${eImg ? `<div class="t07-evimg"><img src="${esc(eImg)}" alt="${esc(eName)}" loading="lazy" decoding="async"></div>` : ''}
+          <div class="t07-evtop">
+            ${p ? `<div class="t07-evdate"><b>${p.d}</b><small>${esc(MONTHS[p.mo - 1].slice(0, 3))}</small></div>` : ''}
+            <div><h3 class="font-cinzel">${esc(eName)}</h3></div>
+          </div>
+          <div class="t07-evb">
+            ${eTime ? `<div class="t07-meta"><b>◷</b>${esc(eTime)}</div>` : ''}
+            ${eLoc ? `<div class="t07-meta"><b>⌖</b>${esc(eLoc)}</div>` : ''}
+            ${desc ? `<p class="t07-desc">${esc(desc)}</p>` : ''}
+            ${dress ? `<div class="t07-dress"><span class="t07-sw" style="background:${color}"></span>Attire: ${esc(dress)}</div>` : ''}
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(198,156,71,0.3);display:flex;justify-content:space-between;align-items:center;font-size:12px">
+              <span style="color:var(--muted)">Bless with Presence</span>
+              <button type="button" data-open-rsvp style="background:none;border:none;cursor:pointer;font-weight:700;color:var(--maroon);font-family:'Cinzel',serif;font-size:11px">
+                RSVP →
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
     }).join('');
-    return `<span class="t7-day t7-reveal">${esc(label)}</span>${items}`;
+    return `<span class="t07-day">${esc(dayLabel)}</span><div class="t07-evs">${cards}</div>`;
   }).join('');
 
-  const travel = [clean(w.travel_info) && ['✈', w.travel_info], clean(w.stay_info) && ['⌂', w.stay_info]].filter(Boolean);
-  const dateNums = day ? `${pad(day.d)} · ${pad(day.mo)} · ${day.y}` : 'To be announced';
+  // Calendar Grid
+  let calHtml = '';
+  if (day) {
+    const first = new Date(Date.UTC(day.y, day.mo - 1, 1)).getUTCDay();
+    const dim = new Date(Date.UTC(day.y, day.mo, 0)).getUTCDate();
+    const dots = new Set(evs.map(e => dparts(e.event_date)).filter(p => p && p.y === day.y && p.mo === day.mo).map(p => p.d));
+    const head = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(h => `<span class="t07-cal-h">${h}</span>`).join('');
+    let cells = '';
+    for (let i = 0; i < first; i++) cells += '<span></span>';
+    for (let d = 1; d <= dim; d++) {
+      cells += d === day.d
+        ? `<span class="t07-cal-d t07-cal-on" aria-label="Wedding day"><b>${d}</b></span>`
+        : `<span class="t07-cal-d${dots.has(d) ? ' t07-cal-dot' : ''}">${d}</span>`;
+    }
+    calHtml = `<div class="t07-cal-grid" role="img" aria-label="${esc(MONTHS[day.mo - 1])} ${day.y}">${head}${cells}</div>`;
+  }
+
+  // RSVP Ceremony selection chips
+  const seenFns = new Set();
+  const fchips = sortedEvs.filter(e => {
+    const n = clean(e.event_name || e.name || 'Ceremony');
+    if (seenFns.has(n)) return false;
+    seenFns.add(n); return true;
+  }).map(e => {
+    const n = clean(e.event_name || e.name);
+    return `<button type="button" class="t07-chip" data-fn="${esc(n)}" aria-pressed="true"><span class="t07-rd">${CHECK_SVG}</span><span>${esc(n)}</span></button>`;
+  }).join('');
+
+  // Story & Moments vignettes
+  const storyVignettes = [heroCoupleImg, `${assetBase}template-06-jaimala.jpg`, `${assetBase}template-06-phere.jpg`];
+  const galleryItems = [heroCoupleImg, brideImg, groomImg, venueImg];
+  const stampEl = stampSvg(`${fName.charAt(0)}&${sName.charAt(0)}`);
+  const postEl = postmark(clean(w.city) || 'Kolkata', dateStr.replace(/\s+/g, '.'));
+  const FRIEZE_USE = n => `<svg viewBox="0 0 1200 190" preserveAspectRatio="xMinYMax meet" aria-hidden="true" focusable="false"><use href="#t07-fz"/></svg>`.repeat(n);
+  const frieze = `<div class="t07-frieze" aria-hidden="true"><div class="t07-fz-track">${FRIEZE_USE(8)}</div></div>`;
 
   return `
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="${FONT_HREF}" rel="stylesheet" data-t7-fonts>
+<link href="${FONT_HREF}" rel="stylesheet" data-t07-fonts>
 <style>${STYLE}</style>
-<noscript><style>.t7-entry{display:none!important}.t7.t7-locked{height:auto!important;max-height:none!important;overflow:visible!important}.t7-reveal{opacity:1!important;transform:none!important}.t7 img.t7-fi{opacity:1!important}.t7-hero-img{opacity:1}</style></noscript>
-<div class="t7 t7-js t7-locked" style="${themeVars(w)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeUrl(w.music_url)}" data-hero-imgs="${esc(JSON.stringify(heroList))}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
-  <div class="t7-progress" aria-hidden="true"></div>
 
-  <div class="t7-entry" role="dialog" aria-label="Wedding invitation envelope">
-    <div class="t7-entry-in">
-      <div class="t7-kicker">YOU ARE INVITED</div>
-      <div class="t7-env">
-        <div class="t7-env-back"></div>
-        <div class="t7-letter"><small>THE WEDDING OF</small><b>${first} &amp; ${second}</b><em>${esc(day ? longDate(day) : city)}</em></div>
-        <div class="t7-pocket" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="t7-flap" aria-hidden="true"></div>
-        <button class="t7-seal" type="button" data-open aria-label="Open wedding invitation"><b>${esc(rawFirst.charAt(0).toUpperCase())}${esc(rawSecond.charAt(0).toUpperCase())}</b></button>
+<div class="t07-root" data-template="template-07" data-when="${esc(String(whenTs))}">
+  ${DEFS}
+  <div class="t07-progress" aria-hidden="true"></div>
+
+  <!-- HTML5 Canvas for Phuljhari & Fireworks (Pointer events explicitly none) -->
+  <canvas id="t07FxCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:995"></canvas>
+
+  <!-- =======================================================================
+       ACT I: ROYAL SLIDING DOUBLE DOORS GATE (OPENING PHYSICALLY "DHIRE DHIRE")
+       Starting unlit with dark palace gates & starry sky.
+       Double doors physically slide open to the sides upon tapping OPEN!
+  ======================================================================== -->
+  <div id="t07LightsOffOverlay" class="t07-entry t07-unlit t07-lights-off" role="dialog" aria-label="Welcome Ceremony">
+    
+    <!-- Physical Double Sliding Palace Doors Portal (Left & Right halves) -->
+    <div class="t07-doors-portal" aria-label="Open Palace Doors">
+      <div class="t07-cur t07-cl" aria-hidden="true">
+        <div class="t07-door-panel t07-door-left">
+          <img class="t07-door t07-door-l" src="${doorClosedImg}" alt="Left Palace Door" loading="eager" decoding="async">
+        </div>
       </div>
-      <div class="t7-guest-line">Dear ${guestLine}</div>
-      <div class="t7-entry-note">Tap the seal to open</div>
+      <div class="t07-cur t07-cr" aria-hidden="true">
+        <div class="t07-door-panel t07-door-right">
+          <img class="t07-door t07-door-r" src="${doorClosedImg}" alt="Right Palace Door" loading="eager" decoding="async">
+        </div>
+      </div>
+    </div>
+
+    <!-- Twinkling stars container in the nocturnal night sky -->
+    <div id="t07StarsContainer" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:4"></div>
+
+    <!-- Center Gate Card assembly (Sits in front of closed palace doors) -->
+    <div class="t07-gate-in">
+      
+      <!-- 1. Kicker Title -->
+      <p style="font-family:'Cinzel',serif;letter-spacing:0.32em;text-transform:uppercase;color:#E5C16C;font-size:clamp(10px, 1.6vw, 13px);font-weight:700;margin:0 0 0.5rem;text-shadow:0 2px 8px rgba(0,0,0,0.8)">
+        A CELEBRATION OF LOVE
+      </p>
+
+      <!-- 2. Variable Couple Names -->
+      <h1 style="font-family:'Cinzel',serif;font-size:clamp(26px, 5.5vw, 44px);font-weight:800;letter-spacing:0.04em;color:#FFFDF7;line-height:1.15;margin:0 0 1rem;filter:drop-shadow(0 2px 14px rgba(198,156,71,0.5))">
+        ${esc(fName)} <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;color:#C69C47;font-size:0.85em">&amp;</span> ${esc(sName)}
+      </h1>
+
+      <!-- 3. Hanging Swaying Brass Lantern Trigger Assembly -->
+      <div
+        id="t07LanternTrigger"
+        class="t07-lantern-wrap"
+        role="button"
+        tabindex="0"
+        onclick="window.__t07Ignite &amp;&amp; window.__t07Ignite()"
+        aria-label="Tap Lantern to Light Up &amp; Open">
+
+        <!-- Vertical Gold Chain -->
+        <div style="width:2px;height:44px;background:linear-gradient(to bottom, transparent, #C69C47, #F2DDA4)"></div>
+
+        <!-- Swaying Lantern Assembly -->
+        <div class="t07-lantern-sway" style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <div class="t07-lantern-halo" style="position:absolute;inset:-36px;border-radius:9999px;background:radial-gradient(circle,rgba(242,221,164,0.48) 0%,rgba(198,156,71,0.18) 48%,transparent 72%);pointer-events:none"></div>
+
+          <!-- Ornate Brass Lantern SVG -->
+          <svg style="width:100px;height:135px;filter:drop-shadow(0 0 28px rgba(242,221,164,0.85));transition:transform 0.3s" viewBox="0 0 120 160" fill="none">
+            <circle cx="60" cy="12" r="6" stroke="#E5C16C" stroke-width="2.5"/>
+            <path d="M44 34 C44 20, 76 20, 76 34 Z" fill="#967128" stroke="#F2DDA4" stroke-width="1.5"/>
+            <rect x="38" y="34" width="44" height="7" rx="3.5" fill="#C69C47" stroke="#F2DDA4" stroke-width="1.2"/>
+            <path d="M40 41 L80 41 L88 76 L76 116 L44 116 L32 76 Z" fill="url(#t07LanternFlame)" stroke="#E5C16C" stroke-width="2.5"/>
+            <path d="M60 41 L60 116 M48 41 L44 76 L50 116 M72 41 L76 76 L70 116" stroke="#967128" stroke-width="1.5" opacity="0.75"/>
+            <ellipse cx="60" cy="78" rx="11" ry="18" fill="#FFFDF7" opacity="0.95"/>
+            <rect x="42" y="116" width="36" height="7" rx="3" fill="#C69C47" stroke="#F2DDA4" stroke-width="1.2"/>
+            <path d="M48 123 L72 123 L60 144 Z" fill="#967128" stroke="#E5C16C" stroke-width="1.5"/>
+            <circle cx="60" cy="148" r="3.5" fill="#F2DDA4"/>
+            <defs>
+              <radialGradient id="t07LanternFlame" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#FFFDF7"/>
+                <stop offset="45%" stop-color="#F2DDA4"/>
+                <stop offset="85%" stop-color="#C69C47"/>
+                <stop offset="100%" stop-color="#881A2B"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 4. Guest Welcome Card -->
+      <div style="background:rgba(20,4,8,0.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1.5px solid rgba(229,193,108,0.65);border-radius:20px;padding:0.85rem 1.75rem;margin-bottom:1.25rem;width:100%;max-width:360px;box-shadow:0 8px 30px rgba(0,0,0,0.85)">
+        <p style="font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#F2DDA4;margin:0 0 4px">
+          Cordially Invited
+        </p>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:clamp(19px, 3.8vw, 25px);font-weight:700;color:#FFFDF7;margin:0 0 2px;letter-spacing:0.02em">
+          ${esc(guestName)}
+        </p>
+        <p style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:#E5C16C;margin:0">
+          ${esc(guestBadgeText)}
+        </p>
+      </div>
+
+      <!-- 5. Grand "OPEN" Button -->
+      <button
+        type="button"
+        id="t07IgniteBtn"
+        class="t07-open-btn"
+        onclick="window.__t07Ignite &amp;&amp; window.__t07Ignite()"
+        aria-label="Open the wedding invitation"
+        style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0.75rem 2.75rem;border-radius:9999px;border:1.5px solid #E5C16C;background:linear-gradient(135deg, #881A2B, #63101D);color:#FFFDF7;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;box-shadow:0 8px 30px rgba(198,156,71,0.4), 0 0 20px rgba(136,26,43,0.6);cursor:pointer;outline:none">
+        <span style="font-size:16px">✨</span>
+        <span style="letter-spacing:0.25em">OPEN</span>
+      </button>
+
+      <!-- 6. Subtitle Prompt -->
+      <p style="font-family:'Cormorant Garamond',serif;margin-top:0.75rem;font-style:italic;font-size:14.5px;color:rgba(242,221,164,0.95);letter-spacing:0.05em;text-shadow:0 1px 4px rgba(0,0,0,0.8)">
+        ✦ Tap to open the invitation ✦
+      </p>
+
+      <!-- 7. Skip Intro Link -->
+      <button
+        type="button"
+        id="t07SkipBtn"
+        onclick="window.__t07Skip &amp;&amp; window.__t07Skip()"
+        style="margin-top:1.25rem;background:none;border:none;cursor:pointer;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);text-decoration:underline;text-underline-offset:4px;padding:4px 8px">
+        Skip Intro
+      </button>
+
     </div>
   </div>
 
   <main>
-    <header class="t7-hero" data-hero>
-      <div class="t7-branch t7-b1" aria-hidden="true">${BRANCH}</div>
-      <div class="t7-branch t7-b2" aria-hidden="true">${BRANCH}</div>
-      <div class="t7-petals" aria-hidden="true"></div>
-      <div class="t7-hero-in">
-        <div class="t7-invoc" style="--i:0">${invocation}</div>
-        <div class="t7-eyebrow" style="--i:1">Together with their families</div>
-        <div class="t7-arch" style="--i:2"><div class="t7-arch-img t7-ph"><i class="t7-hero-img"></i></div></div>
-        <h1 class="t7-names" style="--i:3">${first} <span>&amp;</span> ${second}</h1>
-        <p class="t7-hero-copy" style="--i:4">${inviteText}</p>
-        <div class="t7-datebar" style="--i:5" aria-label="Wedding date">
-          <div>${esc(dayName || 'Save the date')}</div>
-          <strong>${day ? pad(day.d) : '--'}</strong>
-          <div>${day ? esc(MONTHS[day.mo - 1].slice(0, 3)) + ' ' + day.y : 'TBA'}</div>
+    <!-- =====================================================================
+         ACT II: HERO STAGE (2ND SCREEN)
+         Grand Floral Palace Archway framing Spotlight Couple Portrait
+    ====================================================================== -->
+    <header class="t07-hero" data-hero>
+      <!-- Top Auspicious Invocation -->
+      <div style="margin-bottom:12px;text-align:center">
+        <div style="width:min(200px, 45vw);margin:0 auto 6px;color:#C69C47">${LOTUS_DIVIDER_SVG}</div>
+        <div class="${isArabicInvoc ? 'font-arabic' : 'font-serif'}" style="font-size:clamp(16px, 2.5vw, 22px);font-weight:600;color:#881A2B;letter-spacing:0.04em" ${isArabicInvoc ? 'dir="rtl"' : ''}>
+          ${esc(rawInvoc)}
         </div>
-        <p class="t7-where" style="--i:6">${esc(where)}${timeText ? ` · ${esc(timeText)}` : ''}</p>
-        <div class="t7-cd" style="--i:6" role="timer"><div><b data-u="d">--</b><small>DAYS</small></div><div><b data-u="h">--</b><small>HRS</small></div><div><b data-u="m">--</b><small>MIN</small></div><div><b data-u="s">--</b><small>SEC</small></div></div>
-        <div class="t7-pill" style="--i:7">Invited: ${guestLine}</div><br>
-        <div class="t7-cta" style="--i:8"><a href="#" data-goto="story" class="t7-btn">Discover our story <span aria-hidden="true">↓</span></a></div>
+        <p style="font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:0.28em;text-transform:uppercase;color:#967128;margin:3px 0 0">
+          ${esc(invocSub)}
+        </p>
       </div>
-      <div class="t7-cue" aria-hidden="true">Scroll<i></i></div>
+
+      <!-- Grand Floral & Golden Lantern Archway Centerpiece -->
+      <div class="t07-hero-arch-container">
+        <!-- Spotlight Couple Portrait framed inside Open Archway Portal -->
+        <div class="t07-portal-couple-frame" aria-label="Couple portrait">
+          <img class="t07-portal-couple-img" src="${esc(heroCoupleImg)}" alt="${esc(`${fName} & ${sName}`)}" loading="eager" decoding="async">
+        </div>
+
+        <!-- Archway Artwork Overlay -->
+        <picture>
+          <source srcset="${archImg}" type="image/webp">
+          <img
+            class="t07-hero-arch-img"
+            src="./assets/template-07-arch.png"
+            onerror="this.src='${archImg}'; this.onerror=null;"
+            alt="Royal Floral and Golden Lantern Archway"
+            loading="eager"
+            decoding="async">
+        </picture>
+      </div>
+
+      <!-- Hero Calligraphy & Couple Presentation -->
+      <div class="t07-hero-content">
+        <p style="font-family:'Cinzel',serif;font-size:clamp(10px, 1.4vw, 12px);font-weight:700;letter-spacing:0.28em;text-transform:uppercase;color:#967128;margin:0">
+          The Wedding Celebration of
+        </p>
+        <h1 class="t07-hero-names">
+          ${esc(fName)} <i>&amp;</i> ${esc(sName)}
+        </h1>
+        ${(brideParents || groomParents) ? `
+          <p class="t07-hero-parents">
+            ${brideParents ? `Daughter of ${esc(brideParents)}` : ''} ${(brideParents && groomParents) ? '•' : ''} ${groomParents ? `Son of ${esc(groomParents)}` : ''}
+          </p>
+        ` : ''}
+        <p class="t07-hero-copy">
+          ${esc(inviteText)}
+        </p>
+
+        <!-- Hero Royal Person & Family Invited Box -->
+        <div class="t07-hero-guest-box">
+          <span class="t07-hero-guest-sal">Cordially Invited</span>
+          <h2 class="t07-hero-guest-name">${esc(guestName)}</h2>
+          <span class="t07-hero-guest-pill">${esc(guestBadgeText)}</span>
+        </div>
+      </div>
+
+      ${frieze}
     </header>
 
+    <!-- =====================================================================
+         SECTION 1: SACRED STORY & JOURNEY
+    ====================================================================== -->
     <section data-sec="story">
-      <div class="t7-wrap">
-        <div class="t7-quote t7-reveal"><p>${poem}</p>${families ? `<small>${esc(families)}</small>` : ''}<div class="t7-orn"><span>✦</span></div></div>
-      </div>
-      <div class="t7-wrap" style="margin-top:84px">
-        ${story.map((s, i) => `<article class="t7-chap t7-reveal">
-          <div class="t7-chap-img t7-ph"><img class="t7-fi" src="${esc(s.image)}" data-fallback="${esc(s.alt)}" alt="${esc(s.title)}" loading="lazy" decoding="async"></div>
-          <div class="t7-chap-txt"><span class="t7-num" aria-hidden="true">${pad(i + 1)}</span><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div></article>`).join('')}
+      <div class="t07-wrap">
+        <div class="t07-poem">
+          <p>"${esc(poem)}"</p>
+          <small>${esc(families)}</small>
+        </div>
+        <div class="t07-head">
+          <div class="t07-eyebrow">A Little Bit of Forever</div>
+          <h2>Our Journey</h2>
+          <p>Every love story is sacred. Ours is a collection of cherished moments that brought us together.</p>
+          ${LOTUS_DIVIDER_SVG}
+        </div>
+        ${DEFAULT_STORY.map((s, i) => `
+          <article class="t07-chap ${i % 2 === 1 ? 't07-chap-rev' : ''}">
+            <div class="t07-medal">
+              <div><img src="${esc(storyVignettes[i] || storyVignettes[0])}" alt="${esc(s.title)}" loading="lazy" decoding="async"></div>
+            </div>
+            <div class="t07-chap-txt">
+              <span class="t07-num" aria-hidden="true">${pad(i + 1)}</span>
+              <h3>${esc(s.title)}</h3>
+              <p>${esc(s.text)}</p>
+            </div>
+          </article>
+        `).join('')}
       </div>
     </section>
 
-    ${day ? `<section style="padding-top:20px">
-      <div class="t7-wrap">
-        <div class="t7-head t7-reveal"><div class="t7-eyebrow">Mark your calendar</div><h2>Save the Date</h2><div class="t7-orn"><span>✦</span></div></div>
-        <div class="t7-calcard t7-reveal">
-          <h3>${esc(MONTHS[day.mo - 1])}</h3><small>${day.y}</small>
-          ${calendarHtml(day, evs.map(e => e.event_date))}
-          <p style="margin:22px 0 0;font:italic 400 15px var(--f-serif)">${esc(dayName)}${timeText ? `, ${esc(timeText)}` : ''}</p>
-          ${calUrl ? `<a class="t7-btn" href="${calUrl}" target="_blank" rel="noopener noreferrer">✦ &nbsp;Add to calendar</a>` : ''}
+    <!-- =====================================================================
+         SECTION 2: SAVE THE DATE & LIVE COUNTDOWN
+    ====================================================================== -->
+    <section class="t07-sec-date events-section" data-sec="date" id="dates-section">
+      <div class="t07-wrap">
+        <div class="t07-head">
+          <div class="t07-eyebrow">Mark Your Calendar</div>
+          <h2>Save the Date</h2>
+          ${ALPONA}
         </div>
-      </div>
-    </section>` : ''}
+        <div class="t07-datecard" id="datesSection">
+          ${day ? `
+            <div class="t07-cal-m">${esc(MONTHS[day.mo - 1])}</div>
+            <div class="t07-cal-y">${day.y}</div>
+            ${calHtml}
+          ` : `<div class="t07-cal-m">To Be Announced</div>`}
+          <p class="t07-cal-time">${esc(dayName)} · ${esc(timeFormatted)}</p>
+          
+          <!-- Live Countdown Timer -->
+          <div class="t07-cd" role="timer">
+            <div><b id="t07CdDays">--</b><small>Days</small></div>
+            <div><b id="t07CdHours">--</b><small>Hours</small></div>
+            <div><b id="t07CdMins">--</b><small>Min</small></div>
+            <div><b id="t07CdSecs">--</b><small>Sec</small></div>
+          </div>
 
-    ${groups.length ? `<section>
-      <div class="t7-wrap">
-        <div class="t7-head t7-reveal"><div class="t7-eyebrow">The festivities</div><h2>Celebrations</h2>
-          <p>Traditions, laughter, music and memories. We would be delighted to have you with us.</p><div class="t7-orn"><span>✦</span></div></div>
-        <div class="t7-tl">${eventsHtml}</div>
-      </div>
-    </section>` : ''}
-
-    ${gallery.length ? `<section style="padding-top:20px">
-      <div class="t7-wrap">
-        <div class="t7-head t7-reveal"><div class="t7-eyebrow">Glimpses of us</div><h2>Moments</h2><div class="t7-orn"><span>✦</span></div></div>
-        <div class="t7-masonry">${gallery.map((g, i) => `<figure class="t7-ph t7-reveal" data-lb="${esc(g)}"><img class="t7-fi" src="${esc(g)}" alt="Moment ${i + 1}" loading="lazy" decoding="async"></figure>`).join('')}</div>
-      </div>
-    </section>` : ''}
-
-    <section>
-      <div class="t7-wrap">
-        <div class="t7-head t7-reveal"><div class="t7-eyebrow">Join us</div><h2>The Venue</h2><p>A beautiful setting for a celebration close to our hearts.</p></div>
-        <div class="t7-venue-grid">
-          <figure class="t7-venue-photo t7-ph t7-reveal"><img class="t7-fi" src="${esc(venueImg)}" data-fallback="${esc(U('1519741497674-611481863552', 1200))}" alt="${venue}" loading="lazy" decoding="async"></figure>
-          <div class="t7-reveal">
-            <div class="t7-vcard">
-              <div class="t7-eyebrow">The wedding destination</div>
-              <h3>${venue}</h3>
-              <p>${address || city || ''}${dayName ? `<br>${esc(dayName)}, ${esc(dateLong)}${timeText ? ` · ${esc(timeText)}` : ''}` : ''}</p>
-              <div class="t7-vbtns">
-                ${mapUrl ? `<a class="t7-btn" href="${mapUrl}" target="_blank" rel="noopener noreferrer">⌖ &nbsp;Directions</a>` : ''}
-                ${calUrl ? `<a class="t7-btn t7-ghost" href="${calUrl}" target="_blank" rel="noopener noreferrer">✦ &nbsp;Calendar</a>` : ''}
-              </div>
-            </div>
-            ${travel.length ? `<div class="t7-chips">${travel.map(([i, t]) => `<div class="t7-chip"><span aria-hidden="true">${i}</span><p>${esc(t)}</p></div>`).join('')}</div>` : ''}
+          <div style="display:flex;justify-content:center">
+            <a class="t07-btn-gcal" href="${calUrl}" target="_blank" rel="noopener noreferrer" aria-label="Save to Google Calendar">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7v-5z"/>
+              </svg>
+              <span>Save to Google Calendar</span>
+            </a>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="t7-dark">
-      <section style="padding-bottom:40px">
-        <div class="t7-wrap">
-          <div class="t7-head t7-reveal"><div class="t7-eyebrow">Your presence is our present</div><h2>Kindly RSVP</h2></div>
-          <form class="t7-rsvp t7-reveal" data-rsvp novalidate>
-            <h2>Will you grace us<br>with your presence?</h2>
-            <p class="t7-rsvp-intro">Please let us know if you can join our celebration. We cannot wait to share this special day with you.</p>
-            ${canRsvp ? `
-            <div class="t7-seg" role="group" aria-label="Attendance"><button type="button" data-att="Joyfully accepts" aria-pressed="false">Joyfully accepts</button><button type="button" data-att="Regretfully declines" aria-pressed="false">Regretfully declines</button></div>
-            <div class="t7-field"><label for="t7-name">YOUR NAME</label><input id="t7-name" name="name" type="text" placeholder="Enter your full name" autocomplete="name" value="${clean(guest?.name) ? esc(guest.name) : ''}" required></div>
-            <div class="t7-field t7-stepper" data-guests><label style="margin:0">NUMBER OF GUESTS</label><div><button type="button" data-step="-1" aria-label="Fewer guests">−</button><output data-count aria-live="polite">${guest?.with_family ? 2 : 1}</output><button type="button" data-step="1" aria-label="More guests">+</button></div></div>
-            <div class="t7-field"><label for="t7-note">A NOTE FOR THE COUPLE (OPTIONAL)</label><textarea id="t7-note" name="note" rows="2" placeholder="Share your wishes..."></textarea></div>
-            <button class="t7-send" type="submit">Send reply via WhatsApp &nbsp;↗</button>
-            <p class="t7-status" role="status" aria-live="polite"></p>` : ''}
-            ${contacts.length ? `<div class="t7-contacts">${contacts.map(c => `<a class="t7-contact" href="tel:${esc(c.replace(/[^\d+]/g, ''))}">${esc(c)}</a>`).join('')}</div>` : ''}
+    <!-- =====================================================================
+         SECTION 3: AUSPICIOUS RITUALS & CELEBRATIONS TIMELINE
+    ====================================================================== -->
+    <section class="t07-sec-ev" data-sec="events">
+      <div class="t07-wrap">
+        <div class="t07-head">
+          <div class="t07-eyebrow">The Festivities</div>
+          <h2>Rituals &amp; Celebrations</h2>
+          <p>Sacred rituals, heartfelt laughter, music and eternal memories. We would be delighted to have you with us.</p>
+          ${LOTUS_DIVIDER_SVG}
+        </div>
+        ${eventsHtml}
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 4: INTERACTIVE SCRATCH & REVEAL SURPRISE CARD
+    ====================================================================== -->
+    <section class="t07-sec-reveal" data-sec="reveal">
+      <div class="t07-wrap">
+        <div class="t07-head">
+          <div class="t07-eyebrow">A Surprise For You</div>
+          <h2>Special Message</h2>
+          <p>A heartfelt secret blessing for you from the couple</p>
+          ${ALPONA}
+        </div>
+        <div class="t07-scratch-card" data-scratch>
+          <div class="t07-scratch-secret">
+            <span style="color:#C69C47;font-size:14px;letter-spacing:6px;margin-bottom:8px">✦ ✦ ✦</span>
+            <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:clamp(16px, 3.8vw, 20px);line-height:1.55;color:#881A2B;margin:0 0 10px">
+              We are truly blessed to have you in our lives. Your love and blessings mean the world to us as we begin this sacred journey together. See you at the celebration!
+            </p>
+            <div style="font-size:13px;color:#967128;text-transform:uppercase;letter-spacing:0.08em;font-weight:600">
+              <span>With all our love &amp; reverence</span>
+              <b style="display:block;font-family:'Cinzel',serif;font-size:18px;color:#2C1017;text-transform:none;margin-top:2px">${esc(`${fName} & ${sName}`)}</b>
+            </div>
+          </div>
+          <canvas class="t07-scratch-canvas" aria-label="Scratch card"></canvas>
+          <div class="t07-scratch-overlay" data-scratch-cover>
+            <div style="text-align:center;padding:16px 20px">
+              <span style="font-size:24px;color:#E5C16C;display:block;margin-bottom:6px">✦</span>
+              <b style="font-family:'Cinzel',serif;font-size:18px;letter-spacing:0.04em">Tap or Scratch to Reveal</b>
+              <small style="display:block;font-size:12px;opacity:0.85;margin-top:4px">✦ Reveal our secret blessing ✦</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 5: MOMENTS OF LOVE GALLERY
+    ====================================================================== -->
+    <section data-sec="gallery" style="padding-top:20px">
+      <div class="t07-wrap">
+        <div class="t07-head" style="margin-bottom:8px">
+          <div class="t07-eyebrow">Glimpses Of Us</div>
+          <h2>Moments of Love</h2>
+          ${LOTUS_DIVIDER_SVG}
+        </div>
+      </div>
+      <div class="t07-flow">
+        ${galleryItems.map((gImg, i) => `
+          <figure data-lb="${esc(gImg)}">
+            <img src="${esc(gImg)}" alt="Moment ${i + 1}" loading="lazy" decoding="async">
+          </figure>
+        `).join('')}
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 6: ROYAL PALACE VENUE & DIRECTIONS
+    ====================================================================== -->
+    <section class="venue-section" data-sec="venue" id="map-section">
+      <div class="t07-wrap">
+        <div class="t07-head">
+          <div class="t07-eyebrow">Join Us</div>
+          <h2>The Destination</h2>
+          <p>A serene setting for a celebration close to our hearts.</p>
+          ${ALPONA}
+        </div>
+        <div class="t07-venue-grid" id="venueSection">
+          <figure class="t07-venue-photo">
+            <img src="${esc(venueImg)}" alt="${esc(venueTitleText)}" loading="lazy" decoding="async">
+          </figure>
+          <div class="t07-vcard">
+            <div class="t07-eyebrow">The Wedding Destination</div>
+            <h3>${esc(venueTitleText)}</h3>
+            <p>${esc(venueAddress)}<br><small style="font-style:italic;color:#881A2B">${esc(venueComment)}</small></p>
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+              ${mapUrl ? `<a class="t07-btn-gcal" style="margin-top:0" href="${mapUrl}" target="_blank" rel="noopener noreferrer">⌖ &nbsp;Get Directions</a>` : ''}
+              <button type="button" id="t07BanquetMapBtn" class="t07-btn-gcal" style="margin-top:0;background:rgba(255,253,249,0.9);color:#881A2B !important;border:1.6px solid #C69C47;box-shadow:none">
+                ✦ &nbsp;View Banquet Map
+              </button>
+            </div>
+            <div style="display:grid;gap:8px;margin-top:18px;text-align:left;font-size:14px">
+              <div style="padding:10px 14px;border-radius:14px;background:rgba(198,156,71,0.12);border:1px solid rgba(198,156,71,0.3)">
+                ✈ &nbsp;<b>Travel:</b> Direct access from Airport &amp; Central Railway Station.
+              </div>
+              <div style="padding:10px 14px;border-radius:14px;background:rgba(198,156,71,0.12);border:1px solid rgba(198,156,71,0.3)">
+                ⌂ &nbsp;<b>Stay &amp; Valet:</b> Dedicated valet parking at Gate 2 with luxury guest suites.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 7: KINDLY RSVP SUITE & MODAL
+    ====================================================================== -->
+    <section class="t07-sec-rsvp" data-sec="rsvp">
+      <div class="t07-wrap">
+        <div class="t07-head">
+          <div class="t07-eyebrow">Your Presence Is Our Present</div>
+          <h2>Kindly RSVP</h2>
+          <p>Please let us know if you will be celebrating with us by filling in your response below.</p>
+        </div>
+        <div style="display:flex;justify-content:center;margin:28px 0 10px">
+          <button type="button" class="t07-rsvp-launch-btn" id="open-rsvp-modal-btn" data-open-rsvp aria-haspopup="dialog">
+            <span style="font-size:28px">💌</span>
+            <span style="display:flex;flex-direction:column;text-align:left">
+              <span style="font-family:'Cinzel',serif;font-size:20px;font-weight:700">Respond to Invitation · RSVP</span>
+              <span style="font-size:13px;color:#F2DDA4;opacity:0.9">${esc(guestName)} · Click to RSVP &amp; choose ceremonies</span>
+            </span>
+            <span style="font-size:20px;color:#E5C16C;margin-left:6px">➔</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Royal RSVP Modal Dialog -->
+      <dialog id="t07-rsvp-dialog" class="t07-rsvp-modal" aria-labelledby="t07-rsvp-modal-title">
+        <div class="t07-modal-card">
+          <button type="button" class="t07-modal-close" id="close-t07-rsvp-modal-btn" aria-label="Close RSVP form">&times;</button>
+          <div style="text-align:center;margin-bottom:20px">
+            <div class="t07-eyebrow">Will You Join Us?</div>
+            <h3 id="t07-rsvp-modal-title" style="font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:#881A2B;margin:4px 0 6px">Kindly RSVP</h3>
+            <p style="font-size:14px;color:var(--muted);margin:0">Kindly confirm your presence to help us celebrate together.</p>
+          </div>
+          <form class="t07-rsvp" id="t07RsvpForm" novalidate>
+            ${postEl}${stampEl}
+
+            <!-- 1. Guest Name (read-only auto-filled) -->
+            <div class="t07-fld">
+              <label class="t07-lab" for="t07-guest-name">Guest Name</label>
+              <input class="t07-input t07-input-readonly" id="t07-guest-name" name="name" type="text" value="${esc(guestName)}" readonly disabled>
+            </div>
+
+            <!-- 2. Response Toggle -->
+            <div class="t07-fld" role="group" aria-label="Your Response">
+              <label class="t07-lab">Your Response</label>
+              <button type="button" class="t07-opt" data-att="yes" aria-pressed="true"><span class="t07-rd">${CHECK_SVG}</span><span>Gladly Accepting</span></button>
+              <button type="button" class="t07-opt" data-att="no" aria-pressed="false" style="margin-bottom:0"><span class="t07-rd">${CHECK_SVG}</span><span>Unable to Attend</span></button>
+            </div>
+
+            <!-- Conditional Details (shown when Gladly Accepting) -->
+            <div id="t07AcceptDetails">
+              <!-- 3. Category & Guest Count -->
+              <div class="t07-fld">
+                <label class="t07-lab" for="t07-category">Category</label>
+                <select class="t07-input" id="t07-category" name="category">
+                  <option value="Family" ${hasFamily ? 'selected' : ''}>Family Invitation</option>
+                  <option value="Person" ${!hasFamily ? 'selected' : ''}>Person Invitation</option>
+                </select>
+              </div>
+
+              <div class="t07-fld" id="t07GuestCountWrap">
+                <label class="t07-lab" for="t07-guest-count">Number of Guests Attending</label>
+                <select class="t07-input" id="t07-guest-count" name="guest_count">
+                  <option value="1" ${guestPersons === 1 ? 'selected' : ''}>1 Person</option>
+                  <option value="2" ${guestPersons === 2 ? 'selected' : ''}>2 Persons</option>
+                  <option value="3" ${guestPersons === 3 ? 'selected' : ''}>3 Persons</option>
+                  <option value="4" ${guestPersons === 4 ? 'selected' : ''}>4 Persons</option>
+                  <option value="5" ${guestPersons >= 5 ? 'selected' : ''}>5 Persons</option>
+                </select>
+              </div>
+
+              <!-- 4. Phone / WhatsApp -->
+              <div class="t07-fld">
+                <label class="t07-lab" for="t07-phone">Phone / WhatsApp</label>
+                <input class="t07-input" id="t07-phone" name="phone" type="tel" placeholder="e.g. 9876543210" value="${esc(g.phone || '')}">
+              </div>
+
+              <!-- 5. Ceremony Selection Pills -->
+              ${fchips ? `
+                <div class="t07-fld">
+                  <label class="t07-lab">Ceremonies Attending</label>
+                  <div class="t07-chips-row">${fchips}</div>
+                </div>
+              ` : ''}
+
+              <!-- 6. Note for Couple -->
+              <div class="t07-fld">
+                <label class="t07-lab" for="t07-note">Note for Couple &amp; Family (Optional)</label>
+                <textarea class="t07-input" id="t07-note" name="note" placeholder="Heartfelt wishes or blessings for the couple..."></textarea>
+              </div>
+            </div>
+
+            <button class="t07-send" type="submit">${WHATSAPP_SVG}<span>Save &amp; Send RSVP on WhatsApp</span></button>
+            <p style="text-align:center;font-size:12px;color:var(--muted);margin:12px 0 0">WhatsApp opens with your reply pre-filled. Just press send.</p>
           </form>
         </div>
-      </section>
-      <footer class="t7-end">
-        <div class="t7-mono t7-reveal" aria-hidden="true">${monoInit}</div>
-        <h3 class="t7-reveal">With love &amp; gratitude</h3>
-        ${hashtag ? `<p class="t7-tag">${hashtag.startsWith('#') ? hashtag : '#' + hashtag}</p>` : ''}
-        <p>${signature}</p>
-        <p style="margin-top:14px">${esc(dateNums)}${city ? ` &nbsp;|&nbsp; ${city}` : ''}</p>
-      </footer>
-    </div>
-  </main>
+      </dialog>
+    </section>
 
-  <button class="t7-music" type="button" aria-label="Toggle music" aria-pressed="false">♫</button>
-</div>`;
+    <!-- =====================================================================
+         ACT III: ROYAL FINALE
+    ====================================================================== -->
+    <footer class="t07-end">
+      <div class="t07-eyebrow">Forever Begins</div>
+      <h2>${esc(`${fName} & ${sName}`)}</h2>
+      ${LOTUS_DIVIDER_SVG}
+      <p>With Love &amp; Blessings</p>
+      <p style="color:var(--maroon)">${esc(families)}</p>
+      <p style="margin-top:14px;font-size:13px;letter-spacing:0.12em">${esc(dateStr)} • ${esc(venueAddress)}</p>
+      ${frieze}
+    </footer>
+  </main>
+</div>
+`;
 }
 
-/* ---------- mount ---------- */
+/* ---------- Mount Function ---------- */
 export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
-  const host = root?.classList?.contains('t7') ? root : root?.querySelector?.('.t7');
+  const doc = typeof document !== 'undefined' ? document : null;
+  const win = typeof window !== 'undefined' ? window : null;
+  const host = root?.querySelector ? (root.querySelector('.t07-root') || root) : root;
   if (!host) return () => {};
-  if (typeof host._t7Cleanup === 'function') host._t7Cleanup();
 
-  const doc = host.ownerDocument || document;
-  const win = doc.defaultView || window;
-  if (!doc.querySelector('link[data-t7-fonts]')) {
-    const l = doc.createElement('link');
-    l.rel = 'stylesheet'; l.href = FONT_HREF; l.setAttribute('data-t7-fonts', '');
-    (doc.head || doc.body).appendChild(l);
-  }
+  const byId = id => (host.querySelector ? host.querySelector('#' + id) : null) || (doc?.getElementById ? doc.getElementById(id) : null);
+  const byQuery = sel => (host.querySelector ? host.querySelector(sel) : null) || (doc?.querySelector ? doc.querySelector(sel) : null);
+  const byQueryAll = sel => (host.querySelectorAll ? Array.from(host.querySelectorAll(sel)) : []) || (doc?.querySelectorAll ? Array.from(doc.querySelectorAll(sel)) : []);
 
-  const $ = (s, r = host) => r.querySelector(s);
-  const $$ = (s, r = host) => [...r.querySelectorAll(s)];
-  const reduce = typeof win.matchMedia === 'function' ? win.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const undo = [];
-  const on = (t, e, f, o) => { if (t) { t.addEventListener(e, f, o); undo.push(() => t.removeEventListener(e, f, o)); } };
   const timers = [];
-  const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
-  let dead = false;
-
-  /* scroll lock so nothing behind the envelope can move */
-  const html = doc.documentElement, body = doc.body;
-  let locked = false;
-  const lock = () => {
-    if (locked) return; locked = true;
-    if (typeof win.scrollTo === 'function') win.scrollTo(0, 0);
-    html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
+  const addTimer = (fn, ms) => {
+    if (!win) return null;
+    const tid = win.setTimeout(fn, ms);
+    timers.push(tid);
+    return tid;
   };
-  const unlock = () => {
-    if (!locked) return; locked = false;
-    html.style.overflow = 'auto';
-    body.style.overflow = 'visible';
-    if (typeof win.scrollTo === 'function') win.scrollTo(0, 0);
-  };
-  host.classList.add('t7-js');
-  host.classList.remove('t7-boot');
-  lock();
 
-  /* smooth boot: reveal entry immediately and ensure boot class is removed */
-  (() => {
-    const f = doc.fonts;
-    if (f && typeof f.load === 'function') {
-      Promise.all([f.load('40px "Pinyon Script"'), f.load('20px Italiana'), f.load('300 15px Jost')]).catch(() => {});
+  const listeners = [];
+  const addEvt = (el, evt, fn, opt) => {
+    if (el && typeof el.addEventListener === 'function') {
+      el.addEventListener(evt, fn, opt);
+      listeners.push(() => el.removeEventListener(evt, fn, opt));
     }
-    win.requestAnimationFrame(() => host.classList.remove('t7-boot'));
-  })();
-
-  /* hero image: one candidate at a time, fade in once decoded */
-  const heroImgEl = $('.t7-hero-img');
-  let heroList = [];
-  try { heroList = JSON.parse(host.dataset.heroImgs || '[]'); } catch { heroList = []; }
-  const tryHero = i => {
-    if (dead || !heroImgEl || i >= heroList.length) return;
-    const im = new Image();
-    im.onload = () => {
-      if (dead) return;
-      const show = () => { heroImgEl.style.backgroundImage = `url("${heroList[i]}")`; win.requestAnimationFrame(() => heroImgEl.classList.add('t7-on')); };
-      (typeof im.decode === 'function' ? im.decode().catch(() => {}) : Promise.resolve()).then(show);
-    };
-    im.onerror = () => tryHero(i + 1);
-    im.src = heroList[i];
   };
-  tryHero(0);
 
-  /* images: fade in on load, one fallback, then hide */
-  $$('img').forEach(img => {
-    const ok = () => img.classList.add('t7-loaded');
-    const fail = () => {
-      if (img.dataset.fallback && !img.dataset.tried) { img.dataset.tried = '1'; img.src = img.dataset.fallback; }
-      else img.classList.add('t7-failed');
+  // Scroll Progress
+  const progressBar = byQuery('.t07-progress');
+  const onScroll = () => {
+    if (!win || !doc || !progressBar) return;
+    const h = doc.documentElement.scrollHeight - win.innerHeight;
+    if (h > 0) {
+      const p = Math.min(1, Math.max(0, win.scrollY / h));
+      progressBar.style.transform = `scaleX(${p})`;
+    }
+  };
+  addEvt(win, 'scroll', onScroll, { passive: true });
+
+  // 1. Pyrotechnics & Web Audio Sound Synthesizer
+  let audioCtx = null;
+  const playCrackleSound = () => {
+    if (!win) return;
+    try {
+      const AudioContext = win.AudioContext || win.webkitAudioContext;
+      if (!AudioContext) return;
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      // Burst 1: Crisp sparkler sizzle
+      const bufferSize = audioCtx.sampleRate * 0.45;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+      }
+      const whiteNoise = audioCtx.createBufferSource();
+      whiteNoise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(2800, audioCtx.currentTime);
+      filter.Q.setValueAtTime(3.5, audioCtx.currentTime);
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+      whiteNoise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      whiteNoise.start();
+
+      // Burst 2: Low ceremonial bass boom
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(36, audioCtx.currentTime + 0.55);
+      oscGain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
+      osc.connect(oscGain);
+      oscGain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.55);
+    } catch { /* AudioContext requires gesture */ }
+  };
+
+  // Sparkler / Fireworks Canvas Pyrotechnics
+  const canvas = byId('t07FxCanvas');
+  let animId = null;
+  let particles = [];
+  const triggerPyrotechnics = () => {
+    if (!canvas || !win) return;
+    const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+    if (!ctx) return;
+
+    canvas.width = win.innerWidth;
+    canvas.height = win.innerHeight;
+    particles = [];
+
+    const colors = ['#FFE082', '#FFD54F', '#FFCA28', '#FFB300', '#FF8F00', '#FF5722', '#FFFFFF'];
+    const originX = canvas.width / 2;
+    const originY = canvas.height * 0.45;
+
+    for (let i = 0; i < 90; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 8.5 + 2.5;
+      particles.push({
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.5,
+        radius: Math.random() * 3.5 + 1.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1,
+        decay: Math.random() * 0.018 + 0.012,
+        gravity: 0.16
+      });
+    }
+
+    const renderParticles = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (const p of particles) {
+        if (p.alpha <= 0) continue;
+        alive = true;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.alpha -= p.decay;
+        if (p.alpha > 0) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+      if (alive) {
+        animId = win.requestAnimationFrame(renderParticles);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     };
-    on(img, 'load', ok); on(img, 'error', fail);
-    if (img.complete) { if (img.naturalWidth > 0) ok(); else if (img.currentSrc) fail(); }
-  });
-  later(() => $$('img.t7-fi').forEach(i => i.classList.add('t7-loaded')), 5000);
+    renderParticles();
+  };
 
-  /* falling petals */
-  const petals = $('.t7-petals');
-  if (petals && !reduce) {
-    for (let i = 0; i < 14; i++) {
-      const p = doc.createElement('span'); p.className = 't7-petal';
-      p.style.cssText = `--l:${rand(0, 100)}%;--s:${rand(7, 13)}px;--d:${rand(11, 20)}s;--dl:${-rand(0, 18)}s;--x:${rand(-60, 80)}px`;
-      petals.appendChild(p);
+  // Twinkling stars generator for Act I
+  const starsContainer = byId('t07StarsContainer');
+  if (starsContainer) {
+    for (let i = 0; i < 40; i++) {
+      const star = doc?.createElement ? doc.createElement('div') : null;
+      if (star) {
+        star.className = 't07-star-dot';
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        const size = Math.random() * 3.5 + 1.2;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.setProperty('--dur', `${Math.random() * 3.5 + 2}s`);
+        star.style.setProperty('--delay', `${Math.random() * 3}s`);
+        starsContainer.appendChild(star);
+      }
     }
   }
 
-  /* envelope open sequence */
-  const entry = $('.t7-entry'), seal = $('[data-open]'), note = $('.t7-entry-note'), hero = $('[data-hero]');
-  let opened = false;
-  const open = () => {
-    if (opened) return; opened = true;
-    if (seal) seal.classList.add('t7-burst');
-    if (entry) entry.classList.add('t7-open');
-    later(() => {
-      if (entry) entry.classList.add('t7-leaving');
-      host.classList.remove('t7-locked');
-      unlock();
-    }, 1500);
-    later(() => { if (hero) hero.classList.add('t7-intro'); }, 1400);
-    later(() => {
-      if (entry) entry.remove();
-      host.classList.remove('t7-locked');
-      unlock(); onScroll();
-    }, 2200);
+  // =========================================================================
+  // ACT I -> ACT II: ROYAL SLIDING DOUBLE DOORS OPENING ("DHIRE DHIRE")
+  // =========================================================================
+  let isOpened = false;
+  const openDoorsSlowly = () => {
+    if (isOpened) return;
+    isOpened = true;
+
+    const overlay = byId('t07LightsOffOverlay');
+    if (!overlay) return;
+
+    // 1. Lights turn on! Palace doors illuminate with radiant warmth
+    overlay.classList.remove('t07-unlit');
+    overlay.classList.add('t07-lit', 'is-lit');
+
+    // 2. Sound effect & Festive Fireworks burst
+    playCrackleSound();
+    triggerPyrotechnics();
+
+    // 3. Double Doors physically slide open slowly to the sides ("dhire dhire") after 600ms
+    addTimer(() => {
+      overlay.classList.add('t07-open', 't07-door-open');
+    }, 600);
+
+    // 4. Dispatch global event so 4-tab floating bottom dock smoothly slides up at 2.6s!
+    addTimer(() => {
+      if (win) {
+        win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+        if (doc?.body) doc.body.classList.add('invitation-unveiled');
+        if (typeof win.__updateRoyalDockVisibility === 'function') {
+          win.__updateRoyalDockVisibility();
+        }
+      }
+    }, 2600);
+
+    // 5. Fade out overlay and remove after doors fully open (3.0s) so all main stage elements are clickable
+    addTimer(() => {
+      overlay.style.transition = 'opacity 0.6s ease';
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+      addTimer(() => {
+        overlay.classList.add('t07-doors-cleared');
+        overlay.style.display = 'none';
+      }, 600);
+    }, 3000);
   };
-  on(seal, 'click', open);
-  on(note, 'click', open);
-  if (entry) on(entry, 'click', (e) => { if (!e.target.closest('button')) open(); });
 
-  $$('[data-goto]').forEach(a => on(a, 'click', e => {
-    e.preventDefault();
-    $(`[data-sec="${a.dataset.goto}"]`)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  }));
+  // Wire ignition helpers
+  if (win) {
+    win.__t07Ignite = openDoorsSlowly;
+    win.__t07Skip = openDoorsSlowly;
+  }
+  const igniteBtn = byId('t07IgniteBtn');
+  const lanternTrigger = byId('t07LanternTrigger');
+  const skipBtn = byId('t07SkipBtn');
+  if (igniteBtn) addEvt(igniteBtn, 'click', openDoorsSlowly);
+  if (lanternTrigger) addEvt(lanternTrigger, 'click', openDoorsSlowly);
+  if (skipBtn) addEvt(skipBtn, 'click', openDoorsSlowly);
 
-  /* progress + hero parallax (CSS start state equals JS scale: no jump) */
-  const bar = $('.t7-progress');
-  let tick = false;
-  function onScroll() {
-    if (tick || locked) return; tick = true;
-    win.requestAnimationFrame(() => {
-      tick = false;
-      const scY = win.scrollY ?? html.scrollTop ?? 0;
-      const vh = win.innerHeight || html.clientHeight || 800;
-      const max = (html.scrollHeight || body.scrollHeight || vh) - vh;
-      if (bar) bar.style.transform = `scaleX(${max > 0 ? Math.min(1, scY / max) : 0})`;
-      if (hero && heroImgEl && !reduce) {
-        const top = hero.getBoundingClientRect().top;
-        if (top < 0 && -top < vh * 1.3) heroImgEl.style.transform = `translate3d(0,${-top * .12}px,0) scale(1.08)`;
-        else if (top >= 0) heroImgEl.style.transform = '';
+  const overlayEl = byId('t07LightsOffOverlay');
+  if (overlayEl) {
+    addEvt(overlayEl, 'click', e => {
+      if (e.target.closest('#t07IgniteBtn, #t07LanternTrigger, #t07SkipBtn')) return;
+      openDoorsSlowly();
+    });
+  }
+
+  // 2. Live Countdown Timer
+  const daysEl = byId('t07CdDays');
+  const hoursEl = byId('t07CdHours');
+  const minsEl = byId('t07CdMins');
+  const secsEl = byId('t07CdSecs');
+  const rawWhen = host.dataset ? host.dataset.when : null;
+  const targetTime = Number(rawWhen) || (Date.now() + 86400000 * 7);
+
+  const updateCountdown = () => {
+    if (!daysEl || !hoursEl || !minsEl || !secsEl) return;
+    const now = Date.now();
+    const diff = targetTime - now;
+    if (diff <= 0) {
+      daysEl.textContent = '00';
+      hoursEl.textContent = '00';
+      minsEl.textContent = '00';
+      secsEl.textContent = '00';
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+
+    daysEl.textContent = pad(d);
+    hoursEl.textContent = pad(h);
+    minsEl.textContent = pad(m);
+    secsEl.textContent = pad(s);
+  };
+  updateCountdown();
+  let cdInterval = null;
+  if (win) {
+    cdInterval = win.setInterval(updateCountdown, 1000);
+  }
+
+  // 3. Scratch & Reveal Card
+  const scratchWrap = byQuery('[data-scratch]');
+  if (scratchWrap) {
+    const sCanvas = scratchWrap.querySelector('canvas');
+    const sCover = scratchWrap.querySelector('[data-scratch-cover]');
+    if (sCanvas && win) {
+      const sCtx = sCanvas.getContext ? sCanvas.getContext('2d') : null;
+      let scratched = false;
+      const initScratch = () => {
+        const rect = scratchWrap.getBoundingClientRect();
+        sCanvas.width = rect.width || 440;
+        sCanvas.height = rect.height || 220;
+        if (sCtx) {
+          sCtx.fillStyle = '#C69C47';
+          sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+          // Gold foil pattern
+          sCtx.fillStyle = 'rgba(255,255,255,0.2)';
+          for (let i = 0; i < 300; i++) {
+            sCtx.fillRect(Math.random() * sCanvas.width, Math.random() * sCanvas.height, 2, 2);
+          }
+        }
+      };
+      initScratch();
+
+      const clearScratch = () => {
+        if (scratched) return;
+        scratched = true;
+        scratchWrap.classList.add('t07-cleared');
+        if (sCover) sCover.style.display = 'none';
+        if (sCanvas) sCanvas.style.display = 'none';
+      };
+
+      const scratchPoint = (x, y) => {
+        if (!sCtx) return;
+        scratchWrap.classList.add('t07-active');
+        sCtx.globalCompositeOperation = 'destination-out';
+        sCtx.beginPath();
+        sCtx.arc(x, y, 28, 0, Math.PI * 2);
+        sCtx.fill();
+      };
+
+      let isDrawing = false;
+      addEvt(sCanvas, 'mousedown', e => { isDrawing = true; scratchPoint(e.offsetX, e.offsetY); });
+      addEvt(sCanvas, 'mousemove', e => { if (isDrawing) scratchPoint(e.offsetX, e.offsetY); });
+      addEvt(win, 'mouseup', () => { isDrawing = false; });
+      addEvt(sCanvas, 'click', clearScratch);
+
+      addEvt(sCanvas, 'touchstart', e => {
+        isDrawing = true;
+        const b = sCanvas.getBoundingClientRect();
+        const t = e.touches[0];
+        scratchPoint(t.clientX - b.left, t.clientY - b.top);
+      }, { passive: true });
+      addEvt(sCanvas, 'touchmove', e => {
+        if (!isDrawing) return;
+        const b = sCanvas.getBoundingClientRect();
+        const t = e.touches[0];
+        scratchPoint(t.clientX - b.left, t.clientY - b.top);
+      }, { passive: true });
+    }
+  }
+
+  // 4. Moments Gallery Lightbox
+  const figures = byQueryAll('.t07-flow figure');
+  figures.forEach(fig => {
+    addEvt(fig, 'click', () => {
+      const src = fig.dataset ? fig.dataset.lb : null;
+      if (!src || !doc) return;
+      const lb = doc.createElement('div');
+      lb.className = 't07-lb';
+      lb.innerHTML = `<img src="${esc(src)}" alt="Moment Zoom">`;
+      doc.body.appendChild(lb);
+      const closeLb = () => lb.remove();
+      lb.addEventListener('click', closeLb);
+    });
+  });
+
+  // 5. Royal RSVP Modal Dialog
+  const rsvpDialog = byId('t07-rsvp-dialog');
+  const openRsvpBtns = byQueryAll('[data-open-rsvp]');
+  const closeRsvpBtn = byId('close-t07-rsvp-modal-btn');
+
+  const openRsvp = () => {
+    if (rsvpDialog) {
+      if (typeof rsvpDialog.showModal === 'function') {
+        try { rsvpDialog.showModal(); } catch { rsvpDialog.setAttribute('open', ''); }
+      } else {
+        rsvpDialog.setAttribute('open', '');
+      }
+    }
+  };
+  const closeRsvp = () => {
+    if (rsvpDialog) {
+      if (typeof rsvpDialog.close === 'function') {
+        try { rsvpDialog.close(); } catch { rsvpDialog.removeAttribute('open'); }
+      } else {
+        rsvpDialog.removeAttribute('open');
+      }
+    }
+  };
+
+  openRsvpBtns.forEach(btn => addEvt(btn, 'click', openRsvp));
+  if (closeRsvpBtn) addEvt(closeRsvpBtn, 'click', closeRsvp);
+  if (rsvpDialog) {
+    addEvt(rsvpDialog, 'click', e => {
+      if (e.target === rsvpDialog) closeRsvp();
+    });
+  }
+
+  // Attendance Toggle (Gladly Accepting / Unable to Attend)
+  const attBtns = byQueryAll('.t07-opt[data-att]');
+  const acceptDetails = byId('t07AcceptDetails');
+  attBtns.forEach(btn => {
+    addEvt(btn, 'click', () => {
+      attBtns.forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      const isYes = btn.dataset.att === 'yes';
+      if (acceptDetails) {
+        acceptDetails.style.display = isYes ? 'block' : 'none';
+      }
+    });
+  });
+
+  // Ceremony Pills Multi-Select
+  const ceremonyChips = byQueryAll('.t07-chip');
+  ceremonyChips.forEach(chip => {
+    addEvt(chip, 'click', () => {
+      const curr = chip.getAttribute('aria-pressed') === 'true';
+      chip.setAttribute('aria-pressed', String(!curr));
+    });
+  });
+
+  // Banquet Map Button
+  const banquetMapBtn = byId('t07BanquetMapBtn');
+  if (banquetMapBtn) {
+    addEvt(banquetMapBtn, 'click', () => {
+      const globalDockMap = doc?.getElementById ? doc.getElementById('royalDockMap') : null;
+      if (globalDockMap) {
+        globalDockMap.click();
+      } else {
+        const venueSec = byId('venueSection') || byId('map-section');
+        if (venueSec && typeof venueSec.scrollIntoView === 'function') {
+          venueSec.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     });
   }
-  on(win, 'scroll', onScroll, { passive: true });
 
-  /* reveals (stagger delay cleared afterwards) */
-  const clearDelay = el => later(() => { el.style.transitionDelay = ''; }, 1400);
-  if (typeof IntersectionObserver !== 'undefined') {
-    const io = new IntersectionObserver(es => {
-      es.filter(e => e.isIntersecting)
-        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top || a.boundingClientRect.left - b.boundingClientRect.left)
-        .forEach((e, k) => { e.target.style.transitionDelay = `${k * 90}ms`; e.target.classList.add('t7-in'); clearDelay(e.target); io.unobserve(e.target); });
-    }, { threshold: .12, rootMargin: '0px 0px -5% 0px' });
-    $$('.t7-reveal').forEach(el => io.observe(el));
-    undo.push(() => io.disconnect());
-  } else $$('.t7-reveal').forEach(el => el.classList.add('t7-in'));
-
-  /* countdown with tick animation */
-  const when = Number(host.dataset.when);
-  const cdBox = $('.t7-cd');
-  if (when && cdBox) {
-    const set = (k, v) => {
-      const el = $(`[data-u="${k}"]`, cdBox); if (!el) return;
-      const t = pad(v);
-      if (el.textContent !== t) { el.textContent = t; if (!reduce) { el.classList.remove('t7-tick'); void el.offsetWidth; el.classList.add('t7-tick'); } }
-    };
-    let id;
-    const step = () => {
-      const left = when - Date.now();
-      if (left <= 0) { cdBox.innerHTML = '<span class="t7-cd-done">The celebration has begun ✦</span>'; clearInterval(id); return; }
-      const s = Math.floor(left / 1000);
-      set('d', Math.floor(s / 86400)); set('h', Math.floor(s % 86400 / 3600)); set('m', Math.floor(s % 3600 / 60)); set('s', s % 60);
-    };
-    cdBox.classList.add('t7-live'); step();
-    id = setInterval(step, 1000); timers.push(id);
-  }
-
-  /* lightbox */
-  const closeLb = () => { $('.t7-lb')?.remove(); };
-  $$('[data-lb]').forEach(f => on(f, 'click', () => {
-    const src = f.dataset.lb; if (!src) return;
-    closeLb();
-    const lb = doc.createElement('div'); lb.className = 't7-lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-label', 'Photo');
-    const im = doc.createElement('img'); im.src = src; im.alt = 'Moment';
-    lb.appendChild(im); lb.addEventListener('click', closeLb); host.appendChild(lb);
-  }));
-  on(doc, 'keydown', e => { if (e.key === 'Escape') closeLb(); });
-
-  /* RSVP: segmented choice + stepper + WhatsApp */
-  const form = $('[data-rsvp]');
-  const waNum = host.dataset.wa;
-  if (form && waNum) {
-    let att = '';
-    const segBtns = $$('[data-att]', form);
-    const guestsBox = $('[data-guests]', form), out = $('[data-count]', form);
-    let count = Number(out?.textContent) || 1;
-    segBtns.forEach(b => on(b, 'click', () => {
-      att = b.dataset.att;
-      segBtns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-      if (guestsBox) guestsBox.style.display = att === 'Regretfully declines' ? 'none' : '';
-    }));
-    $$('[data-step]', form).forEach(b => on(b, 'click', () => {
-      count = Math.max(1, Math.min(12, count + Number(b.dataset.step)));
-      if (out) out.textContent = String(count);
-    }));
-    on(form, 'submit', e => {
+  // WhatsApp RSVP Form Submission
+  const rsvpForm = byId('t07RsvpForm');
+  if (rsvpForm) {
+    addEvt(rsvpForm, 'submit', e => {
       e.preventDefault();
-      const name = $('[name="name"]', form).value.trim();
-      const nt = $('[name="note"]', form).value.trim();
-      const status = $('.t7-status', form);
-      if (!name || !att) { status.textContent = 'Please add your name and choose whether you can join.'; return; }
-      const names = host.dataset.names || '';
-      const dateTxt = $('.t7-datebar', host)?.textContent.replace(/\s+/g, ' ').trim() || '';
-      const msg = [`Wedding RSVP — ${names}`, `Name: ${name}`, `Response: ${att}`, att !== 'Regretfully declines' && `Guests: ${count}`, nt && `Note: ${nt}`, dateTxt && `Wedding date: ${dateTxt}`, host.dataset.venue && `Venue: ${host.dataset.venue}`].filter(Boolean).join('\n');
-      win.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
-      status.textContent = 'Thank you! Your WhatsApp reply is opening in a new tab.';
+      const guestNameVal = clean(byId('t07-guest-name')?.value) || 'Respected Guest';
+      const isAttending = byQuery('.t07-opt[data-att="yes"]')?.getAttribute('aria-pressed') === 'true';
+      const category = byId('t07-category')?.value || 'Family';
+      const guestCount = byId('t07-guest-count')?.value || '4';
+      const phone = clean(byId('t07-phone')?.value);
+      const note = clean(byId('t07-note')?.value);
+
+      const selectedFns = byQueryAll('.t07-chip[aria-pressed="true"]').map(c => c.dataset.fn).filter(Boolean);
+
+      let msg = `*RSVP for Wedding Celebrations*\n`;
+      msg += `Guest: ${guestNameVal}\n`;
+      msg += `Status: ${isAttending ? 'Gladly Accepting ✅' : 'Unable to Attend ❌'}\n`;
+      if (isAttending) {
+        msg += `Category: ${category}\n`;
+        msg += `Guests Attending: ${guestCount}\n`;
+        if (selectedFns.length) msg += `Ceremonies: ${selectedFns.join(', ')}\n`;
+        if (phone) msg += `Phone: ${phone}\n`;
+      }
+      if (note) msg += `Note: ${note}\n`;
+
+      const rsvpPhone = clean(wedding.rsvp_number || wedding.phone || wedding.whatsapp) || '919477929927';
+      const digits = rsvpPhone.replace(/\D/g, '') || '919477929927';
+      const waNumber = digits.length === 10 ? `91${digits}` : digits;
+
+      const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+      if (win) win.open(waUrl, '_blank');
+      closeRsvp();
     });
   }
 
-  /* optional music */
-  const musicBtn = $('.t7-music'), musicUrl = host.dataset.music;
-  if (musicBtn && musicUrl) {
-    const audio = new Audio(musicUrl); audio.loop = true; audio.preload = 'none';
-    musicBtn.classList.add('t7-has');
-    on(musicBtn, 'click', () => {
-      const play = audio.paused;
-      (play ? audio.play() : Promise.resolve(audio.pause())).catch(() => {});
-      musicBtn.setAttribute('aria-pressed', String(play)); musicBtn.textContent = play ? '♪' : '♫';
-    });
-    undo.push(() => audio.pause());
-  }
-
-  const cleanup = () => {
-    dead = true;
-    timers.forEach(t => { clearTimeout(t); clearInterval(t); });
-    undo.forEach(f => f());
-    closeLb();
-    unlock();
-    host.classList.remove('t7-js', 't7-locked');
-    delete host._t7Cleanup;
+  // Cleanup
+  return () => {
+    timers.forEach(t => win && win.clearTimeout(t));
+    if (cdInterval && win) win.clearInterval(cdInterval);
+    if (animId && win) win.cancelAnimationFrame(animId);
+    listeners.forEach(f => f());
+    if (win) {
+      delete win.__t07Ignite;
+      delete win.__t07Skip;
+    }
   };
-  host._t7Cleanup = cleanup;
-  return cleanup;
 }

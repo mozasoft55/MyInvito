@@ -17,7 +17,7 @@ const wedding = {
 const guest = { name: 'Nadia Rahman', persons: 2, with_family: false };
 const events = [{ event_name: 'Nikah', event_date: '2027-02-14', event_time: '4:00 PM' }];
 
-for (let number = 1; number <= 10; number++) {
+for (let number = 1; number <= 11; number++) {
   const templateId = `template-${String(number).padStart(2, '0')}`;
   test(`${templateId} renders the invitation contract and escapes wedding data`, async () => {
     const module = await import(`../templates/${templateId}.js`);
