@@ -1892,6 +1892,12 @@ export function initTemplate14(container) {
         if (clearCount / total > 0.42) {
           scratchDone = true;
           scratchCanvas.classList.add('revealed');
+          if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+            const b = scratchCanvas.getBoundingClientRect ? scratchCanvas.getBoundingClientRect() : null;
+            const cx = b ? b.left + b.width / 2 : null;
+            const cy = b ? b.top + b.height / 2 : null;
+            window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+          }
         }
       } catch (_) {}
     }
@@ -1906,6 +1912,9 @@ export function initTemplate14(container) {
         sctx.beginPath();
         sctx.arc(x, y, 22, 0, Math.PI * 2);
         sctx.fill();
+      }
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        window.RoyalScratchCracker.emitPhuljhariSparks(clientX, clientY, 8);
       }
       checkScratch();
     }

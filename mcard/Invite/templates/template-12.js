@@ -1993,6 +1993,10 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
         ctx.arc(x, y, 22, 0, Math.PI * 2);
         ctx.fill();
       }
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const rect = (scratchCanvas.getBoundingClientRect && scratchCanvas.getBoundingClientRect()) || { left: 0, top: 0 };
+        window.RoyalScratchCracker.emitPhuljhariSparks(rect.left + x, rect.top + y, 8);
+      }
 
       scratchedPixels += 1;
       if (scratchedPixels > 24 && !scratchScratched) {
@@ -2046,6 +2050,12 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
 
     function revealScratchCard() {
       scratchScratched = true;
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const rect = (scratchCanvas.getBoundingClientRect && scratchCanvas.getBoundingClientRect()) || null;
+        const cx = rect ? rect.left + rect.width / 2 : null;
+        const cy = rect ? rect.top + rect.height / 2 : null;
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+      }
       if (scratchCanvas.style) {
         scratchCanvas.style.opacity = '0';
         setTimeout(() => {

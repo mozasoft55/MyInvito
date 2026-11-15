@@ -1697,6 +1697,9 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       scratchCanvas.style.pointerEvents = 'none';
       if (scratchBtn) scratchBtn.style.display = 'none';
       playCrackleSound();
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(r.left + r.width / 2, r.top + r.height / 2);
+      }
     }
 
     function scratchAtPos(x, y) {
@@ -1706,6 +1709,10 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       sCtx.arc(x, y, 24, 0, Math.PI * 2);
       sCtx.fill();
       sCtx.globalCompositeOperation = 'source-over';
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const r = scratchCanvas.getBoundingClientRect();
+        window.RoyalScratchCracker.emitPhuljhariSparks(r.left + x, r.top + y, 8);
+      }
     }
 
     function getScratchPos(e) {

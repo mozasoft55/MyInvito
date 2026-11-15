@@ -1806,6 +1806,12 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       scratched = true;
       scWrap.classList.add('t9-cleared');
       burstPetals();
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const rect = scWrap.getBoundingClientRect ? scWrap.getBoundingClientRect() : null;
+        const cx = rect ? rect.left + rect.width / 2 : null;
+        const cy = rect ? rect.top + rect.height / 2 : null;
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+      }
     };
 
     const scratchAt = (clientX, clientY) => {
@@ -1823,6 +1829,9 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       ctx.arc(x, y, 26 * dpr, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        window.RoyalScratchCracker.emitPhuljhariSparks(clientX, clientY, 8);
+      }
     };
 
     on(scWrap, 'pointerdown', e => {

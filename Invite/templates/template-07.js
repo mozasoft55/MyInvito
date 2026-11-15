@@ -1837,6 +1837,12 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
         scratchWrap.classList.add('t07-cleared');
         if (sCover) sCover.style.display = 'none';
         if (sCanvas) sCanvas.style.display = 'none';
+        if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+          const rect = scratchWrap.getBoundingClientRect ? scratchWrap.getBoundingClientRect() : null;
+          const cx = rect ? rect.left + rect.width / 2 : null;
+          const cy = rect ? rect.top + rect.height / 2 : null;
+          window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+        }
       };
 
       const scratchPoint = (x, y) => {
@@ -1846,6 +1852,10 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
         sCtx.beginPath();
         sCtx.arc(x, y, 28, 0, Math.PI * 2);
         sCtx.fill();
+        if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+          const rect = sCanvas.getBoundingClientRect ? sCanvas.getBoundingClientRect() : { left: 0, top: 0 };
+          window.RoyalScratchCracker.emitPhuljhariSparks(rect.left + x, rect.top + y, 8);
+        }
       };
 
       let isDrawing = false;

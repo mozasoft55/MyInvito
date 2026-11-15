@@ -1928,6 +1928,14 @@
           }
           mountRsvpWidget(mount, weddingPayload, guest.invite_code, language);
         }
+
+        // Initialize Universal Scratch Phuljhari & Firecracker Engine across all templates
+        try {
+          const { initUniversalScratchCracker } = await import('./utils/scratch-cracker.js');
+          initUniversalScratchCracker(document);
+        } catch (e) {
+          console.warn('Scratch cracker init error:', e);
+        }
       } catch (err) {
         console.error('Invitation loading error:', err);
         showPageError(err.message || 'We could not load this invitation. Please try again.');

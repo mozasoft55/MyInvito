@@ -952,6 +952,11 @@ function createScratch(canvas) {
     done = true;
     const rect = canvas.getBoundingClientRect();
     ctx.clearRect(0, 0, rect.width, rect.height);
+    if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+      const cx = rect ? rect.left + rect.width / 2 : null;
+      const cy = rect ? rect.top + rect.height / 2 : null;
+      window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+    }
   };
 
   const scratchAt = (x, y) => {
@@ -962,6 +967,10 @@ function createScratch(canvas) {
     ctx.globalCompositeOperation = 'source-over';
     if (!touched) {
       touched = true;
+    }
+    if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+      const r = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : { left: 0, top: 0 };
+      window.RoyalScratchCracker.emitPhuljhariSparks(r.left + x, r.top + y, 8);
     }
   };
 

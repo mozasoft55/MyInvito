@@ -2067,6 +2067,12 @@ export function mount(root, data = {}) {
       revealBtn.textContent = 'Duas Revealed ✦';
       const cv = host.querySelector('.t04-scratch-box canvas');
       if (cv) cv.style.display = 'none';
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const rect = revealBtn.getBoundingClientRect ? revealBtn.getBoundingClientRect() : null;
+        const cx = rect ? rect.left + rect.width / 2 : null;
+        const cy = rect ? rect.top + rect.height / 2 : null;
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+      }
       return;
     }
   };
@@ -2153,6 +2159,9 @@ export function mount(root, data = {}) {
         ctx.beginPath();
         ctx.arc(x, y, 16, 0, Math.PI * 2);
         ctx.fill();
+        if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+          window.RoyalScratchCracker.emitPhuljhariSparks(clientX, clientY, 8);
+        }
       }
       canvas.addEventListener('mousedown', e => { isDrawing = true; scratch(e); });
       if (win) win.addEventListener('mouseup', () => { isDrawing = false; });

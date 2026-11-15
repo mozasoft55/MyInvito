@@ -1955,6 +1955,9 @@ export function initTemplate13(container) {
       ctx.beginPath();
       ctx.arc(x, y, 22, 0, Math.PI * 2);
       ctx.fill();
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        window.RoyalScratchCracker.emitPhuljhariSparks(clientX, clientY, 8);
+      }
 
       scratchedPixels += 1;
       if (scratchedPixels > 35 && !scratchScratched) {
@@ -1981,6 +1984,12 @@ export function initTemplate13(container) {
     function revealScratch() {
       if (scratchScratched) return;
       scratchScratched = true;
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const rect = scratchCanvas ? scratchCanvas.getBoundingClientRect() : null;
+        const cx = rect ? rect.left + rect.width / 2 : null;
+        const cy = rect ? rect.top + rect.height / 2 : null;
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+      }
       if (scratchCanvas) {
         scratchCanvas.style.transition = 'opacity 0.6s ease';
         scratchCanvas.style.opacity = '0';

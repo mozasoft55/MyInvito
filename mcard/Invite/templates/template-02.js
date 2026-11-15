@@ -417,7 +417,16 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
   }
 
   const sm = $('#sm'), cv = $('#cv');
-  $('#sc').onclick = () => { sm.classList.add('on'); scratch(cv); };
+  $('#sc').onclick = () => {
+    sm.classList.add('on');
+    scratch(cv);
+    if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+      const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+      const cx = r ? r.left + r.width / 2 : null;
+      const cy = r ? r.top + r.height / 2 : null;
+      window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+    }
+  };
   $('#cs').onclick = () => sm.classList.remove('on');
 }
 
@@ -437,6 +446,9 @@ function scratch(c) {
     x.beginPath();
     x.arc(p.clientX - r.left, p.clientY - r.top, 16, 0, 7);
     x.fill();
+    if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+      window.RoyalScratchCracker.emitPhuljhariSparks(p.clientX, p.clientY, 8);
+    }
   };
 
   c.onmousedown = c.ontouchstart = () => d = 1;
