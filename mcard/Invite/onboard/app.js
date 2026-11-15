@@ -41,6 +41,8 @@ let designConfigurationLoaded = false;
 let cashRequestMode = false;
 let busy = false;
 
+const getSupabaseBase = () => (ONBOARDING_CONFIG.supabaseUrl || 'https://skpcxbdrmsnwmggjodkz.supabase.co').replace(/\/+$/, '');
+
 // ── Photo Upload & Compression Pipeline ──────────────────────────────
 function persistUploadedPhoto(slot, result) {
   const dataUrl = result.dataUrl || result.previewUrl || '';
@@ -116,8 +118,7 @@ if (uploaderContainer) {
 
 async function uploadPhotoToSupabase(file, prefix = 'photo') {
   if (!file) return '';
-  const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
-    || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+  const supabaseBase = getSupabaseBase();
   const bucket = 'wedding-photos';
   const cleanName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
   const uploadUrl = `${supabaseBase}/storage/v1/object/${bucket}/${cleanName}`;
@@ -690,8 +691,36 @@ function updateReview() {
 
 async function loadConfiguration() {
   try {
-    const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
-      || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+    const supabaseBase = getSupabaseBase();
+    
+    // 1. Try Edge Function if deployed
+    if (ONBOARDING_CONFIG.onboardingEndpoint) {
+      try {
+        const efRes = await fetch(ONBOARDING_CONFIG.onboardingEndpoint, {
+          method: 'GET',
+          headers: {
+            'apikey': ONBOARDING_CONFIG.publishableKey,
+            'Authorization': `Bearer ${ONBOARDING_CONFIG.publishableKey}`
+          },
+          cache: 'no-store'
+        });
+        if (efRes.ok) {
+          const config = await efRes.json();
+          packages = config.packages || [];
+          paymentConfig = config.payment || { upi_vpa: ONBOARDING_CONFIG.defaultUpiVpa || '9477929927@okbizaxis', merchant_name: ONBOARDING_CONFIG.defaultMerchantName || 'Prime eCard' };
+          const styles = (config.styles && config.styles.length) ? config.styles : DEFAULT_STYLES;
+          themes = (config.themes && config.themes.length) ? config.themes : DEFAULT_THEMES;
+          packageConfigurationLoaded = true;
+          designConfigurationLoaded = true;
+          renderDesignChoices(styles, themes, '');
+          renderPackageChoices();
+          updatePaymentPanel();
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Try RPC get_onboarding_config
     const rpcConfigUrl = `${supabaseBase}/rest/v1/rpc/get_onboarding_config`;
 
     const response = await fetch(rpcConfigUrl, {
@@ -708,7 +737,7 @@ async function loadConfiguration() {
     if (response.ok) {
       const config = await response.json();
       packages = config.packages || [];
-      paymentConfig = config.payment || { upi_vpa: '9477929927@okbizaxis', merchant_name: 'Prime eCard' };
+      paymentConfig = config.payment || { upi_vpa: ONBOARDING_CONFIG.defaultUpiVpa || '9477929927@okbizaxis', merchant_name: ONBOARDING_CONFIG.defaultMerchantName || 'Prime eCard' };
       const styles = (config.styles && config.styles.length) ? config.styles : DEFAULT_STYLES;
       themes = (config.themes && config.themes.length) ? config.themes : DEFAULT_THEMES;
       packageConfigurationLoaded = true;
@@ -741,7 +770,7 @@ async function loadConfiguration() {
       features: ['Custom Themes & Audio', 'Full 5-Day Event Timeline', 'Dedicated Support']
     }
   ];
-  paymentConfig = { upi_vpa: '9477929927@okbizaxis', merchant_name: 'Prime eCard' };
+  paymentConfig = { upi_vpa: ONBOARDING_CONFIG.defaultUpiVpa || '9477929927@okbizaxis', merchant_name: ONBOARDING_CONFIG.defaultMerchantName || 'Prime eCard' };
   packageConfigurationLoaded = true;
   designConfigurationLoaded = true;
   renderDesignChoices(DEFAULT_STYLES, DEFAULT_THEMES, '');
@@ -955,8 +984,7 @@ form.addEventListener('submit', async event => {
 
     submitButton.textContent = cashRequestMode ? 'Sending request…' : 'Creating your order…';
 
-    const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
-      || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+    const supabaseBase = getSupabaseBase();
     const rpcUrl = `${supabaseBase}/rest/v1/rpc/submit_customer_onboarding`;
 
     const response = await fetch(rpcUrl, {
@@ -1087,8 +1115,7 @@ if (refreshStatusBtn) {
     }
 
     try {
-      const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
-        || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+      const supabaseBase = getSupabaseBase();
       const rpcUrl = `${supabaseBase}/rest/v1/rpc/manage_customer_dashboard`;
 
       const response = await fetch(rpcUrl, {
@@ -1354,8 +1381,7 @@ function initTrackOrderModal() {
       }
 
       // 2. Query server RPC to verify and retrieve fresh status
-      const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
-        || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+      const supabaseBase = getSupabaseBase();
       const rpcUrl = `${supabaseBase}/rest/v1/rpc/manage_customer_dashboard`;
 
       let serverVerified = false;

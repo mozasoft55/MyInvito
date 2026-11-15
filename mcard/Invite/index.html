@@ -1362,7 +1362,7 @@
           return;
         }
         const introCover = document.querySelector(
-          '#t07LightsOffOverlay:not(.t07-open), .t07-entry:not(.t07-open), .t07-lights-off:not(.is-lit), .t9-entry:not(.t9-open), .t04-cover:not(.t04-open), .t7-entry:not(.t7-leaving), .t03-doors:not(.t03-open), .t8-cover:not(.t8-open), [data-screen="0"]:not(.is-hidden), #t11-intro:not([style*="display: none"]):not([style*="display:none"])'
+          '#t07LightsOffOverlay:not(.t07-open), .t07-entry:not(.t07-open), .t07-lights-off:not(.is-lit), .t9-entry:not(.t9-open), .t04-cover:not(.t04-open), .t7-entry:not(.t7-leaving), .t03-doors:not(.t03-open), .t8-cover:not(.t8-open), [data-screen="0"]:not(.is-hidden), #t11-intro:not([style*="display: none"]):not([style*="display:none"]), #t12-intro:not([style*="display: none"]):not([style*="display:none"]), #t13-intro:not([style*="display: none"]):not([style*="display:none"]), #t14-intro:not([style*="display: none"]):not([style*="display:none"])'
         );
         const isIntroActive = Boolean(introCover && introCover.offsetParent !== null);
         if (isIntroActive) {
@@ -1900,8 +1900,8 @@
             rootMargin: '0px 0px -40px 0px'
           });
         } else {
-          // --- Legacy Template Fallback (template-01..template-11) ---
-          if (!['template-01', 'template-02', 'template-03', 'template-04', 'template-05', 'template-06', 'template-07', 'template-08', 'template-09', 'template-10', 'template-11'].includes(templateId)) {
+          // --- Legacy Template Fallback (template-01..template-14) ---
+          if (!['template-01', 'template-02', 'template-03', 'template-04', 'template-05', 'template-06', 'template-07', 'template-08', 'template-09', 'template-10', 'template-11', 'template-12', 'template-13', 'template-14'].includes(templateId)) {
             throw new Error('This invitation is configured with an unsupported design.');
           }
 

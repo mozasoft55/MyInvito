@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PURUSHOTTAM & SANJUKTA / ROYAL WEDDING SUITE (Template 11)
-   Master-Level Royal Indian Wedding Invitation:
+   PURUSHOTTAM & SANJUKTA / PARI & PARAM (Template 11)
+   Master-Level Royal Indian Wedding Invitation Suite:
    - Act I: Ornate Nocturnal Palace Gate (Lights Off):
      - Starry night palace arch with 6 unlit bronze lanterns and royal gates.
      - Center invitation overlay: "WELCOME", "A CELEBRATION OF LOVE",
@@ -13,24 +13,26 @@
      - Live HTML5 canvas sparkler / phuljhari cracker fireworks burst upward.
      - Double palace gates unfold gently ("dhire dhire" via scaleX(.09) over 3.8s).
      - Arch fades out to reveal the inner Taj Mahal palace parchment stage.
-   - Act III: Screen 1 — The Couple & Parental Blessings:
-     - Backdrop: Royal palace parchment & Taj Mahal stage.
-     - Auspicious invocation / blessing, couple names in Great Vibes.
-     - Circular photo medallions with gold borders, roles (SON OF / DAUGHTER OF),
-       parents' names, ancestral origin / address.
-     - Family Invitation Board card for the honored guest.
-   - Act IV: Screen 2 — Auspicious Itinerary & Dates of Celebrations:
-     - Framed with the exquisite royal blue & gold floral pillar border (`template-11-border.png`).
-     - Live 4-box Countdown Timer (Days, Hours, Minutes, Seconds).
-     - Dynamic ceremony cards with date ribbons, timings, venue, and "RSVP →" action.
-   - Act V: Screen 3 — Banquet Hall & Google Maps Venue:
-     - Framed with `template-11-border.png`.
-     - Hero banquet photo / royal arch motif, venue name, address, and interactive
-       "📍 GET DIRECTIONS ON GOOGLE MAPS" button.
-   - Act VI: Screen 4 — Warmest Wishes & Royal RSVP Suite:
-     - Framed with `template-11-border.png`.
-     - Guest personal invitation badge, "✨ OPEN ROYAL RSVP MODAL" button,
-       WhatsApp RSVP direct link, closing family blessing, and "REPLAY LIGHTS & PHULJHARI".
+   - Act III (2nd Image): Screen 1 — Two Hearts · One Destiny:
+     - "Two Hearts · One Destiny", "Together with their Families"
+     - "The Journey of Love & Togetherness"
+     - Bride on Left (Photo, Bride, Pari, d/o, Kalam, Address)
+     - Groom on Right (Photo, Groom, Param, s/o, Abdul, Address)
+     - "❖ Two hearts, two families, one beautiful beginning."
+   - Act IV (3rd Image): Screen 2 — Auspicious Wedding Muhurat:
+     - "Auspicious Wedding Muhurat · The Sacred Wedding Date"
+     - "Scratch below to reveal our sacred wedding date, followed by live countdown & calendar"
+     - Interactive Scratch & Reveal Wedding Date card with canvas
+     - 4-box Live Countdown Timer (Days, Hours, Minutes, Seconds)
+     - Save Date (Google Calendar Integration)
+   - Act V (4th Image): Screen 3 — Wedding Programme:
+     - "Wedding Programme" with ceremony photo banners, dates, timings & RSVP link
+   - Act VI (5th Image): Screen 4 — Banquet & Venue:
+     - Banquet Name, Location Name with banquet hero image & Google Maps button
+   - Act VII: Screen 5 — Warmest Wishes & Royal RSVP Suite:
+     - Guest badge, Royal RSVP modal button,
+     - "With love, affection, and best wishes, The Pari & Para Families"
+     - Replay Lights & Phuljhari
    ========================================================================== */
 
 /* ---------- Helpers & Sanitizers ---------- */
@@ -85,6 +87,18 @@ function formatRibbonDate(dStr, tStr) {
   return `${day} ${month} ${yr} ${time}`;
 }
 
+function formatAddress(addr) {
+  const s = clean(addr);
+  if (!s) return 'Ancestral Heritage,<br>West Bengal';
+  if (s.includes(',')) {
+    const parts = s.split(',').map(p => p.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${esc(parts[0])},<br>${esc(parts.slice(1).join(', '))}`;
+    }
+  }
+  return esc(s);
+}
+
 function getFatherOnly(str, fallback) {
   const s = clean(str);
   if (!s) return fallback || 'Mr. Father Name';
@@ -102,6 +116,48 @@ function getFatherOnly(str, fallback) {
   return res.trim() || fallback || 'Mr. Father Name';
 }
 
+const CEREMONY_IMAGES = [
+  { re: /gaye\s*holud|holud|haldi/i, img: './assets/template-06-gaye-holud.webp' },
+  { re: /mehndi|mehendi/i, img: './assets/template-06-sangeet.webp' },
+  { re: /sangeet|musical/i, img: './assets/template-06-sangeet.webp' },
+  { re: /biye|bibaho|shubho|nikah|vivah|wedding|ceremony/i, img: './assets/template-06-shubho-bibaho.webp' },
+  { re: /bou\s*bhat|boubhat|walima/i, img: './assets/template-06-boubhat.webp' },
+  { re: /reception/i, img: './assets/template-06-reception.webp' }
+];
+
+function getEventPhoto(ev) {
+  const custom = safeImg(ev.image || ev.photo || ev.pic || ev.event_photo || ev.photo_url || ev.image_url);
+  if (custom) return custom;
+  const name = clean(ev.event_name || ev.name || ev.title || '');
+  const found = CEREMONY_IMAGES.find(c => c.re.test(name));
+  return found ? found.img : './assets/template-06-shubho-bibaho.webp';
+}
+
+function buildGoogleCalendarUrl({ wedding = {}, guest = {} } = {}) {
+  const bride = clean(wedding.bride_name) || 'Pari';
+  const groom = clean(wedding.groom_name) || 'Param';
+  const venue = clean(wedding.venue) || 'Royal Palace Banquet';
+  const addr = clean(wedding.address) || '';
+  const loc = [venue, addr].filter(Boolean).join(', ');
+
+  let startMs = Date.parse(wedding.date || '2026-11-28');
+  if (isNaN(startMs)) startMs = Date.now() + 7 * 86400000;
+
+  const fmt = ms => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const endMs = startMs + 4 * 3600 * 1000;
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Wedding Celebration of ${bride} & ${groom}`,
+    dates: `${fmt(startMs)}/${fmt(endMs)}`,
+    ctz: 'Asia/Kolkata',
+    location: loc,
+    details: `We eagerly look forward to celebrating with ${guest.name || 'you and your family'}.`
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 /* ---------- Default Export: Render Template HTML ---------- */
 export default function render({ guest = {}, wedding = {}, events = [] }) {
   const gName = clean(guest.name) || 'Respected Guest';
@@ -109,24 +165,22 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   const isFamily = Boolean(guest.with_family || gPersons > 1 || /family/i.test(gName));
   const guestBadge = isFamily ? `Family Invitation · ${gPersons} Persons` : `${gPersons} Person Invited`;
 
-  const groomName = clean(wedding.groom_name) || 'Purushottam';
-  const brideName = clean(wedding.bride_name) || 'Sanjukta';
+  const brideName = clean(wedding.bride_name) || 'Pari';
+  const groomName = clean(wedding.groom_name) || 'Param';
 
   // Father only - Mother name removed per request
-  const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Mr. Father Name');
-  const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Mr. Father Name');
+  const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
+  const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
 
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.address) || 'Ancestral Heritage, West Bengal';
   const brideAddr = clean(wedding.bride_address) || clean(wedding.address) || 'Ancestral Heritage, West Bengal';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.address) || 'Ancestral Heritage, West Bengal';
 
-  const invocation = clean(wedding.invocation) || '|| শ্রী শ্রী প্রজাপতয়ে নমঃ ||';
   const weddingDateStr = formatRoyalDate(wedding.date);
 
   const venueName = clean(wedding.venue) || 'Royal Palace Banquet';
   const venueAddr = clean(wedding.address) || 'Grand Heritage Avenue, Kolkata';
   const mapLink = safeUrl(wedding.map_url) || `https://maps.google.com/?q=${encodeURIComponent(venueName + ' ' + venueAddr)}`;
-
-  const footerBlessing = clean(wedding.footer_text) || `The ${groomName} & ${brideName} Families`;
+  const calLink = buildGoogleCalendarUrl({ wedding, guest });
 
   // Photos
   const storedCouple = getStoredPhoto('wedding_couple_photo');
@@ -162,9 +216,10 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 #t11-stage {
   position: relative;
   container-type: size;
-  aspect-ratio: 2/3;
-  width: min(100%, calc(100dvh * 2 / 3));
-  height: min(100dvh, 150vw);
+  width: 100%;
+  max-width: 480px;
+  height: 100dvh;
+  min-height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
   background: #070b1a;
@@ -196,68 +251,78 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   overflow: hidden;
 }
 
-/* Page 1: Hero Page (Palace Parchment Stage) */
+/* Page 1 (2nd Image): Hero Page (Palace Parchment Stage) */
 .t11-page-hero {
   background: var(--t11-img2) center/100% 100% no-repeat;
 }
 .t11-inner {
   position: absolute;
-  left: 17.5cqw;
-  right: 17.5cqw;
-  top: 25cqh;
-  bottom: 11cqh;
+  left: 14cqw;
+  right: 14cqw;
+  top: 31cqh;
+  bottom: 8.5cqh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   text-align: center;
   color: #140b02;
   opacity: 0;
   transition: opacity 1.4s ease;
+  box-sizing: border-box;
+  padding: 0;
+}
+.t11-hero-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 .t11-done .t11-inner { opacity: 1; }
 .t11-done .t11-inner > * { animation: t11Up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.t11-done .t11-inner > :nth-child(2) { animation-delay: 0.2s; }
-.t11-done .t11-inner > :nth-child(3) { animation-delay: 0.4s; }
-.t11-done .t11-inner > :nth-child(4) { animation-delay: 0.6s; }
+.t11-done .t11-inner > :nth-child(2) { animation-delay: 0.25s; }
+.t11-done .t11-inner > :nth-child(3) { animation-delay: 0.5s; }
 
 @keyframes t11Up {
   from { opacity: 0; transform: translateY(2.8cqw); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.t11-blessing {
+.t11-eyebrow {
   font-family: 'Cinzel', serif;
-  font-size: 2.6cqw;
+  font-size: 2.5cqw;
   font-weight: 800;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.26em;
   color: #6d0716;
-  margin-bottom: 0.5cqw;
+  margin-bottom: 0.6cqw;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
 }
 .t11-kicker {
   font-family: 'Cinzel', serif;
   font-weight: 800;
-  font-size: 2.5cqw;
-  letter-spacing: 0.35em;
+  font-size: 2.1cqw;
+  letter-spacing: 0.28em;
   color: #1a0f03;
+  margin-bottom: 0.4cqw;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
 }
-.t11-title {
-  font-family: 'Great Vibes', cursive;
-  font-size: 8.6cqw;
-  font-weight: 700;
-  color: #140b02;
-  line-height: 1.1;
-  margin: 0.3cqw 0 2cqw;
-  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95);
+.t11-hero-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 3.4cqw;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #7a0918;
+  line-height: 1.25;
+  margin: 0.4cqw 0 1.2cqw;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
 }
 .t11-couple {
   display: flex;
-  gap: 2.5cqw;
+  gap: 3.5cqw;
   width: 100%;
   justify-content: center;
   align-items: flex-start;
+  margin: 0;
 }
 .t11-side {
   flex: 1;
@@ -267,8 +332,8 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   min-width: 0;
 }
 .t11-photo {
-  width: 16cqw;
-  height: 16cqw;
+  width: 18cqw;
+  height: 18cqw;
   border-radius: 50%;
   border: 0.7cqw solid #cfa344;
   box-shadow: 0 0 0 0.45cqw #fff9ea, 0 1cqw 2.5cqw rgba(30, 15, 0, 0.4);
@@ -277,75 +342,91 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   align-items: center;
   justify-content: center;
   font-family: 'Cinzel', serif;
-  font-size: 6.5cqw;
+  font-size: 7cqw;
   font-weight: 800;
   color: #8a6015;
 }
+.t11-role-badge {
+  font-family: 'Cinzel', serif;
+  font-weight: 800;
+  font-size: 2.2cqw;
+  letter-spacing: 0.25em;
+  color: #6d0716;
+  margin-top: 1cqw;
+  text-transform: uppercase;
+}
 .t11-name {
   font-family: 'Great Vibes', cursive;
-  font-size: 6.4cqw;
+  font-size: 6.8cqw;
   font-weight: 700;
   color: #140b02;
-  margin-top: 1cqw;
+  margin-top: 0.4cqw;
   line-height: 1.1;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
 }
-.t11-role {
+.t11-rel {
   font-family: 'Cinzel', serif;
   font-weight: 800;
   font-size: 2.1cqw;
   letter-spacing: 0.22em;
-  color: #6d0716;
+  color: #7a0918;
   margin-top: 0.6cqw;
+  text-transform: lowercase;
 }
 .t11-par {
-  font-size: 2.5cqw;
+  font-size: 2.7cqw;
   font-weight: 700;
   line-height: 1.3;
-  margin-top: 0.6cqw;
+  margin-top: 0.4cqw;
   color: #140b02;
 }
 .t11-addr {
-  font-size: 2.2cqw;
+  font-size: 2.0cqw;
   font-weight: 600;
   line-height: 1.3;
-  margin-top: 0.5cqw;
+  margin-top: 0.3cqw;
   color: #2b1704;
+  max-width: 27cqw;
+  text-wrap: balance;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
-.t11-guest-board {
-  margin-top: 2.5cqw;
-  padding: 1.5cqw 3cqw;
-  background: rgba(255, 255, 255, 0.98);
-  border: 0.25cqw solid #cfa344;
-  border-radius: 4cqw;
-  box-shadow: 0 0.8cqw 2.5cqw rgba(40, 20, 0, 0.25);
+.t11-hero-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
   width: 100%;
-  max-width: 76cqw;
-  text-align: center;
 }
-.t11-gb-label {
-  font-family: 'Cinzel', serif;
-  font-size: 1.9cqw;
-  letter-spacing: 0.28em;
-  color: #6d0716;
-  font-weight: 800;
+.t11-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5cqw;
+  width: 46cqw;
+  opacity: 0.85;
 }
-.t11-gb-name {
-  font-family: 'Cinzel', serif;
-  font-size: 3.2cqw;
-  color: #140b02;
-  font-weight: 800;
-  margin: 0.3cqw 0;
+.t11-ornament-line {
+  flex: 1;
+  height: 0.18cqw;
+  background: linear-gradient(90deg, transparent, #cfa344, transparent);
 }
-.t11-gb-sub {
-  font-size: 2.3cqw;
+.t11-ornament-icon {
+  font-size: 2.2cqw;
+  color: #8a6015;
+  line-height: 1;
+}
+.t11-tagline {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.6cqw;
   font-weight: 600;
-  color: #2e1a05;
+  font-style: italic;
+  color: #3d2307;
+  line-height: 1.4;
+  margin: 0;
 }
-
 .t11-scroll-cue {
-  margin-top: 1.8cqw;
   font-family: 'Cinzel', serif;
   font-size: 1.9cqw;
   font-weight: 800;
@@ -353,13 +434,14 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   color: #573307;
   text-shadow: 0 0.1cqw 0.2cqw rgba(255, 255, 255, 0.8);
   animation: t11PulseCue 2s infinite ease-in-out;
+  padding: 0.4cqw 1cqw;
 }
 @keyframes t11PulseCue {
   0%, 100% { opacity: 0.6; transform: translateY(0); }
   50% { opacity: 1; transform: translateY(0.4cqw); }
 }
 
-/* Pages 2, 3, 4: Framed with Ornate Royal Blue & Gold Pillars Border (Side-shifted so half pillar is visible) */
+/* Framed Pages Border Overlay (Half pillar visible on edges) */
 .t11-page-framed {
   background: radial-gradient(circle at 50% 25%, #ffffff 0%, #faf4e6 55%, #f2e5c8 100%);
   position: relative;
@@ -368,28 +450,29 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -9.5cqw;
-  right: -9.5cqw;
+  left: -8cqw;
+  right: -8cqw;
   pointer-events: none;
   background: var(--t11-border) center/100% 100% no-repeat;
   z-index: 2;
 }
 .t11-framed-content {
   position: absolute;
-  left: 7.5cqw;
-  right: 7.5cqw;
-  top: 8.5cqh;
-  bottom: 8cqh;
+  left: 12cqw;
+  right: 12cqw;
+  top: 6cqh;
+  bottom: 8.5cqh;
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   overflow-y: auto;
   scrollbar-width: none;
   text-align: center;
   color: #140b02;
-  padding: 1cqw;
+  box-sizing: border-box;
+  padding: 0;
 }
 .t11-framed-content::-webkit-scrollbar { display: none; }
 
@@ -403,21 +486,23 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 .t11-sec-kicker {
   font-family: 'Cinzel', serif;
-  font-size: 2.4cqw;
-  letter-spacing: 0.32em;
+  font-size: 2.3cqw;
+  letter-spacing: 0.3em;
   color: #7a0918;
   font-weight: 800;
 }
 .t11-sec-title {
   font-family: 'Cinzel', serif;
-  font-size: 4.8cqw;
+  font-size: 3.8cqw;
   color: #140b02;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-weight: 800;
-  margin: 0.4cqw 0 0.6cqw;
+  margin: 0.3cqw 0 0.5cqw;
+  line-height: 1.2;
+  word-break: break-word;
 }
 .t11-sec-sub {
-  font-size: 2.6cqw;
+  font-size: 2.5cqw;
   font-weight: 600;
   color: #2e1a05;
   max-width: 74cqw;
@@ -425,14 +510,132 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   margin-bottom: 2cqw;
 }
 
-/* Countdown Timer */
+/* Page 2 (3rd Image): Scratch & Reveal Card */
+.t11-scratch-card-wrap {
+  width: 100%;
+  max-width: 76cqw;
+  background: rgba(255, 255, 255, 0.98);
+  border: 0.25cqw solid #cfa344;
+  border-radius: 2.5cqw;
+  padding: 2.2cqw 2.5cqw;
+  box-shadow: 0 1cqw 3cqw rgba(50, 25, 0, 0.15);
+  margin-bottom: 2.5cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.t11-scratch-head {
+  text-align: center;
+  margin-bottom: 1.5cqw;
+}
+.t11-scratch-icon {
+  font-size: 4.5cqw;
+  display: block;
+  margin-bottom: 0.5cqw;
+}
+.t11-scratch-title {
+  font-family: 'Cinzel', serif;
+  font-size: 3.4cqw;
+  font-weight: 800;
+  color: #140b02;
+  margin: 0 0 0.4cqw;
+}
+.t11-scratch-desc {
+  font-size: 2.3cqw;
+  color: #3d2307;
+  font-weight: 600;
+  margin: 0;
+}
+.t11-scratch-box {
+  position: relative;
+  width: 100%;
+  height: 24cqw;
+  border-radius: 2cqw;
+  border: 0.22cqw solid #cfa344;
+  overflow: hidden;
+  box-shadow: inset 0 0.5cqw 1.5cqw rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #fffcf5, #f5e8cd);
+}
+.t11-scratch-unveiled {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5cqw;
+  text-align: center;
+}
+.t11-scratch-ring {
+  font-size: 4cqw;
+  line-height: 1;
+  margin-bottom: 0.4cqw;
+}
+.t11-scratch-date {
+  font-family: 'Cinzel', serif;
+  font-size: 4.6cqw;
+  font-weight: 800;
+  color: #7a0918;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4cqw;
+}
+.t11-scratch-muhurat {
+  font-size: 2.3cqw;
+  font-weight: 700;
+  color: #2b1704;
+  margin-bottom: 0.3cqw;
+}
+.t11-scratch-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 1.8cqw;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #8a6015;
+}
+.t11-scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+.t11-btn-scratch {
+  margin-top: 1.6cqw;
+  font-family: 'Cinzel', serif;
+  font-size: 2.2cqw;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  padding: 1.1cqw 3.2cqw;
+  color: #7a0918;
+  background: linear-gradient(180deg, #fffdf2, #f3d790);
+  border: 0.22cqw solid #cfa344;
+  border-radius: 6cqw;
+  cursor: pointer;
+  box-shadow: 0 0.8cqw 2cqw rgba(50, 25, 0, 0.12);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.t11-btn-scratch:active { transform: scale(0.97); }
+
+/* Live Countdown Card */
+.t11-cd-card {
+  width: 100%;
+  max-width: 76cqw;
+  margin-bottom: 2.5cqw;
+}
+.t11-cd-label {
+  font-family: 'Cinzel', serif;
+  font-size: 2.1cqw;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #6d0716;
+  margin-bottom: 1.2cqw;
+}
 .t11-cd-grid {
   display: flex;
   gap: 2.2cqw;
   justify-content: center;
-  margin-bottom: 2.5cqw;
   width: 100%;
-  max-width: 76cqw;
 }
 .t11-cd-box {
   flex: 1;
@@ -462,21 +665,82 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   margin-top: 0.4cqw;
 }
 
-/* Ceremony Cards */
+/* Save Date Card (Google Calendar) */
+.t11-cal-card {
+  width: 100%;
+  max-width: 76cqw;
+  background: rgba(255, 255, 255, 0.98);
+  border: 0.25cqw solid #cfa344;
+  border-radius: 2.5cqw;
+  padding: 2.2cqw 3cqw;
+  box-shadow: 0 1cqw 3cqw rgba(50, 25, 0, 0.15);
+  margin-bottom: 1cqw;
+}
+.t11-cal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 3.4cqw;
+  font-weight: 800;
+  color: #140b02;
+  margin-bottom: 0.4cqw;
+}
+.t11-cal-desc {
+  font-size: 2.3cqw;
+  color: #3d2307;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 1.5cqw;
+}
+.t11-btn-cal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+  font-family: 'Cinzel', serif;
+  font-size: 2.4cqw;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding: 1.4cqw 3.6cqw;
+  color: #1a0f02;
+  background: linear-gradient(180deg, #fff3c4 0%, #e2b457 55%, #c58f2c 100%);
+  border: 0.22cqw solid #fff7d6;
+  border-radius: 8cqw;
+  cursor: pointer;
+  box-shadow: 0 1cqw 2.5cqw rgba(212, 175, 55, 0.45);
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+.t11-btn-cal:active { transform: scale(0.97); }
+
+/* Page 3 (4th Image): Wedding Programme */
 .t11-events-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.8cqw;
+  gap: 2.2cqw;
   width: 100%;
   max-width: 78cqw;
 }
 .t11-ev-card {
   background: rgba(255, 255, 255, 0.98);
-  border: 0.22cqw solid #cfa344;
-  border-radius: 2.2cqw;
-  padding: 1.8cqw 2.5cqw;
+  border: 0.25cqw solid #cfa344;
+  border-radius: 2.4cqw;
+  overflow: hidden;
   box-shadow: 0 1cqw 2.8cqw rgba(50, 25, 0, 0.14);
   text-align: left;
+}
+.t11-ev-img-wrap {
+  width: 100%;
+  height: 20cqw;
+  overflow: hidden;
+  position: relative;
+  background: #ecd9b5;
+}
+.t11-ev-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.t11-ev-body {
+  padding: 1.8cqw 2.5cqw;
 }
 .t11-ev-ribbon {
   display: inline-block;
@@ -495,7 +759,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   font-size: 3.6cqw;
   font-weight: 800;
   color: #140b02;
-  margin: 0.4cqw 0 0.2cqw;
+  margin: 0.4cqw 0 0.3cqw;
 }
 .t11-ev-venue {
   font-size: 2.5cqw;
@@ -528,7 +792,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 .t11-ev-rsvp-link:hover { text-decoration: underline; }
 
-/* Page 3: Banquet Hall Venue */
+/* Page 4 (5th Image): Banquet Hall Venue */
 .t11-venue-card {
   width: 100%;
   max-width: 78cqw;
@@ -543,7 +807,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 .t11-venue-photo-wrap {
   width: 100%;
-  height: 25cqw;
+  height: 26cqw;
   border-radius: 2cqw;
   border: 0.25cqw solid #cfa344;
   overflow: hidden;
@@ -611,7 +875,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 .t11-btn-primary:active { transform: scale(0.97); }
 
-/* Page 4: RSVP & Warmest Wishes */
+/* Page 5: RSVP & Warmest Wishes */
 .t11-rsvp-card {
   width: 100%;
   max-width: 78cqw;
@@ -650,22 +914,27 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   font-weight: 600;
   margin-bottom: 2cqw;
 }
+.t11-footer-closing {
+  margin-top: 2cqw;
+  text-align: center;
+}
+.t11-footer-blessing {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.8cqw;
+  font-style: italic;
+  font-weight: 600;
+  color: #3d2307;
+  margin-bottom: 0.4cqw;
+}
 .t11-footer-family {
   font-family: 'Cinzel', serif;
-  font-size: 2.8cqw;
+  font-size: 3.2cqw;
   font-weight: 800;
   letter-spacing: 0.16em;
   color: #140b02;
-  margin-top: 2cqw;
-}
-.t11-footer-blessing {
-  font-size: 2.4cqw;
-  font-weight: 600;
-  color: #3d2307;
-  margin-top: 0.5cqw;
 }
 .t11-btn-replay {
-  margin-top: 2cqw;
+  margin-top: 2.2cqw;
   font-family: 'Cinzel', serif;
   font-size: 2.2cqw;
   font-weight: 800;
@@ -676,41 +945,6 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   border: 0.22cqw solid #cfa344;
   border-radius: 6cqw;
   cursor: pointer;
-}
-
-/* Special Message Card */
-.t11-msg-card {
-  width: 100%;
-  max-width: 76cqw;
-  background: rgba(255, 255, 255, 0.97);
-  border: 0.25cqw solid #cfa344;
-  border-radius: 3cqw;
-  padding: 3cqw 3.5cqw 2.5cqw;
-  box-shadow: 0 1.2cqw 3.5cqw rgba(50, 25, 0, 0.14);
-  text-align: center;
-  margin-top: 1.5cqw;
-}
-.t11-msg-quote {
-  font-family: 'Great Vibes', cursive;
-  font-size: 12cqw;
-  color: #cfa344;
-  line-height: 0.6;
-  margin-bottom: 1.5cqw;
-}
-.t11-msg-text {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 3.2cqw;
-  font-weight: 600;
-  color: #2e1a05;
-  line-height: 1.6;
-  font-style: italic;
-  margin-bottom: 2cqw;
-}
-.t11-msg-signed {
-  font-family: 'Great Vibes', cursive;
-  font-size: 5.5cqw;
-  color: #7a0918;
-  font-weight: 700;
 }
 
 /* ==================== ACT I INTRO GATE & SCENE ==================== */
@@ -767,13 +1001,13 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 @keyframes t11Flicker { 50% { opacity: 0.72; } }
 
-/* Intro Message Card */
+/* Intro Message Card (Luminous Gold Suite) */
 #t11-msg {
   position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 26%;
-  bottom: 12%;
+  left: 10%;
+  right: 10%;
+  top: 23%;
+  bottom: 11%;
   z-index: 6;
   display: flex;
   flex-direction: column;
@@ -787,96 +1021,111 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 #t11-msg::before {
   content: "";
   position: absolute;
-  inset: -6% -14%;
+  inset: -12% -18%;
   z-index: -1;
-  background: radial-gradient(ellipse at center, rgba(3, 8, 30, 0.78) 0%, rgba(3, 8, 30, 0.55) 50%, transparent 76%);
+  background: radial-gradient(ellipse at center, rgba(3, 7, 24, 0.78) 0%, rgba(3, 7, 24, 0.45) 55%, transparent 78%);
   border-radius: 50%;
+  pointer-events: none;
 }
 @keyframes t11MsgIn { from { opacity: 0; } }
 .t11-open #t11-msg { opacity: 0; pointer-events: none; }
 
 #t11-msg > div {
-  background: linear-gradient(180deg, #fffbe8 0%, #ffe9a6 48%, #f0c35c 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #fff4d1;
   font-weight: 700;
-  filter: drop-shadow(0 0.15cqw 0.2cqw rgba(0, 0, 0, 0.95)) drop-shadow(0 0 1.4cqw rgba(0, 0, 0, 0.85));
+  text-shadow: 0 0.2cqw 0.8cqw rgba(0, 0, 0, 0.95), 0 0 2cqw rgba(255, 215, 120, 0.45);
 }
 .t11-wel {
   font-family: 'Cinzel', serif;
-  font-size: 3.8cqw;
-  letter-spacing: 0.5em;
-  padding-left: 0.5em;
+  font-size: 4cqw;
+  letter-spacing: 0.52em;
+  padding-left: 0.52em;
+  color: #fce7ba;
 }
 .t11-cel {
   font-family: 'Cinzel', serif;
   font-size: 2.6cqw;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
   margin: 1.4cqw 0 0.8cqw;
+  color: #ebd19c;
 }
 .t11-names {
   font-family: 'Great Vibes', cursive;
-  font-size: 9cqw;
-  line-height: 1.08;
+  font-size: 10.2cqw;
+  line-height: 1.1;
+  color: #ffe6a3;
+  text-shadow: 0 0.4cqw 1cqw rgba(0, 0, 0, 0.98), 0 0 2.5cqw rgba(255, 215, 0, 0.7);
 }
 .t11-ci {
   font-family: 'Cinzel', serif;
   font-size: 2.6cqw;
-  letter-spacing: 0.24em;
-  margin-top: 2.8cqw;
+  letter-spacing: 0.26em;
+  margin-top: 2.6cqw;
+  color: #ebd19c;
 }
 .t11-gst {
   font-family: 'Great Vibes', cursive;
-  font-size: 7.2cqw;
+  font-size: 8.2cqw;
   margin-top: 0.4cqw;
   line-height: 1.1;
+  color: #fff3c8;
+  text-shadow: 0 0.3cqw 0.8cqw rgba(0, 0, 0, 0.95), 0 0 2cqw rgba(255, 215, 0, 0.6);
 }
 .t11-per {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 3.5cqw;
-  letter-spacing: 0.1em;
-  margin-top: 0.3cqw;
+  font-size: 3.6cqw;
+  letter-spacing: 0.12em;
+  margin-top: 0.4cqw;
+  color: #f2e2be;
 }
 #t11-open-btn {
   margin-top: 2.8cqw;
   font-family: 'Cinzel', serif;
-  font-size: 3.2cqw;
-  font-weight: 700;
+  font-size: 3.4cqw;
+  font-weight: 800;
   letter-spacing: 0.35em;
-  padding: 1.6cqw 5.8cqw 1.6cqw 6.15cqw;
-  color: #2a1b05;
-  background: linear-gradient(180deg, #fff0bd 0%, #e2b457 55%, #c58f2c 100%);
-  border: 0.2cqw solid #fff3c8;
+  padding: 1.6cqw 6cqw 1.6cqw 6.35cqw;
+  color: #2a1603;
+  background: linear-gradient(180deg, #fff2c6 0%, #e8bc5c 52%, #c9932d 100%);
+  border: 0.25cqw solid #fff8d6;
   border-radius: 10cqw;
   cursor: pointer;
-  box-shadow: 0 0 3cqw rgba(255, 210, 110, 0.65);
+  box-shadow: 0 0 3.5cqw rgba(255, 215, 120, 0.85), 0 0.8cqw 2cqw rgba(0, 0, 0, 0.6);
   animation: t11BtnPulse 2s infinite ease-in-out;
 }
 .t11-lit #t11-open-btn { animation: none; }
 .t11-tap {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 2.7cqw;
+  font-size: 2.8cqw;
   margin-top: 2cqw;
   letter-spacing: 0.1em;
+  color: #f0dfb6;
 }
 @keyframes t11BtnPulse {
-  50% { box-shadow: 0 0 6cqw rgba(255, 210, 110, 0.95); transform: scale(1.02); }
+  50% { box-shadow: 0 0 6cqw rgba(255, 215, 120, 1), 0 0 2cqw rgba(255, 255, 255, 0.8); transform: scale(1.02); }
 }
 
 .t11-skip-btn {
-  margin-top: 2cqw;
+  margin-top: 2.2cqw;
   background: none;
   border: none;
-  color: rgba(255, 240, 200, 0.7);
+  color: rgba(255, 240, 200, 0.85);
   font-family: 'Cinzel', serif;
-  font-size: 2cqw;
+  font-size: 2.2cqw;
   letter-spacing: 0.25em;
   text-decoration: underline;
   cursor: pointer;
   transition: color 0.2s;
 }
 .t11-skip-btn:hover { color: #fff; }
+
+/* Strictly hide floating bottom dock on intro / unrevealed */
+body:not(.invitation-unveiled) .royal-dock-wrap,
+#t11-stage:not(.t11-done):not(.t11-open) ~ * .royal-dock-wrap {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
 #t11-fx {
   position: absolute;
@@ -891,123 +1140,158 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 <div id="t11-stage" class="t11-stage" data-wedding-date="${esc(wedding.date || '2026-11-28')}">
   <!-- Inner Pages -->
   <div id="t11-pages">
-    <!-- Screen 1: The Couple & Parental Blessings (Palace Stage Backdrop) -->
-    <section class="t11-page t11-page-hero" aria-label="Royal Couple &amp; Parental Blessings">
+    <!-- Screen 1 (2nd Image): The Royal Couple & Lineage (Palace Stage Backdrop) -->
+    <section class="t11-page t11-page-hero" aria-label="Royal Couple &amp; Lineage">
       <div class="t11-inner" id="t11-p1">
-        <div class="t11-blessing">${esc(invocation)}</div>
-        <div class="t11-kicker">THE WEDDING CELEBRATION OF</div>
-        <div class="t11-title">${esc(groomName)} &amp;amp; ${esc(brideName)}</div>
+        <div class="t11-hero-header">
+          <div class="t11-eyebrow">Two Hearts · One Destiny</div>
+          <div class="t11-kicker">Together with their Families</div>
+          <h1 class="t11-hero-title">The Journey of Love &amp; Togetherness</h1>
+        </div>
         <div class="t11-couple">
-          <div class="t11-side">
-            <div class="t11-photo" ${groomPhoto ? `style="background-image:url('${esc(groomPhoto)}')"` : ''}>
-              ${groomPhoto ? '' : esc(groomName.charAt(0) || 'G')}
-            </div>
-            <div class="t11-name">${esc(groomName)}</div>
-            <div class="t11-role">SON OF</div>
-            <div class="t11-par">${esc(groomFather)}</div>
-            <div class="t11-addr">${esc(groomAddr)}</div>
-          </div>
+          <!-- Bride on Left -->
           <div class="t11-side">
             <div class="t11-photo" ${bridePhoto ? `style="background-image:url('${esc(bridePhoto)}')"` : ''}>
               ${bridePhoto ? '' : esc(brideName.charAt(0) || 'B')}
             </div>
+            <div class="t11-role-badge">Bride</div>
             <div class="t11-name">${esc(brideName)}</div>
-            <div class="t11-role">DAUGHTER OF</div>
+            <div class="t11-rel">d/o</div>
             <div class="t11-par">${esc(brideFather)}</div>
-            <div class="t11-addr">${esc(brideAddr)}</div>
+            <div class="t11-addr">${formatAddress(brideAddr)}</div>
           </div>
-        </div>
-        <div class="t11-scroll-cue">✦ SCROLL FOR AUSPICIOUS ITINERARY ✦</div>
-      </div>
-    </section>
-
-    <!-- Screen 2: Save the Date + Guest Board (Framed) -->
-    <section class="t11-page t11-page-framed" id="dates-section" data-sec="date" aria-label="Save The Date">
-      <div class="t11-frame-border" aria-hidden="true"></div>
-      <div class="t11-framed-content">
-        <div class="t11-sec-arch" aria-hidden="true"></div>
-        <div class="t11-sec-kicker">SAVE THE DATE</div>
-        <h2 class="t11-sec-title">${esc(weddingDateStr)}</h2>
-        <p class="t11-sec-sub">${esc(groomName)} &amp;amp; ${esc(brideName)} — Together with their families</p>
-
-        <!-- Live Countdown -->
-        <div class="t11-cd-grid" role="timer" aria-label="Wedding Countdown">
-          <div class="t11-cd-box">
-            <span class="t11-cd-num" id="t11-cd-days">00</span>
-            <span class="t11-cd-lbl">DAYS</span>
-          </div>
-          <div class="t11-cd-box">
-            <span class="t11-cd-num" id="t11-cd-hours">00</span>
-            <span class="t11-cd-lbl">HOURS</span>
-          </div>
-          <div class="t11-cd-box">
-            <span class="t11-cd-num" id="t11-cd-mins">00</span>
-            <span class="t11-cd-lbl">MINS</span>
-          </div>
-          <div class="t11-cd-box">
-            <span class="t11-cd-num" id="t11-cd-secs">00</span>
-            <span class="t11-cd-lbl">SECS</span>
-          </div>
-        </div>
-
-        <!-- Guest Invitation Badge -->
-        <div class="t11-guest-board">
-          <div class="t11-gb-label">CORDIALLY INVITED</div>
-          <div class="t11-gb-name">${esc(gName)}</div>
-          <div class="t11-gb-sub">${esc(guestBadge)}</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Screen 3: Rituals & Celebrations (Framed) -->
-    <section class="t11-page t11-page-framed" id="events-section" data-sec="events" aria-label="Rituals &amp; Celebrations">
-      <div class="t11-frame-border" aria-hidden="true"></div>
-      <div class="t11-framed-content">
-        <div class="t11-sec-arch" aria-hidden="true"></div>
-        <div class="t11-sec-kicker">AUSPICIOUS ITINERARY</div>
-        <h2 class="t11-sec-title">RITUALS &amp;amp; CELEBRATIONS</h2>
-        <p class="t11-sec-sub">Cherished ceremonies uniting our families in love, tradition, and blessings.</p>
-
-        <!-- Dynamic Events Grid -->
-        <div class="t11-events-grid">
-          ${rawEvents.map(ev => `
-            <div class="t11-ev-card">
-              <div class="t11-ev-ribbon">${formatRibbonDate(ev.event_date, ev.event_time)}</div>
-              <div class="t11-ev-name">${esc(ev.event_name || 'Wedding Ceremony')}</div>
-              <div class="t11-ev-venue">${esc(ev.venue || venueName)}</div>
-              <div class="t11-ev-bottom">
-                <span class="t11-ev-bless">Bless with Presence</span>
-                <button type="button" class="t11-ev-rsvp-link" data-trigger-rsvp>RSVP &rarr;</button>
-              </div>
+          <!-- Groom on Right -->
+          <div class="t11-side">
+            <div class="t11-photo" ${groomPhoto ? `style="background-image:url('${esc(groomPhoto)}')"` : ''}>
+              ${groomPhoto ? '' : esc(groomName.charAt(0) || 'G')}
             </div>
-          `).join('')}
+            <div class="t11-role-badge">Groom</div>
+            <div class="t11-name">${esc(groomName)}</div>
+            <div class="t11-rel">s/o</div>
+            <div class="t11-par">${esc(groomFather)}</div>
+            <div class="t11-addr">${formatAddress(groomAddr)}</div>
+          </div>
+        </div>
+        <div class="t11-hero-footer">
+          <div class="t11-ornament" aria-hidden="true">
+            <span class="t11-ornament-line"></span>
+            <span class="t11-ornament-icon">❖</span>
+            <span class="t11-ornament-line"></span>
+          </div>
+          <p class="t11-tagline">
+            Two hearts, two families,<br>one beautiful beginning.
+          </p>
+          <div class="t11-scroll-cue">✦ SCROLL FOR SACRED MUHURAT ✦</div>
         </div>
       </div>
     </section>
 
-    <!-- Screen 4: Special Message (Framed) — only if wedding.message or wedding.surprise_message present -->
-    ${(clean(wedding.message) || clean(wedding.surprise_message)) ? `
-    <section class="t11-page t11-page-framed" id="message-section" data-sec="reveal" aria-label="Special Message">
+    <!-- Screen 2 (3rd Image): Auspicious Wedding Muhurat, Scratch, Countdown & Save Date -->
+    <section class="t11-page t11-page-framed" id="dates-section" data-sec="date" aria-label="Auspicious Wedding Muhurat">
       <div class="t11-frame-border" aria-hidden="true"></div>
       <div class="t11-framed-content">
         <div class="t11-sec-arch" aria-hidden="true"></div>
-        <div class="t11-sec-kicker">A SPECIAL MESSAGE</div>
-        <h2 class="t11-sec-title">FROM THE HEART</h2>
-        <div class="t11-msg-card">
-          <div class="t11-msg-quote">“</div>
-          <div class="t11-msg-text">${esc(clean(wedding.message) || clean(wedding.surprise_message))}</div>
-          <div class="t11-msg-signed">— ${esc(groomName)} &amp; ${esc(brideName)}</div>
+        <div class="t11-sec-kicker">AUSPICIOUS WEDDING MUHURAT</div>
+        <h2 class="t11-sec-title">THE SACRED WEDDING DATE</h2>
+        <p class="t11-sec-sub">Scratch below to reveal our sacred wedding date, followed by live countdown &amp; calendar</p>
+
+        <!-- 1. Interactive Scratch Card -->
+        <div class="t11-scratch-card-wrap">
+          <div class="t11-scratch-head">
+            <span class="t11-scratch-icon">✨</span>
+            <h3 class="t11-scratch-title">Scratch &amp; Reveal Wedding Date</h3>
+            <p class="t11-scratch-desc">Scratch the golden card below to reveal the sacred wedding date &amp; muhurat!</p>
+          </div>
+          <div class="t11-scratch-box" id="t11-scratch-box">
+            <div class="t11-scratch-unveiled">
+              <span class="t11-scratch-ring">💍</span>
+              <strong class="t11-scratch-date">${esc(weddingDateStr)}</strong>
+              <span class="t11-scratch-muhurat">⏰ Auspicious Vivah Muhurat: ${esc(wedding.time || '7:00 PM Onwards')}</span>
+              <span class="t11-scratch-badge">✦ Shubh Vivah · Auspicious Union ✦</span>
+            </div>
+            <canvas id="t11-scratch-canvas" class="t11-scratch-canvas" aria-label="Scratch to reveal the wedding date"></canvas>
+          </div>
+          <button type="button" class="t11-btn-scratch" id="t11-scratch-btn">
+            <span>✨</span> Scratch or Tap to Reveal
+          </button>
+        </div>
+
+        <!-- 2. Live Countdown Timer -->
+        <div class="t11-cd-card">
+          <div class="t11-cd-label">COUNTDOWN TO CELEBRATIONS</div>
+          <div class="t11-cd-grid" role="timer" aria-label="Wedding Countdown">
+            <div class="t11-cd-box">
+              <span class="t11-cd-num" id="t11-cd-days">00</span>
+              <span class="t11-cd-lbl">DAYS</span>
+            </div>
+            <div class="t11-cd-box">
+              <span class="t11-cd-num" id="t11-cd-hours">00</span>
+              <span class="t11-cd-lbl">HOURS</span>
+            </div>
+            <div class="t11-cd-box">
+              <span class="t11-cd-num" id="t11-cd-mins">00</span>
+              <span class="t11-cd-lbl">MINS</span>
+            </div>
+            <div class="t11-cd-box">
+              <span class="t11-cd-num" id="t11-cd-secs">00</span>
+              <span class="t11-cd-lbl">SECS</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Save Date Card (Google Calendar) -->
+        <div class="t11-cal-card">
+          <div class="t11-cal-title">Save the Date</div>
+          <p class="t11-cal-desc">Add our sacred wedding ceremony directly to your Google Calendar so you never miss it.</p>
+          <a href="${calLink}" target="_blank" rel="noopener noreferrer" class="t11-btn-cal" id="t11-cal-btn">
+            <span>📅</span> Add to Google Calendar
+          </a>
         </div>
       </div>
-    </section>` : ''}
+    </section>
 
-    <!-- Screen 5: The Destination / Banquet Hall & Google Maps (Framed) -->
+    <!-- Screen 3 (4th Image): Wedding Programme (Framed) -->
+    <section class="t11-page t11-page-framed" id="events-section" data-sec="events" aria-label="Wedding Programme">
+      <div class="t11-frame-border" aria-hidden="true"></div>
+      <div class="t11-framed-content">
+        <div class="t11-sec-arch" aria-hidden="true"></div>
+        <div class="t11-sec-kicker">AUSPICIOUS CEREMONIES</div>
+        <h2 class="t11-sec-title">WEDDING PROGRAMME</h2>
+        <p class="t11-sec-sub">Join us in celebrating each sacred ritual with joyous celebrations</p>
+
+        <!-- Dynamic Events Grid with images -->
+        <div class="t11-events-grid">
+          ${rawEvents.map(ev => {
+            const evImg = getEventPhoto(ev);
+            return `
+            <div class="t11-ev-card">
+              ${evImg ? `
+                <div class="t11-ev-img-wrap">
+                  <img src="${esc(evImg)}" alt="${esc(ev.event_name || 'Ceremony')}" class="t11-ev-img" loading="lazy" />
+                </div>
+              ` : ''}
+              <div class="t11-ev-body">
+                <div class="t11-ev-ribbon">${formatRibbonDate(ev.event_date, ev.event_time)}</div>
+                <div class="t11-ev-name">${esc(ev.event_name || 'Wedding Ceremony')}</div>
+                <div class="t11-ev-venue">📍 ${esc(ev.venue || venueName)}</div>
+                <div class="t11-ev-bottom">
+                  <span class="t11-ev-bless">Bless with Presence</span>
+                  <button type="button" class="t11-ev-rsvp-link" data-trigger-rsvp>RSVP &rarr;</button>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 4 (5th Image): Banquet Name & Location Name with Image (Framed) -->
     <section class="t11-page t11-page-framed" id="map-section" data-sec="venue" aria-label="Banquet Hall Venue">
       <div class="t11-frame-border" aria-hidden="true"></div>
       <div class="t11-framed-content">
         <div class="t11-sec-arch" aria-hidden="true"></div>
-        <div class="t11-sec-kicker">THE DESTINATION</div>
-        <h2 class="t11-sec-title">BANQUET &amp;amp; VENUE</h2>
+        <div class="t11-sec-kicker">CELEBRATION DETAILS</div>
+        <h2 class="t11-sec-title">BANQUET &amp; VENUE</h2>
         <p class="t11-sec-sub">We eagerly look forward to welcoming you to grace this auspicious occasion.</p>
 
         <div class="t11-venue-card">
@@ -1031,12 +1315,12 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
       </div>
     </section>
 
-    <!-- Screen 6: Closing Blessing & RSVP Suite (Framed) -->
+    <!-- Screen 5: Closing Blessing & RSVP Suite (Framed) -->
     <section class="t11-page t11-page-framed" id="rsvp-section" data-sec="rsvp" aria-label="RSVP Suite">
       <div class="t11-frame-border" aria-hidden="true"></div>
       <div class="t11-framed-content">
         <div class="t11-sec-arch" aria-hidden="true"></div>
-        <div class="t11-sec-kicker">WARMEST WISHES</div>
+        <div class="t11-sec-kicker">WARMEST WISHES &amp; RSVP</div>
         <h2 class="t11-sec-title">WILL YOU JOIN US?</h2>
         <p class="t11-sec-sub">Your gracious presence will make this celebration complete and truly unforgettable.</p>
 
@@ -1049,16 +1333,17 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
             <span>✨</span> OPEN ROYAL RSVP MODAL
           </button>
 
-          <div class="t11-footer-family">${esc(footerBlessing)}</div>
-          <div class="t11-footer-blessing">Request the honour of your and your family&amp;#39;s presence</div>
+          <div class="t11-footer-closing">
+            <div class="t11-footer-blessing">With love, affection, and best wishes,</div>
+            <div class="t11-footer-family">The ${esc(brideName)} &amp; ${esc(groomName)} Families</div>
+          </div>
 
           <button type="button" class="t11-btn-replay" id="t11-replay-btn">
-            <span>✨</span> REPLAY LIGHTS &amp;amp; PHULJHARI
+            <span>✨</span> REPLAY LIGHTS &amp; PHULJHARI
           </button>
         </div>
       </div>
     </section>
-
   </div>
 
   <!-- Canvas for phuljhari / sparkler crackers fireworks -->
@@ -1077,7 +1362,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
     <div id="t11-msg" data-open="true">
       <div class="t11-wel">WELCOME</div>
       <div class="t11-cel">A CELEBRATION OF LOVE</div>
-      <div class="t11-names">${esc(groomName)} &amp;<br>${esc(brideName)}</div>
+      <div class="t11-names">${esc(brideName)} &amp;<br>${esc(groomName)}</div>
       <div class="t11-ci">CORDIALLY INVITED</div>
       <div class="t11-gst">${esc(gName)}</div>
       <div class="t11-per">${esc(guestBadge)}</div>
@@ -1188,8 +1473,8 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       const osc = audioCtx.createOscillator();
       const oscGain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.35); // A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.35);
       oscGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
       oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
       osc.connect(oscGain);
@@ -1279,11 +1564,9 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     if (busy || isDone) return;
     busy = true;
 
-    // Stage 1: Lamps illuminate sequentially
     stage.classList.add('t11-lit');
     playCrackleSound();
 
-    // Stage 2: Curtain doors unfold gently + phuljhari cracker pyrotechnics burst
     timers.push(setTimeout(() => {
       stage.classList.add('t11-open');
       sparkle(6500);
@@ -1292,17 +1575,14 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       } catch {}
     }, 3200));
 
-    // Stage 3: Arch frame turns transparent -> inner palace parchment stage shows through
     timers.push(setTimeout(() => {
       stage.classList.add('t11-fadeF');
     }, 4300));
 
-    // Stage 4: Door panels melt away
     timers.push(setTimeout(() => {
       stage.classList.add('t11-fadeP');
     }, 6200));
 
-    // Stage 5: Inner content animates in with staggered transitions
     timers.push(setTimeout(() => {
       stage.classList.add('t11-done');
       isDone = true;
@@ -1314,7 +1594,6 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       } catch {}
     }, 7400));
 
-    // Stage 6: Intro screen completely removed from display
     timers.push(setTimeout(() => {
       if (intro) intro.style.display = 'none';
       try {
@@ -1324,6 +1603,13 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
   }
 
   function skipIntro() {
+    document.body.classList.add('invitation-unveiled');
+    window._invitationUnveiled = true;
+    try {
+      if (typeof window.__updateRoyalDockVisibility === 'function') {
+        window.__updateRoyalDockVisibility();
+      }
+    } catch {}
     timers.forEach(t => clearTimeout(t));
     timers = [];
     if (animId) cancelAnimationFrame(animId);
@@ -1354,7 +1640,6 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     }
     isDone = false;
     busy = false;
-    // Scroll back to top
     const pages = stage.querySelector('#t11-pages');
     if (pages) pages.scrollTop = 0;
   }
@@ -1373,7 +1658,75 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     });
   });
 
-  // 7. Live 4-box Countdown Timer
+  // 7. Interactive Scratch Card Controller
+  const scratchCanvas = stage.querySelector('#t11-scratch-canvas');
+  const scratchBtn = stage.querySelector('#t11-scratch-btn');
+  if (scratchCanvas && typeof scratchCanvas.getContext === 'function') {
+    const sCtx = scratchCanvas.getContext('2d');
+    let scratchDone = false;
+    let isScratching = false;
+
+    function paintScratch() {
+      const r = scratchCanvas.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      scratchCanvas.width = Math.max(1, Math.floor(r.width * dpr));
+      scratchCanvas.height = Math.max(1, Math.floor(r.height * dpr));
+      sCtx.scale(dpr, dpr);
+
+      if (scratchDone) return;
+      const grad = sCtx.createLinearGradient(0, 0, r.width, r.height);
+      grad.addColorStop(0, '#cda23e');
+      grad.addColorStop(0.3, '#fff4b8');
+      grad.addColorStop(0.65, '#9d6d1b');
+      grad.addColorStop(1, '#dfbc5e');
+      sCtx.fillStyle = grad;
+      sCtx.fillRect(0, 0, r.width, r.height);
+
+      sCtx.fillStyle = '#2b1704';
+      sCtx.font = '700 12.5px "Cinzel", Georgia, serif';
+      sCtx.textAlign = 'center';
+      sCtx.textBaseline = 'middle';
+      sCtx.fillText('✨ SCRATCH OR TAP TO REVEAL ✨', r.width / 2, r.height / 2);
+    }
+
+    function revealScratch() {
+      if (scratchDone) return;
+      scratchDone = true;
+      const r = scratchCanvas.getBoundingClientRect();
+      sCtx.clearRect(0, 0, r.width, r.height);
+      scratchCanvas.style.pointerEvents = 'none';
+      if (scratchBtn) scratchBtn.style.display = 'none';
+      playCrackleSound();
+    }
+
+    function scratchAtPos(x, y) {
+      if (scratchDone) return;
+      sCtx.globalCompositeOperation = 'destination-out';
+      sCtx.beginPath();
+      sCtx.arc(x, y, 24, 0, Math.PI * 2);
+      sCtx.fill();
+      sCtx.globalCompositeOperation = 'source-over';
+    }
+
+    function getScratchPos(e) {
+      const r = scratchCanvas.getBoundingClientRect();
+      const t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX - r.left, y: t.clientY - r.top };
+    }
+
+    scratchCanvas.addEventListener('mousedown', e => { isScratching = true; const p = getScratchPos(e); scratchAtPos(p.x, p.y); });
+    window.addEventListener('mousemove', e => { if (isScratching) { const p = getScratchPos(e); scratchAtPos(p.x, p.y); } });
+    window.addEventListener('mouseup', () => { isScratching = false; });
+    scratchCanvas.addEventListener('touchstart', e => { isScratching = true; const p = getScratchPos(e); scratchAtPos(p.x, p.y); }, { passive: true });
+    scratchCanvas.addEventListener('touchmove', e => { if (isScratching) { const p = getScratchPos(e); scratchAtPos(p.x, p.y); } }, { passive: true });
+    window.addEventListener('touchend', () => { isScratching = false; });
+    scratchCanvas.addEventListener('click', revealScratch);
+    if (scratchBtn) scratchBtn.addEventListener('click', revealScratch);
+
+    paintScratch();
+  }
+
+  // 8. Live 4-box Countdown Timer
   const daysEl = stage.querySelector('#t11-cd-days');
   const hoursEl = stage.querySelector('#t11-cd-hours');
   const minsEl = stage.querySelector('#t11-cd-mins');

@@ -168,8 +168,7 @@ function closeDialog(dialog) {
 /* ───────────── network ───────────── */
 
 function supabaseBase() {
-  return ONBOARDING_CONFIG.supabaseUrl
-    || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+  return (ONBOARDING_CONFIG.supabaseUrl || 'https://skpcxbdrmsnwmggjodkz.supabase.co').replace(/\/+$/, '');
 }
 
 async function callRpc(name, body) {
@@ -191,6 +190,31 @@ async function callRpc(name, body) {
 }
 
 async function dashboardRequest(action, extra = {}) {
+  // 1. Try Edge Function if configured and token exists
+  if (dashboardToken && ONBOARDING_CONFIG.dashboardEndpoint) {
+    try {
+      const efRes = await fetch(ONBOARDING_CONFIG.dashboardEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${dashboardToken}`,
+          'apikey': ONBOARDING_CONFIG.publishableKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action, ...extra }),
+        cache: 'no-store'
+      });
+      if (efRes.ok) {
+        const efData = await efRes.json();
+        if (efData && efData.success) {
+          return efData.dashboard ?? efData;
+        }
+      }
+    } catch (_) {
+      // Gracefully fall back to RPC
+    }
+  }
+
+  // 2. Fallback to SQL RPC
   const result = await callRpc('manage_customer_dashboard', {
     p_order_reference: orderReference,
     p_action: action,

@@ -16,8 +16,7 @@ export function trackInviteOpen(code) {
     sessionStorage.setItem(marker, '1');
   } catch (e) { /* storage blocked: still track, just not de-duplicated */ }
 
-  const base = ONBOARDING_CONFIG.supabaseUrl
-    || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+  const base = (ONBOARDING_CONFIG.supabaseUrl || 'https://skpcxbdrmsnwmggjodkz.supabase.co').replace(/\/+$/, '');
   fetch(base + '/rest/v1/rpc/track_invite_open', {
     method: 'POST',
     headers: {

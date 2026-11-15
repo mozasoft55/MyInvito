@@ -12,10 +12,16 @@ export function parseGuestLinkEntries(value, { autoGenerate = false } = {}) {
       code = parts[0];
       name = parts[1] || 'Guest';
     } else if (autoGenerate) {
-      // User ne sirf NAAM enter kiya hai - Code hum auto generate karenge
       name = line;
       const cleanPrefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase();
-      const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+      let rand = '';
+      if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(4);
+        crypto.getRandomValues(bytes);
+        rand = Array.from(bytes, b => b.toString(36).padStart(2, '0')).join('').slice(0, 6).toUpperCase();
+      } else {
+        rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+      }
       code = (cleanPrefix ? `${cleanPrefix}-` : 'G-') + rand;
     } else {
       throw new Error(`Line ${index + 1}: enter an existing Supabase invite code and guest name, like VIP-AKBAR-01 | Ayesha Rahman.`);
