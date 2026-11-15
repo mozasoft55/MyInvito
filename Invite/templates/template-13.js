@@ -47,21 +47,32 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
 const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
 const safeImg = u => {
-  const c = clean(u);
-  if (!c) return '';
-  if (/^(https?:\/\/|data:image\/(png|jpe?g|webp|gif);base64,|\/|\.\/)/i.test(c)) {
-    return esc(c);
+  const s = clean(u);
+  if (!s) return '';
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^blob:/i.test(s)) return s;
+  if (s.startsWith('data:image/')) return s;
+  if (/^\.?\/?assets\//i.test(s)) return s;
+  if (/^[a-z0-9_\-\/.]+\.(jpg|jpeg|png|webp|svg|gif|avif)$/i.test(s)) {
+    return s.startsWith('.') || s.startsWith('/') ? s : `./assets/${s}`;
   }
-  return '';
+  return s;
 };
 
-const getStoredPhoto = k => {
+const getStoredPhoto = (...keys) => {
   try {
-    if (typeof localStorage !== 'undefined') {
-      const v = localStorage.getItem(k);
-      return safeImg(v);
+    for (const k of keys) {
+      if (!k) continue;
+      if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+        const v = localStorage.getItem(k);
+        if (v && v.trim()) return v.trim();
+      }
+      if (typeof sessionStorage !== 'undefined' && typeof sessionStorage.getItem === 'function') {
+        const v = sessionStorage.getItem(k);
+        if (v && v.trim()) return v.trim();
+      }
     }
-  } catch (_) {}
+  } catch { return ''; }
   return '';
 };
 
@@ -164,25 +175,91 @@ function makeCalendarLink({ title, description, location, startDate, startTime }
    DEFAULT EXPORT: RENDER HTML
    ========================================================================== */
 export default function renderTemplate13({ guest = {}, wedding = {}, events = [] } = {}) {
-  const gName = clean(guest.name) || clean(guest.family_name) || 'Respected Guest';
-  const partySize = parseInt(guest.party_size || guest.passes || 2, 10) || 2;
-  const isFamily = partySize > 1 || Boolean(guest.is_family || (guest.family_name && !guest.name));
-  const partyBadge = isFamily ? `Family Invitation · ${partySize} Persons` : `Personal Invitation · ${partySize} Person`;
+  const rawGuestName = clean(guest.name || guest.guest_name || guest.family_name) || 'Respected Guest';
+  const rawPersons = guest.persons ?? guest.guest_count ?? guest.family_members ?? guest.party_size ?? guest.passes;
+  const isExplicitPerson = guest.with_family === false || String(guest.category || '').toLowerCase() === 'person';
+  const isExplicitFamily = guest.with_family === true || String(guest.category || '').toLowerCase() === 'family' || Boolean(guest.is_family) || Boolean(guest.family_name && !guest.name) || /family/i.test(rawGuestName);
+
+  const partySize = Math.max(1, parseInt(rawPersons ?? (isExplicitFamily ? 2 : 1), 10) || (isExplicitFamily ? 2 : 1));
+  const isFamily = !isExplicitPerson && (isExplicitFamily || (partySize > 1 && guest.with_family !== false));
+
+  const hasFamilyInName = /family/i.test(rawGuestName);
+  const guestDisplayName = isFamily && !hasFamilyInName ? `${rawGuestName} & Family` : rawGuestName;
+
+  const partyBadge = isFamily
+    ? (partySize > 1 ? `Family Invitation · ${partySize} Persons` : 'Family Invitation')
+    : (partySize > 1 ? `Personal Invitation · ${partySize} Persons` : 'Personal Invitation · 1 Person');
 
   const brideName = clean(wedding.bride_name) || 'Pari';
   const groomName = clean(wedding.groom_name) || 'Param';
-  const bridePhoto = safeImg(wedding.bride_photo) || getStoredPhoto('bride_photo') || './assets/template-06-bride.webp';
-  const groomPhoto = safeImg(wedding.groom_photo) || getStoredPhoto('groom_photo') || './assets/template-06-groom.webp';
-  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || 'Ancestral Heritage, West Bengal';
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || 'Ancestral Heritage, West Bengal';
+  const bridePhoto = safeImg(wedding.bride_photo)
+    || safeImg(wedding.bride_image)
+    || safeImg(wedding.bridePhoto)
+    || safeImg(wedding.photo_bride)
+    || safeImg(wedding.bride_img)
+    || getStoredPhoto(
+         wedding.order_reference ? `wedding_bride_photo_${wedding.order_reference}` : '',
+         'wedding-bride-photo',
+         'wedding_bride_photo',
+         'onboard-bride-photo',
+         'selected_bride_photo',
+         'bride_photo'
+       )
+    || './assets/template-06-bride.webp';
+
+  const groomPhoto = safeImg(wedding.groom_photo)
+    || safeImg(wedding.groom_image)
+    || safeImg(wedding.groomPhoto)
+    || safeImg(wedding.photo_groom)
+    || safeImg(wedding.groom_img)
+    || getStoredPhoto(
+         wedding.order_reference ? `wedding_groom_photo_${wedding.order_reference}` : '',
+         'wedding-groom-photo',
+         'wedding_groom_photo',
+         'onboard-groom-photo',
+         'selected_groom_photo',
+         'groom_photo'
+       )
+    || './assets/template-06-groom.webp';
+
+  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
 
   const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
   const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
 
-  const weddingDateStr = formatWeddingDate(wedding.date);
-  const venueName = clean(wedding.venue_name) || clean(wedding.banquet_name) || 'Royal Palace Banquet';
-  const venueAddr = clean(wedding.venue_address) || clean(wedding.location) || 'Riverfront Promenade, Heritage Boulevard';
-  const banquetPhoto = safeImg(wedding.venue_photo) || safeImg(wedding.banquet_photo) || getStoredPhoto('venue_photo') || './assets/template-13-page.webp';
+  const weddingDateStr = formatWeddingDate(wedding.date || wedding.event_date);
+  const venueName = clean(wedding.venue)
+    || clean(wedding.venue_name)
+    || clean(wedding.banquet_name)
+    || clean(wedding.banquet)
+    || clean(wedding.venue_title)
+    || clean(wedding.hall)
+    || clean(wedding.hall_name)
+    || 'Royal Palace Banquet';
+
+  const venueAddr = clean(wedding.address)
+    || clean(wedding.venue_address)
+    || clean(wedding.location)
+    || clean(wedding.city_address)
+    || clean(wedding.city)
+    || 'Riverfront Promenade, Heritage Boulevard';
+
+  const banquetPhoto = safeImg(wedding.venue_photo)
+    || safeImg(wedding.banquet_photo)
+    || safeImg(wedding.venue_image)
+    || safeImg(wedding.banquet_image)
+    || safeImg(wedding.photo_venue)
+    || getStoredPhoto(
+         wedding.order_reference ? `wedding_venue_photo_${wedding.order_reference}` : '',
+         'wedding-venue-photo',
+         'wedding_venue_photo',
+         'onboard-venue-photo',
+         'selected_venue_photo',
+         'venue_photo',
+         'banquet_photo'
+       )
+    || './assets/template-13-page.webp';
 
   const mapLink = safeUrl(wedding.map_url) || `https://maps.google.com/?q=${encodeURIComponent(`${venueName}, ${venueAddr}`)}`;
   const calLink = makeCalendarLink({
@@ -1392,11 +1469,11 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
           <div class="t13-gold-divider"></div>
         </div>
 
-        <!-- Family Invitation Board -->
+        <!-- Family / Personal Invitation Board -->
         <div class="t13-guest-badge">
-          <span class="t13-board-lbl">FAMILY INVITATION BOARD</span>
-          <span class="t13-board-guest">${esc(gName)}</span>
-          <span class="t13-board-party">${partyBadge}</span>
+          <span class="t13-board-lbl">${isFamily ? 'FAMILY INVITATION BOARD' : 'PERSONAL INVITATION BOARD'}</span>
+          <span class="t13-board-guest">${esc(guestDisplayName)}</span>
+          <span class="t13-board-party">${esc(partyBadge)}</span>
         </div>
 
         <button class="t13-action-btn" data-trigger-rsvp="true" onclick="window.__openRoyalRsvpModal &amp;&amp; window.__openRoyalRsvpModal();">
@@ -1439,8 +1516,8 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
           <div class="t13-l-nm" id="t13-groom">${esc(groomName)}</div>
           <div class="t13-l-nm" id="t13-bride">&amp; ${esc(brideName)}</div>
           <div class="t13-l-sm" id="t13-cord">CORDIALLY INVITED</div>
-          <div class="t13-l-gst" id="t13-guest">${esc(gName)}</div>
-          <div class="t13-l-prs" id="t13-persons">${partyBadge}</div>
+          <div class="t13-l-gst" id="t13-guest">${esc(guestDisplayName)}</div>
+          <div class="t13-l-prs" id="t13-persons">${esc(partyBadge)}</div>
           <button class="t13-obtn" id="t13-hit-open" aria-label="Open invitation">OPEN</button>
           <button class="t13-skip-btn" id="t13-skip-btn" aria-label="Skip Intro">SKIP INTRO</button>
         </div>

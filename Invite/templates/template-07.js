@@ -904,12 +904,20 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
   const brideFirst = clean(w.name_order) === 'bride_first';
   const [fName, sName] = brideFirst ? [rawBride, rawGroom] : [rawGroom, rawBride];
 
-  const hasFamily = Boolean(g.with_family || (g.persons && Number(g.persons) > 1));
-  const guestName = clean(g.name) || (hasFamily ? 'Respected Guest & Family' : 'Respected Guest');
-  const guestPersons = Number(g.persons) || (hasFamily ? 4 : 1);
+  const rawGuestName = clean(g.name || g.guest_name || g.family_name) || 'Respected Guest';
+  const rawPersons = g.persons ?? g.guest_count ?? g.family_members ?? g.party_size ?? g.passes;
+  const isExplicitPerson = g.with_family === false || String(g.category || '').toLowerCase() === 'person';
+  const isExplicitFamily = g.with_family === true || String(g.category || '').toLowerCase() === 'family' || Boolean(g.is_family) || Boolean(g.family_name && !g.name) || /family/i.test(rawGuestName);
+
+  const guestPersons = Math.max(1, parseInt(rawPersons ?? (isExplicitFamily ? 4 : 1), 10) || (isExplicitFamily ? 4 : 1));
+  const hasFamily = !isExplicitPerson && (isExplicitFamily || (guestPersons > 1 && g.with_family !== false));
+
+  const hasFamilyInName = /family/i.test(rawGuestName);
+  const guestName = hasFamily && !hasFamilyInName ? `${rawGuestName} & Family` : rawGuestName;
+
   const guestBadgeText = hasFamily
     ? (guestPersons > 1 ? `Family Invitation · ${guestPersons} Persons` : 'Family Invitation')
-    : 'Personal Invitation · 1 Person';
+    : (guestPersons > 1 ? `Personal Invitation · ${guestPersons} Persons` : 'Personal Invitation · 1 Person');
 
   // Invocation
   const rawInvoc = clean(w.invocation) || '|| শ্রী শ্রী প্রজাপতয়ে নমঃ ||';

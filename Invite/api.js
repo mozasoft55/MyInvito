@@ -195,6 +195,45 @@ function findLocalInvitation(code) {
             venue: 'Wedding Celebration Venue'
           };
           const capacity = Number(guest.family_members || guest.persons || (guest.with_family ? 4 : 1));
+          const isExplicitPerson = guest.with_family === false || String(guest.category || '').toLowerCase() === 'person';
+          const isFamily = !isExplicitPerson && (guest.with_family === true || String(guest.category || '').toLowerCase() === 'family' || (capacity > 1 && guest.with_family !== false));
+
+          const bridePhoto = wedding.bride_photo
+            || wedding.bride_image
+            || localStorage.getItem('wedding_bride_photo_' + ref)
+            || localStorage.getItem('wedding-bride-photo')
+            || localStorage.getItem('wedding_bride_photo')
+            || localStorage.getItem('onboard-bride-photo')
+            || '';
+          const groomPhoto = wedding.groom_photo
+            || wedding.groom_image
+            || localStorage.getItem('wedding_groom_photo_' + ref)
+            || localStorage.getItem('wedding-groom-photo')
+            || localStorage.getItem('wedding_groom_photo')
+            || localStorage.getItem('onboard-groom-photo')
+            || '';
+          const couplePhoto = wedding.couple_photo
+            || wedding.hero_image
+            || localStorage.getItem('wedding_couple_photo_' + ref)
+            || localStorage.getItem('wedding-couple-photo')
+            || localStorage.getItem('wedding_couple_photo')
+            || localStorage.getItem('onboard-couple-photo')
+            || '';
+          const venuePhoto = wedding.venue_photo
+            || wedding.venue_image
+            || wedding.banquet_photo
+            || localStorage.getItem('wedding_venue_photo_' + ref)
+            || localStorage.getItem('wedding-venue-photo')
+            || localStorage.getItem('wedding_venue_photo')
+            || localStorage.getItem('onboard-venue-photo')
+            || '';
+
+          wedding.bride_photo = bridePhoto || wedding.bride_photo;
+          wedding.groom_photo = groomPhoto || wedding.groom_photo;
+          wedding.couple_photo = couplePhoto || wedding.couple_photo;
+          wedding.venue_photo = venuePhoto || wedding.venue_photo;
+          wedding.banquet_photo = venuePhoto || wedding.banquet_photo;
+
           return {
             guest: {
               id: guest.id,
@@ -202,12 +241,12 @@ function findLocalInvitation(code) {
               phone: guest.phone || '',
               city: guest.city_address || guest.city || '',
               address: guest.city_address || guest.address || '',
-              category: guest.category || (guest.with_family ? 'Family' : 'Person'),
+              category: guest.category || (isFamily ? 'Family' : 'Person'),
               invite_code: guest.invite_code || code,
               persons: capacity,
               person_display: String(capacity),
-              with_family: guest.with_family === true || String(guest.category || '').toLowerCase() === 'family',
-              family_display: guest.with_family === true || String(guest.category || '').toLowerCase() === 'family' ? '✓' : '✕'
+              with_family: isFamily,
+              family_display: isFamily ? '✓' : '✕'
             },
             wedding,
             events: order.events || wedding.events || []

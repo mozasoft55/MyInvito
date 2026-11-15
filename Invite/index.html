@@ -1741,28 +1741,38 @@
           weddingPayload = await fetchInvitationByCode(inviteCode);
         } catch (fetchErr) {
           if (!inviteCode) {
+            let localOrder = null;
+            try {
+              localOrder = JSON.parse(localStorage.getItem('primeecard_last_order') || localStorage.getItem('primeecard_onboard_draft') || 'null');
+            } catch (_) {}
+
             weddingPayload = {
-              guest: { name: 'Respected Guest', persons: 2, invite_code: 'preview' },
+              guest: { name: 'Respected Guest', persons: 1, with_family: false, invite_code: 'preview' },
               wedding: {
-                bride_name: 'Sanjukta',
-                groom_name: 'Purushottam',
-                couple_name: 'Sanjukta & Purushottam',
-                event_date: '2026-12-05',
-                ceremony_time: '7:00 PM',
-                ceremony_title: 'Shubho Bibaho · Sacred Royal Heritage',
-                invocation: '॥ শ্রী শ্রী প্রজাপতয়ে নমঃ ॥',
-                venue: 'Grand Heritage Palace Grounds',
-                venue_title: 'The Royal Mandap & Banquet Courtyard',
-                address: 'Riverfront Promenade, Heritage Boulevard',
-                city: 'Kolkata, West Bengal',
-                rsvp_phone: '9477929927',
-                phone: '9477929927',
-                template_id: p.get('template') || 'hindu-vedic-crimson'
+                bride_name: localOrder?.bride_name || 'Pari',
+                groom_name: localOrder?.groom_name || 'Param',
+                couple_name: localOrder ? `${localOrder.bride_name || 'Pari'} & ${localOrder.groom_name || 'Param'}` : 'Pari & Param',
+                event_date: localOrder?.event_date || localOrder?.date || '2026-11-28',
+                date: localOrder?.event_date || localOrder?.date || '2026-11-28',
+                ceremony_time: localOrder?.ceremony_time || localOrder?.time || '7:00 PM',
+                ceremony_title: localOrder?.ceremony_title || 'Shubho Bibaho · Sacred Royal Heritage',
+                invocation: localOrder?.invocation || '॥ শ্রী শ্রী প্রজাপতয়ে নমঃ ॥',
+                venue: localOrder?.venue || localOrder?.venue_name || localOrder?.banquet_name || 'Grand Heritage Palace Grounds',
+                venue_name: localOrder?.venue || localOrder?.venue_name || localOrder?.banquet_name || 'Grand Heritage Palace Grounds',
+                venue_title: localOrder?.venue_title || 'The Royal Mandap & Banquet Courtyard',
+                address: localOrder?.address || localOrder?.location || 'Riverfront Promenade, Heritage Boulevard',
+                city: localOrder?.city || 'Kolkata, West Bengal',
+                rsvp_phone: localOrder?.phone || '9477929927',
+                phone: localOrder?.phone || '9477929927',
+                bride_photo: localOrder?.bride_photo || '',
+                groom_photo: localOrder?.groom_photo || '',
+                venue_photo: localOrder?.venue_photo || '',
+                template_id: p.get('template') || localOrder?.template_style || 'hindu-vedic-crimson'
               },
-              events: [
-                { name: 'Mehendi & Sangeet', date: '2026-12-04', time: '5:00 PM', venue: 'Royal Palace Banquet' },
-                { name: 'Wedding Ceremony (Phere)', date: '2026-12-05', time: '7:00 PM', venue: 'Royal Palace Mandap' },
-                { name: 'Grand Reception', date: '2026-12-06', time: '7:30 PM', venue: 'Imperial Ballroom' }
+              events: localOrder?.events && Array.isArray(localOrder.events) && localOrder.events.length ? localOrder.events : [
+                { name: 'Mehendi & Sangeet', date: '2026-11-24', time: '5:00 PM', venue: localOrder?.venue || 'Royal Palace Banquet' },
+                { name: 'Wedding Ceremony (Vivah)', date: '2026-11-28', time: '7:00 PM', venue: localOrder?.venue || 'Royal Palace Mandap' },
+                { name: 'Grand Reception', date: '2026-11-30', time: '7:30 PM', venue: localOrder?.venue || 'Imperial Ballroom' }
               ]
             };
           } else {
@@ -1807,8 +1817,33 @@
           || getStored('onboard-venue-photo')
           || '';
 
+        const bridePhoto = wedding.bride_photo
+          || wedding.bride_image
+          || wedding.photo_bride
+          || getStored('wedding_bride_photo_' + (wedding.order_reference || ''))
+          || getStored('wedding-bride-photo')
+          || getStored('wedding_bride_photo')
+          || getStored('onboard-bride-photo')
+          || getStored('selected_bride_photo')
+          || getStored('bride_photo')
+          || '';
+
+        const groomPhoto = wedding.groom_photo
+          || wedding.groom_image
+          || wedding.photo_groom
+          || getStored('wedding_groom_photo_' + (wedding.order_reference || ''))
+          || getStored('wedding-groom-photo')
+          || getStored('wedding_groom_photo')
+          || getStored('onboard-groom-photo')
+          || getStored('selected_groom_photo')
+          || getStored('groom_photo')
+          || '';
+
+        wedding.bride_photo = bridePhoto || wedding.bride_photo;
+        wedding.groom_photo = groomPhoto || wedding.groom_photo;
         wedding.couple_photo = couplePhoto;
         wedding.venue_photo = venuePhoto;
+        wedding.banquet_photo = venuePhoto || wedding.banquet_photo;
         wedding.hero_image = couplePhoto || wedding.hero_image;
         wedding.venue_image = venuePhoto || wedding.venue_image;
 

@@ -43,25 +43,28 @@ const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
 const safeImg = u => {
   const s = clean(u);
   if (!s) return '';
-  if (/^https?:\/\/[^\s'"<>]+$/i.test(s)) return s;
-  if (/^blob:[^\s'"<>]+$/i.test(s)) return s;
-  if (/^\.?\/?assets\/[^\s'"<>]+$/i.test(s)) return s;
-  if (/^[a-z0-9_-]+\.(jpg|jpeg|png|webp|svg)$/i.test(s)) return `./assets/${s}`;
-  if (s.startsWith('data:image/') && s.includes(';base64,')) {
-    if (!/[\s'"<>]/.test(s.slice(0, 50))) return s;
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^blob:/i.test(s)) return s;
+  if (s.startsWith('data:image/')) return s;
+  if (/^\.?\/?assets\//i.test(s)) return s;
+  if (/^[a-z0-9_\-\/.]+\.(jpg|jpeg|png|webp|svg|gif|avif)$/i.test(s)) {
+    return s.startsWith('.') || s.startsWith('/') ? s : `./assets/${s}`;
   }
-  return '';
+  return s;
 };
 
-const getStoredPhoto = k => {
+const getStoredPhoto = (...keys) => {
   try {
-    if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
-      const v = localStorage.getItem(k);
-      if (v) return v;
-    }
-    if (typeof sessionStorage !== 'undefined' && typeof sessionStorage.getItem === 'function') {
-      const v = sessionStorage.getItem(k);
-      if (v) return v;
+    for (const k of keys) {
+      if (!k) continue;
+      if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+        const v = localStorage.getItem(k);
+        if (v && v.trim()) return v.trim();
+      }
+      if (typeof sessionStorage !== 'undefined' && typeof sessionStorage.getItem === 'function') {
+        const v = sessionStorage.getItem(k);
+        if (v && v.trim()) return v.trim();
+      }
     }
   } catch { return ''; }
   return '';
@@ -160,10 +163,20 @@ function buildGoogleCalendarUrl({ wedding = {}, guest = {} } = {}) {
 
 /* ---------- Default Export: Render Template HTML ---------- */
 export default function render({ guest = {}, wedding = {}, events = [] }) {
-  const gName = clean(guest.name) || 'Respected Guest';
-  const gPersons = parseInt(guest.persons, 10) || 2;
-  const isFamily = Boolean(guest.with_family || gPersons > 1 || /family/i.test(gName));
-  const guestBadge = isFamily ? `Family Invitation · ${gPersons} Persons` : `${gPersons} Person Invited`;
+  const rawGuestName = clean(guest.name || guest.guest_name || guest.family_name) || 'Respected Guest';
+  const rawPersons = guest.persons ?? guest.guest_count ?? guest.family_members ?? guest.party_size ?? guest.passes;
+  const isExplicitPerson = guest.with_family === false || String(guest.category || '').toLowerCase() === 'person';
+  const isExplicitFamily = guest.with_family === true || String(guest.category || '').toLowerCase() === 'family' || Boolean(guest.is_family) || Boolean(guest.family_name && !guest.name) || /family/i.test(rawGuestName);
+
+  const partySize = Math.max(1, parseInt(rawPersons ?? (isExplicitFamily ? 2 : 1), 10) || (isExplicitFamily ? 2 : 1));
+  const isFamily = !isExplicitPerson && (isExplicitFamily || (partySize > 1 && guest.with_family !== false));
+
+  const hasFamilyInName = /family/i.test(rawGuestName);
+  const guestDisplayName = isFamily && !hasFamilyInName ? `${rawGuestName} & Family` : rawGuestName;
+
+  const guestBadge = isFamily
+    ? (partySize > 1 ? `Family Invitation · ${partySize} Persons` : 'Family Invitation')
+    : (partySize > 1 ? `Personal Invitation · ${partySize} Persons` : 'Personal Invitation · 1 Person');
 
   const brideName = clean(wedding.bride_name) || 'Pari';
   const groomName = clean(wedding.groom_name) || 'Param';
@@ -172,25 +185,78 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
   const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
 
-  const brideAddr = clean(wedding.bride_address) || clean(wedding.address) || 'Ancestral Heritage, West Bengal';
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.address) || 'Ancestral Heritage, West Bengal';
+  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
 
-  const weddingDateStr = formatRoyalDate(wedding.date);
+  const weddingDateStr = formatRoyalDate(wedding.date || wedding.event_date);
 
-  const venueName = clean(wedding.venue) || 'Royal Palace Banquet';
-  const venueAddr = clean(wedding.address) || 'Grand Heritage Avenue, Kolkata';
+  const venueName = clean(wedding.venue)
+    || clean(wedding.venue_name)
+    || clean(wedding.banquet_name)
+    || clean(wedding.banquet)
+    || clean(wedding.venue_title)
+    || clean(wedding.hall)
+    || clean(wedding.hall_name)
+    || 'Royal Palace Banquet';
+
+  const venueAddr = clean(wedding.address)
+    || clean(wedding.venue_address)
+    || clean(wedding.location)
+    || clean(wedding.city_address)
+    || clean(wedding.city)
+    || 'Grand Heritage Avenue, Kolkata';
+
   const mapLink = safeUrl(wedding.map_url) || `https://maps.google.com/?q=${encodeURIComponent(venueName + ' ' + venueAddr)}`;
   const calLink = buildGoogleCalendarUrl({ wedding, guest });
 
   // Photos
-  const storedCouple = getStoredPhoto('wedding_couple_photo');
-  const storedGroom = getStoredPhoto('wedding_groom_photo');
-  const storedBride = getStoredPhoto('wedding_bride_photo');
-  const storedBanquet = getStoredPhoto('wedding_banquet_photo');
+  const bridePhoto = safeImg(wedding.bride_photo)
+    || safeImg(wedding.bride_image)
+    || safeImg(wedding.bridePhoto)
+    || safeImg(wedding.photo_bride)
+    || safeImg(wedding.bride_img)
+    || getStoredPhoto(
+         wedding.order_reference ? `wedding_bride_photo_${wedding.order_reference}` : '',
+         'wedding-bride-photo',
+         'wedding_bride_photo',
+         'onboard-bride-photo',
+         'selected_bride_photo',
+         'bride_photo'
+       )
+    || safeImg(wedding.couple_photo)
+    || './assets/template-06-bride.webp';
 
-  const groomPhoto = safeImg(storedGroom || wedding.groom_photo || storedCouple || wedding.couple_photo);
-  const bridePhoto = safeImg(storedBride || wedding.bride_photo || storedCouple || wedding.couple_photo);
-  const banquetPhoto = safeImg(storedBanquet || wedding.banquet_photo);
+  const groomPhoto = safeImg(wedding.groom_photo)
+    || safeImg(wedding.groom_image)
+    || safeImg(wedding.groomPhoto)
+    || safeImg(wedding.photo_groom)
+    || safeImg(wedding.groom_img)
+    || getStoredPhoto(
+         wedding.order_reference ? `wedding_groom_photo_${wedding.order_reference}` : '',
+         'wedding-groom-photo',
+         'wedding_groom_photo',
+         'onboard-groom-photo',
+         'selected_groom_photo',
+         'groom_photo'
+       )
+    || safeImg(wedding.couple_photo)
+    || './assets/template-06-groom.webp';
+
+  const banquetPhoto = safeImg(wedding.venue_photo)
+    || safeImg(wedding.banquet_photo)
+    || safeImg(wedding.venue_image)
+    || safeImg(wedding.banquet_image)
+    || safeImg(wedding.photo_venue)
+    || getStoredPhoto(
+         wedding.order_reference ? `wedding_venue_photo_${wedding.order_reference}` : '',
+         'wedding-venue-photo',
+         'wedding_venue_photo',
+         'onboard-venue-photo',
+         'selected_venue_photo',
+         'venue_photo',
+         'banquet_photo'
+       )
+    || './assets/template-06-shubho-bibaho.webp';
 
   // Normalized Events
   const rawEvents = Array.isArray(events) && events.length ? events : [
@@ -1326,7 +1392,7 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
 
         <div class="t11-rsvp-card">
           <div class="t11-rsvp-badge">${esc(guestBadge)}</div>
-          <div class="t11-rsvp-guest">${esc(gName)}</div>
+          <div class="t11-rsvp-guest">${esc(guestDisplayName)}</div>
           <div class="t11-rsvp-meta">Cordially invited to grace the celebrations</div>
 
           <button type="button" class="t11-btn-primary" id="t11-rsvp-btn" data-trigger-rsvp style="margin-top:0.8cqw;width:100%;">
@@ -1364,7 +1430,7 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
       <div class="t11-cel">A CELEBRATION OF LOVE</div>
       <div class="t11-names">${esc(brideName)} &amp;<br>${esc(groomName)}</div>
       <div class="t11-ci">CORDIALLY INVITED</div>
-      <div class="t11-gst">${esc(gName)}</div>
+      <div class="t11-gst">${esc(guestDisplayName)}</div>
       <div class="t11-per">${esc(guestBadge)}</div>
       <button type="button" id="t11-open-btn" data-open="true">OPEN</button>
       <div class="t11-tap">✦ Tap to open the invitation ✦</div>
