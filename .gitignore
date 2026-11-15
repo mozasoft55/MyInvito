@@ -14,5 +14,3 @@ user-music/*
 !user-music/.gitkeep
 Invite/user-music/*
 !Invite/user-music/.gitkeep
-mcard/Invite/user-music/*
-!mcard/Invite/user-music/.gitkeep

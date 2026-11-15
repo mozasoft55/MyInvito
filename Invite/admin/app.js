@@ -32,12 +32,22 @@ const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const digitsOnly = value => String(value || '').replace(/\D/g, '').slice(0, 6);
 
+const getStoredInt = (k, def = 0) => {
+  try {
+    const val = Number(sessionStorage.getItem(k));
+    return Number.isFinite(val) ? val : def;
+  } catch { return def; }
+};
+const setStoredInt = (k, val) => {
+  try { sessionStorage.setItem(k, String(val)); } catch {}
+};
+
 let payments = [];
 let cashRequests = [];
 let enrollFactorId = '';
-let passwordFails = 0;
-let codeFails = 0;
-let lockedUntil = 0;
+let passwordFails = getStoredInt('wedding-admin-pwd-fails', 0);
+let codeFails = getStoredInt('wedding-admin-code-fails', 0);
+let lockedUntil = getStoredInt('wedding-admin-lock-until', 0);
 let idleTimer = null;
 let idleActive = false;
 let currentFilter = 'pending';
@@ -168,14 +178,19 @@ $('view-password').addEventListener('submit', async event => {
 
   if (error) {
     passwordFails += 1;
+    setStoredInt('wedding-admin-pwd-fails', passwordFails);
     if (passwordFails >= MAX_PASSWORD_TRIES || error.status === 429) {
       lockedUntil = Date.now() + LOCK_MS;
       passwordFails = 0;
+      setStoredInt('wedding-admin-lock-until', lockedUntil);
+      setStoredInt('wedding-admin-pwd-fails', 0);
       return setMsg('login-message', 'Too many attempts. Please wait a minute and try again.');
     }
     return setMsg('login-message', 'Incorrect email or password.');
   }
   passwordFails = 0;
+  setStoredInt('wedding-admin-pwd-fails', 0);
+  setStoredInt('wedding-admin-lock-until', 0);
   setMsg('login-message', '');
   await route();
 });
@@ -216,11 +231,17 @@ $('view-mfa').addEventListener('submit', async event => {
     const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
     if (error) {
       codeFails += 1;
+      setStoredInt('wedding-admin-code-fails', codeFails);
       form.elements.code.value = '';
-      if (codeFails >= MAX_CODE_TRIES) { codeFails = 0; return await forceSignOut('Too many incorrect codes. Please sign in again.'); }
+      if (codeFails >= MAX_CODE_TRIES) {
+        codeFails = 0;
+        setStoredInt('wedding-admin-code-fails', 0);
+        return await forceSignOut('Too many incorrect codes. Please sign in again.');
+      }
       return setMsg('mfa-message', 'That code is incorrect or has expired. Check your app and try again.');
     }
     codeFails = 0;
+    setStoredInt('wedding-admin-code-fails', 0);
     form.elements.code.value = '';
     setMsg('mfa-message', '');
     await route();

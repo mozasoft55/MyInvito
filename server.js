@@ -130,8 +130,8 @@ const server = http.createServer((req, res) => {
       const destPath = path.join(USER_MUSIC_DIR, songFileName);
       fs.writeFileSync(destPath, fileBytes);
 
-      // Mirror to Invite/user-music and mcard/Invite/user-music for path flexibility
-      for (const subDir of [path.join(__dirname, 'Invite', 'user-music'), path.join(__dirname, 'mcard', 'Invite', 'user-music')]) {
+      // Mirror to Invite/user-music for path flexibility
+      for (const subDir of [path.join(__dirname, 'Invite', 'user-music')]) {
         try {
           if (!fs.existsSync(subDir)) fs.mkdirSync(subDir, { recursive: true });
           fs.writeFileSync(path.join(subDir, songFileName), fileBytes);
