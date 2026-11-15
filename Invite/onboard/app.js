@@ -1421,6 +1421,11 @@ form.addEventListener('submit', async event => {
       localStorage.setItem('customer-dashboard-token', currentDashboardToken);
       localStorage.setItem('primeecard_last_order', JSON.stringify(orderMetadata));
       localStorage.setItem('primeecard_order_' + currentOrderReference, JSON.stringify(orderMetadata));
+      if (rawFormData.template_style) {
+        localStorage.setItem('customer-dashboard-template-' + currentOrderReference, rawFormData.template_style);
+        localStorage.setItem('customer-dashboard-template-default', rawFormData.template_style);
+        localStorage.setItem('selected_invitation_template', rawFormData.template_style);
+      }
       localStorage.removeItem('primeecard_onboard_draft'); // clear draft since order is completed
     } catch (e) {
       console.warn('[Onboard] Could not persist order in localStorage:', e);
@@ -1864,6 +1869,11 @@ function initTrackOrderModal() {
         localStorage.setItem('customer-dashboard-token', finalOrder.token || 'demo-token');
         localStorage.setItem('primeecard_last_order', JSON.stringify(finalOrder));
         localStorage.setItem('primeecard_order_' + finalOrder.reference, JSON.stringify(finalOrder));
+        if (finalOrder.template_style) {
+          localStorage.setItem('customer-dashboard-template-' + finalOrder.reference, finalOrder.template_style);
+          localStorage.setItem('customer-dashboard-template-default', finalOrder.template_style);
+          localStorage.setItem('selected_invitation_template', finalOrder.template_style);
+        }
       } catch (_) {}
 
       closeModal();

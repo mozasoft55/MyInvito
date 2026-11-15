@@ -37,7 +37,7 @@ export class TemplateSelector {
     }
 
     this.templates = Array.isArray(templates) ? templates : [];
-    this.categories = ['Hindu', 'Muslim', 'Sikh', 'Royal', 'Floral', 'All'];
+    this.categories = ['Hindu', 'Muslim', 'Sikh', 'Royal', 'Floral', 'Advance', 'All'];
     
     // Non-restrictive default filter: matches initialCommunity if valid, otherwise 'All'
     this.activeFilter = this._normalizeCommunity(initialCommunity);
@@ -79,6 +79,7 @@ export class TemplateSelector {
     if (lower.includes('sikh')) return 'Sikh';
     if (lower.includes('royal')) return 'Royal';
     if (lower.includes('floral')) return 'Floral';
+    if (lower.includes('advance') || lower.includes('3d')) return 'Advance';
     if (lower === 'all') return 'All';
     return 'Hindu';
   }
@@ -305,7 +306,8 @@ export class TemplateSelector {
       case 'sikh': return '☬';
       case 'royal': return '👑';
       case 'floral': return '🌸';
-      case 'all': return '✨';
+      case 'advance': return '✨';
+      case 'all': return '✦';
       default: return '✦';
     }
   }

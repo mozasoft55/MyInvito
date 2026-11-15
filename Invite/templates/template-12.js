@@ -348,58 +348,7 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
 }
 #t12-stage::-webkit-scrollbar { display: none; }
 
-/* Top Luxury Suite Header Bar */
-.t12-suite-bar {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  height: 38px;
-  padding: 0 12px;
-  background: rgba(5, 10, 28, 0.92);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(220, 180, 100, 0.35);
-  z-index: 900;
-  color: #f7e7c4;
-  font-family: 'Cinzel', serif;
-  font-size: 1.9cqw;
-  letter-spacing: 0.12em;
-}
-.t12-suite-badge {
-  color: #ffdda1;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-.t12-suite-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.t12-suite-btn {
-  background: rgba(212, 175, 55, 0.18);
-  border: 1px solid rgba(240, 205, 120, 0.5);
-  color: #fff4d1;
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-family: 'Cinzel', serif;
-  font-size: 1.7cqw;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-}
-.t12-suite-btn:hover {
-  background: rgba(212, 175, 55, 0.35);
-  color: #ffffff;
-}
+
 
 /* ==========================================================================
    ACT I: 3D GATE INTRO (Screen 0)
@@ -895,7 +844,7 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding-top: calc(44px + 4cqw);
+  padding-top: 5cqw;
   padding-bottom: calc(76px + env(safe-area-inset-bottom, 16px));
   padding-left: 14cqw;
   padding-right: 14cqw;
@@ -1342,19 +1291,6 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
 </style>
 
 <div id="t12-stage" class="t12-stage" data-wedding-date="${esc(wedding.date || '2026-11-28')}">
-  <!-- Top Luxury Header Bar -->
-  <header class="t12-suite-bar" aria-label="Wedding Suite Controls">
-    <span class="t12-suite-badge">WEDDING SUITE: ${esc(partyBadge)}</span>
-    <div class="t12-suite-actions">
-      <a href="#dates-section" class="t12-suite-btn" id="t12-suite-save-btn">
-        <span>📅</span> SAVE THE DATE
-      </a>
-      <button type="button" class="t12-suite-btn" id="t12-suite-replay-btn">
-        <span>✨</span> REPLAY
-      </button>
-    </div>
-  </header>
-
   <!-- Inner Scrollable Pages -->
   <div class="t12-pages" id="t12-pages">
     <!-- Screen 1 (2nd Image): Royal Couple & Lineage (Palace Stage Backdrop) -->

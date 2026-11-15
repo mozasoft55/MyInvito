@@ -37,6 +37,50 @@ export class AudioController {
     this.widgetEl = null;
     this.isPlaying = false;
     this.hasUserInteracted = false;
+    this._wasPlayingBeforeHide = false;
+
+    this._handleVisibilityChange = () => {
+      if (typeof document === 'undefined') return;
+      if (document.hidden) {
+        if (this.isPlaying) {
+          this._wasPlayingBeforeHide = true;
+          this.pause();
+        }
+      } else if (this._wasPlayingBeforeHide) {
+        this._wasPlayingBeforeHide = false;
+        this.play().catch(() => {});
+      }
+    };
+
+    this._handleWindowBlur = () => {
+      if (this.isPlaying) {
+        this._wasPlayingBeforeHide = true;
+        this.pause();
+      }
+    };
+
+    this._handleWindowFocus = () => {
+      if (this._wasPlayingBeforeHide && (typeof document === 'undefined' || !document.hidden)) {
+        this._wasPlayingBeforeHide = false;
+        this.play().catch(() => {});
+      }
+    };
+
+    this._handlePageHide = () => {
+      if (this.isPlaying) {
+        this._wasPlayingBeforeHide = true;
+        this.pause();
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this._handleVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('blur', this._handleWindowBlur);
+      window.addEventListener('focus', this._handleWindowFocus);
+      window.addEventListener('pagehide', this._handlePageHide);
+    }
 
     if (typeof window !== 'undefined') {
       this._initAudio();
@@ -160,8 +204,9 @@ export class AudioController {
    * Pause audio
    */
   pause() {
-    if (!this.audio) return;
-    this.audio.pause();
+    if (this.audio) {
+      try { this.audio.pause(); } catch {}
+    }
     this.isPlaying = false;
     this._updateWidgetState();
   }
@@ -195,6 +240,14 @@ export class AudioController {
    */
   destroy() {
     this.pause();
+    if (typeof document !== 'undefined' && this._handleVisibilityChange) {
+      document.removeEventListener('visibilitychange', this._handleVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      if (this._handleWindowBlur) window.removeEventListener('blur', this._handleWindowBlur);
+      if (this._handleWindowFocus) window.removeEventListener('focus', this._handleWindowFocus);
+      if (this._handlePageHide) window.removeEventListener('pagehide', this._handlePageHide);
+    }
     if (this.widgetEl && this.widgetEl.parentNode) {
       this.widgetEl.parentNode.removeChild(this.widgetEl);
     }

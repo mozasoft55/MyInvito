@@ -554,13 +554,47 @@ function renderDashboard(data) {
   setTxt('advance-verified', formatMoney(advanceVerified));
   setTxt('balance', formatMoney(balance));
 
+  // Retrieve stored order metadata if available in localStorage
+  let orderObj = {};
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const rawOrder = localStorage.getItem('primeecard_order_' + orderReference)
+        || localStorage.getItem('primeecard_last_order');
+      if (rawOrder) orderObj = JSON.parse(rawOrder);
+    }
+  } catch {}
+
+  // 1. Populate Wedding Soundtrack information
+  const songTitle = (data && (data.music_title || (data.wedding && data.wedding.music_title)))
+    || orderObj.music_title
+    || (orderObj.wedding && orderObj.wedding.music_title)
+    || (typeof localStorage !== 'undefined' && (
+      localStorage.getItem('wedding_music_title_' + orderReference)
+      || localStorage.getItem('wedding-music-title')
+      || localStorage.getItem('wedding_music_title_default')
+    ))
+    || 'Ambient Instrumental (Default)';
+
+  setTxt('soundtrack-title', songTitle);
+  setTxt('metric-soundtrack', songTitle);
+
+  // 2. Resolve selected template style for preview button
   const previewLink = $('preview-link');
   if (previewLink) {
     const baseCode = (data && data.preview_guest_code) ? data.preview_guest_code : '9D6JGSQY7YD8';
-    const chosenTemplate = (data && data.wedding && data.wedding.template_id)
-      || (data && data.template_id)
-      || localStorage.getItem(templateKey(orderReference))
-      || 'template-06';
+    const chosenTemplate = (data && data.wedding && (data.wedding.template_id || data.wedding.template_style))
+      || (data && (data.template_id || data.template_style))
+      || orderObj.template_style
+      || orderObj.template_id
+      || (orderObj.wedding && (orderObj.wedding.template_style || orderObj.wedding.template_id))
+      || (typeof localStorage !== 'undefined' && (
+        localStorage.getItem(templateKey(orderReference))
+        || localStorage.getItem('customer-dashboard-template-' + orderReference)
+        || localStorage.getItem('customer-dashboard-template-default')
+        || localStorage.getItem('selected_invitation_template')
+        || localStorage.getItem('selected_template_id')
+      ))
+      || 'template-12';
     previewLink.href = `../?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(chosenTemplate)}`;
   }
   const guestLinks = $('generate-guest-links');

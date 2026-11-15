@@ -866,14 +866,15 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
 }
 .t13-page-framed .t13-border-l,
 .t13-page-framed i:nth-of-type(1) {
-  left: 0;
-  right: auto;
+  left: 0 !important;
+  right: auto !important;
 }
 .t13-page-framed .t13-border-r,
 .t13-page-framed i:nth-of-type(2) {
-  right: 0;
-  left: auto;
+  right: 0 !important;
+  left: auto !important;
   transform: scaleX(-1);
+  transform-origin: center center;
 }
 
 .t13-framed-content {
@@ -1464,7 +1465,7 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
       <div class="t13-framed-content">
         <div>
           <div class="t13-sec-kicker">Honor &amp; Warm Regards</div>
-          <div class="t13-sec-title">Royal Invitation Suite</div>
+          <div class="t13-sec-title">Auspicious Blessings</div>
           <div class="t13-sec-subtitle">Your gracious presence is the greatest gift of all</div>
           <div class="t13-gold-divider"></div>
         </div>

@@ -1128,6 +1128,33 @@
         }
       }
 
+      // Pause music when switching tab, blurring browser window, or locking phone screen
+      let wasMusicPlayingBeforeHide = false;
+      function handleAudioTabHide() {
+        if (isMusicPlaying) {
+          wasMusicPlayingBeforeHide = true;
+          stopMusic();
+        }
+      }
+      function handleAudioTabShow() {
+        if (wasMusicPlayingBeforeHide && (typeof document === 'undefined' || !document.hidden)) {
+          wasMusicPlayingBeforeHide = false;
+          startMusic();
+        }
+      }
+
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) handleAudioTabHide();
+          else handleAudioTabShow();
+        });
+      }
+      if (typeof window !== 'undefined') {
+        window.addEventListener('blur', handleAudioTabHide);
+        window.addEventListener('focus', handleAudioTabShow);
+        window.addEventListener('pagehide', handleAudioTabHide);
+      }
+
       // --- 2. Build DOM Markup ---
       const dockMarkup = `
         <!-- Floating Bottom Navigation Pill Dock (RSVP, Map, Dates, Music) -->
@@ -1747,8 +1774,23 @@
             } catch (_) {}
 
             weddingPayload = {
+              guest: { name: 'Respected Guest', persons: 2, invite_code: 'preview' },
               guest: { name: 'Respected Guest', persons: 1, with_family: false, invite_code: 'preview' },
               wedding: {
+                bride_name: 'Sanjukta',
+                groom_name: 'Purushottam',
+                couple_name: 'Sanjukta & Purushottam',
+                event_date: '2026-12-05',
+                ceremony_time: '7:00 PM',
+                ceremony_title: 'Shubho Bibaho · Sacred Royal Heritage',
+                invocation: '॥ শ্রী শ্রী প্রজাপতয়ে নমঃ ॥',
+                venue: 'Grand Heritage Palace Grounds',
+                venue_title: 'The Royal Mandap & Banquet Courtyard',
+                address: 'Riverfront Promenade, Heritage Boulevard',
+                city: 'Kolkata, West Bengal',
+                rsvp_phone: '9477929927',
+                phone: '9477929927',
+                template_id: p.get('template') || 'hindu-vedic-crimson'
                 bride_name: localOrder?.bride_name || 'Pari',
                 groom_name: localOrder?.groom_name || 'Param',
                 couple_name: localOrder ? `${localOrder.bride_name || 'Pari'} & ${localOrder.groom_name || 'Param'}` : 'Pari & Param',
@@ -1769,6 +1811,10 @@
                 venue_photo: localOrder?.venue_photo || '',
                 template_id: p.get('template') || localOrder?.template_style || 'hindu-vedic-crimson'
               },
+              events: [
+                { name: 'Mehendi & Sangeet', date: '2026-12-04', time: '5:00 PM', venue: 'Royal Palace Banquet' },
+                { name: 'Wedding Ceremony (Phere)', date: '2026-12-05', time: '7:00 PM', venue: 'Royal Palace Mandap' },
+                { name: 'Grand Reception', date: '2026-12-06', time: '7:30 PM', venue: 'Imperial Ballroom' }
               events: localOrder?.events && Array.isArray(localOrder.events) && localOrder.events.length ? localOrder.events : [
                 { name: 'Mehendi & Sangeet', date: '2026-11-24', time: '5:00 PM', venue: localOrder?.venue || 'Royal Palace Banquet' },
                 { name: 'Wedding Ceremony (Vivah)', date: '2026-11-28', time: '7:00 PM', venue: localOrder?.venue || 'Royal Palace Mandap' },

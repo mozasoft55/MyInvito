@@ -52,12 +52,20 @@
 
     <div id="dashboard-content" hidden>
       <section class="welcome">
-        <div><p class="eyebrow">Your celebration, organized</p><h1 id="couple-title"></h1><p id="wedding-date"></p></div>
+        <div>
+          <p class="eyebrow">Your celebration, organized</p>
+          <h1 id="couple-title"></h1>
+          <p id="wedding-date"></p>
+          <div id="dashboard-soundtrack" style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px;border-radius:20px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);font-size:13px;color:#f5e1a4;">
+            <span>🎵 Selected Soundtrack:</span> <strong id="soundtrack-title">Ambient Instrumental</strong>
+          </div>
+        </div>
         <a id="preview-link" class="button button-gold" href="../share.html">Preview invitation</a>
       </section>
       <section class="summary-grid" aria-label="Order summary">
         <article class="metric"><small>Order reference</small><strong id="order-reference"></strong></article>
         <article class="metric"><small>Package</small><strong id="package-name"></strong></article>
+        <article class="metric"><small>Wedding Soundtrack</small><strong id="metric-soundtrack">Ambient Instrumental</strong></article>
         <article class="metric"><small>Order status</small><strong id="order-status"></strong></article>
         <article class="metric"><small>Payment status</small><strong id="payment-status"></strong></article>
         <article class="metric"><small>List price</small><strong id="list-price"></strong></article>

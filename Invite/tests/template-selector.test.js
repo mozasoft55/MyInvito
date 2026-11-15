@@ -7,14 +7,24 @@ import { TemplateSelector } from '../token-engine/TemplateSelector.js';
 const templatesJsonPath = fileURLToPath(new URL('../token-engine/templates.json', import.meta.url));
 const catalog = JSON.parse(fs.readFileSync(templatesJsonPath, 'utf8'));
 
-test('TemplateSelector initializes with all 6 quick filter categories in strict order with Hindu default', () => {
+test('TemplateSelector initializes with all quick filter categories including Advance with Hindu default', () => {
   const selector = new TemplateSelector({
     templates: catalog.templates
   });
 
-  // Strict order: [🕉️ Hindu (Default), ☪️ Muslim, ☬ Sikh, 👑 Royal, 🌸 Floral, ✨ All]
-  assert.deepEqual(selector.categories, ['Hindu', 'Muslim', 'Sikh', 'Royal', 'Floral', 'All']);
+  // Strict order: [🕉️ Hindu (Default), ☪️ Muslim, ☬ Sikh, 👑 Royal, 🌸 Floral, ✨ Advance, ✦ All]
+  assert.deepEqual(selector.categories, ['Hindu', 'Muslim', 'Sikh', 'Royal', 'Floral', 'Advance', 'All']);
   assert.equal(selector.activeFilter, 'Hindu');
+
+  // Verify Advance filter returns 3D advance templates (templates 11-14)
+  selector.setFilter('Advance');
+  assert.equal(selector.activeFilter, 'Advance');
+  const advanceTemplates = selector.getFilteredTemplates();
+  assert.ok(advanceTemplates.length >= 4);
+  assert.ok(advanceTemplates.some(t => t.legacyId === 'template-11'));
+  assert.ok(advanceTemplates.some(t => t.legacyId === 'template-12'));
+  assert.ok(advanceTemplates.some(t => t.legacyId === 'template-13'));
+  assert.ok(advanceTemplates.some(t => t.legacyId === 'template-14'));
 });
 
 test('TemplateSelector implements hard isolation and clean memory swap', () => {

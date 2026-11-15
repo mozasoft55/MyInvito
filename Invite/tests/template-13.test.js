@@ -54,6 +54,8 @@ test('template-13 renders 3D temple palace door with welcome board, couple detai
   assert.match(html, /Wedding Programme/);
   assert.match(html, /Banquet &amp; Venue/);
   assert.match(html, /The Pari &amp; Param Families/);
+  assert.doesNotMatch(html, /t13-suite-bar/i);
+  assert.doesNotMatch(html, /Royal Invitation Suite/i);
 });
 
 test('template-13 mount initializes safely and returns working cleanup function', async () => {

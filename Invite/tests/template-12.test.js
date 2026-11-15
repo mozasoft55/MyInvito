@@ -52,6 +52,7 @@ test('template-12 renders 3D royal gate opening with welcome board, couple detai
   assert.match(html, /template-12-cover\.webp/);
   assert.match(html, /template-12-page\.webp/);
   assert.match(html, /template-12-border\.webp/);
+  assert.doesNotMatch(html, /t12-suite-bar/i);
 });
 
 test('template-12 mount initializes safely and returns working cleanup function', async () => {

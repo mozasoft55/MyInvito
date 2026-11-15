@@ -560,6 +560,190 @@
         "--border-radius-btn": "40px",
         "--card-shadow": "0 24px 60px rgba(12, 3, 7, 0.85), inset 0 1px 0 rgba(255, 207, 181, 0.2)"
       }
+    },
+    {
+      "id": "advance-palace-gate-3d",
+      "legacyId": "template-11",
+      "title": "Royal Palace Gate 3D Door & Phuljhari",
+      "community": "Hindu",
+      "category": [
+        "Advance",
+        "Hindu",
+        "Royal"
+      ],
+      "theme": "Royal Palace 3D Gate & Moving Lights",
+      "themeBadge": "Advance 3D",
+      "tags": [
+        "Advance",
+        "3D Door",
+        "Hindu",
+        "Palace Gate",
+        "Phuljhari",
+        "Template 11"
+      ],
+      "thumbnail": "./assets/template-12-cover.webp",
+      "fonts": [
+        "https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Great+Vibes&display=swap"
+      ],
+      "tokens": {
+        "--card-bg": "linear-gradient(180deg, #120308 0%, #1f0810 50%, #0d0105 100%)",
+        "--card-surface": "rgba(35, 10, 18, 0.92)",
+        "--card-surface-hover": "rgba(48, 14, 25, 0.98)",
+        "--card-border": "1.5px solid #d4af37",
+        "--text-primary": "#fff5ea",
+        "--text-secondary": "#e7c480",
+        "--text-muted": "rgba(231, 196, 128, 0.72)",
+        "--accent-gold": "#d4af37",
+        "--accent-gold-light": "#fae19c",
+        "--accent-foil": "linear-gradient(110deg, #8B0000 0%, #D4AF37 30%, #FFE082 50%, #D4AF37 70%, #8B0000 100%)",
+        "--accent-jewel": "#8B0000",
+        "--card-font-display": "'Cinzel', Georgia, serif",
+        "--card-font-body": "'Cormorant Garamond', Georgia, serif",
+        "--card-font-accent": "'Great Vibes', cursive",
+        "--frame-motif": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d4af37' stroke-width='1.5'%3E%3Cpath d='M50 0 C20 30 20 70 50 100 C80 70 80 30 50 0 Z' stroke-opacity='0.35'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-opacity='0.4'/%3E%3C/svg%3E\")",
+        "--corner-motif": "radial-gradient(circle at 0 0, rgba(212, 175, 55, 0.45) 0%, transparent 70%)",
+        "--border-radius-card": "26px",
+        "--border-radius-btn": "40px",
+        "--card-shadow": "0 24px 60px rgba(10, 1, 4, 0.85), inset 0 1px 0 rgba(255, 230, 180, 0.2)"
+      }
+    },
+    {
+      "id": "advance-royal-3d-gate",
+      "legacyId": "template-12",
+      "title": "Royal 3D Gate & Floral Pillars Suite",
+      "community": "Hindu",
+      "category": [
+        "Advance",
+        "Hindu",
+        "Royal"
+      ],
+      "theme": "3D Royal Gate Opening & Scratch Muhurat",
+      "themeBadge": "Advance 3D",
+      "tags": [
+        "Advance",
+        "3D Gate",
+        "Hindu",
+        "Floral Pillars",
+        "Scratch Card",
+        "Template 12"
+      ],
+      "thumbnail": "./assets/template-12-cover.webp",
+      "fonts": [
+        "https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Great+Vibes&display=swap"
+      ],
+      "tokens": {
+        "--card-bg": "linear-gradient(180deg, #050a1c 0%, #0d1533 50%, #060a1a 100%)",
+        "--card-surface": "rgba(13, 21, 51, 0.92)",
+        "--card-surface-hover": "rgba(20, 32, 75, 0.98)",
+        "--card-border": "1.5px solid #d4af37",
+        "--text-primary": "#f8f0e4",
+        "--text-secondary": "#e7c480",
+        "--text-muted": "rgba(231, 196, 128, 0.72)",
+        "--accent-gold": "#d4af37",
+        "--accent-gold-light": "#ffe9a6",
+        "--accent-foil": "linear-gradient(110deg, #050a1c 0%, #d4af37 35%, #fffbe8 50%, #d4af37 65%, #050a1c 100%)",
+        "--accent-jewel": "#7a1426",
+        "--card-font-display": "'Cinzel', Georgia, serif",
+        "--card-font-body": "'Cormorant Garamond', Georgia, serif",
+        "--card-font-accent": "'Great Vibes', cursive",
+        "--frame-motif": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d4af37' stroke-width='1.5'%3E%3Cpath d='M50 0 C20 30 20 70 50 100 C80 70 80 30 50 0 Z' stroke-opacity='0.35'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-opacity='0.4'/%3E%3C/svg%3E\")",
+        "--corner-motif": "radial-gradient(circle at 0 0, rgba(212, 175, 55, 0.45) 0%, transparent 70%)",
+        "--border-radius-card": "26px",
+        "--border-radius-btn": "40px",
+        "--card-shadow": "0 24px 60px rgba(5, 10, 28, 0.85), inset 0 1px 0 rgba(255, 235, 180, 0.2)"
+      }
+    },
+    {
+      "id": "advance-temple-palace-3d",
+      "legacyId": "template-13",
+      "title": "Temple Palace 3D Door & Floral Sanctuary",
+      "community": "Hindu",
+      "category": [
+        "Advance",
+        "Hindu",
+        "Royal"
+      ],
+      "theme": "Temple Palace 3D Doors & Starry Entrance",
+      "themeBadge": "Advance 3D",
+      "tags": [
+        "Advance",
+        "3D Door",
+        "Temple",
+        "Palace",
+        "Scratch Card",
+        "Template 13"
+      ],
+      "thumbnail": "./assets/template-13-cover.webp",
+      "fonts": [
+        "https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,400&family=Great+Vibes&display=swap"
+      ],
+      "tokens": {
+        "--card-bg": "linear-gradient(180deg, #09030a 0%, #170719 50%, #070208 100%)",
+        "--card-surface": "rgba(25, 8, 28, 0.92)",
+        "--card-surface-hover": "rgba(38, 12, 42, 0.98)",
+        "--card-border": "1.5px solid #d4af37",
+        "--text-primary": "#fff7ed",
+        "--text-secondary": "#e7c480",
+        "--text-muted": "rgba(231, 196, 128, 0.72)",
+        "--accent-gold": "#d4af37",
+        "--accent-gold-light": "#f5e1a4",
+        "--accent-foil": "linear-gradient(110deg, #7a1426 0%, #d4af37 35%, #fffbe8 50%, #d4af37 65%, #7a1426 100%)",
+        "--accent-jewel": "#7a1426",
+        "--card-font-display": "'Cinzel', Georgia, serif",
+        "--card-font-body": "'Cormorant Garamond', Georgia, serif",
+        "--card-font-accent": "'Great Vibes', cursive",
+        "--frame-motif": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d4af37' stroke-width='1.5'%3E%3Cpath d='M50 0 C20 30 20 70 50 100 C80 70 80 30 50 0 Z' stroke-opacity='0.35'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-opacity='0.4'/%3E%3C/svg%3E\")",
+        "--corner-motif": "radial-gradient(circle at 0 0, rgba(212, 175, 55, 0.45) 0%, transparent 70%)",
+        "--border-radius-card": "26px",
+        "--border-radius-btn": "40px",
+        "--card-shadow": "0 24px 60px rgba(9, 3, 10, 0.85), inset 0 1px 0 rgba(255, 230, 180, 0.2)"
+      }
+    },
+    {
+      "id": "advance-royal-palace-grand-door",
+      "legacyId": "template-14",
+      "title": "Royal Palace 3D Grand Door Suite",
+      "community": "Hindu",
+      "category": [
+        "Advance",
+        "Hindu",
+        "Royal"
+      ],
+      "theme": "Royal Palace 3D Double Doors & High-Contrast Couple Screen",
+      "themeBadge": "Advance 3D",
+      "tags": [
+        "Advance",
+        "3D Door",
+        "Grand Palace",
+        "Side Pillars",
+        "Scratch Card",
+        "Template 14"
+      ],
+      "thumbnail": "./assets/template-14-cover.webp",
+      "fonts": [
+        "https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,700&family=Great+Vibes&display=swap"
+      ],
+      "tokens": {
+        "--card-bg": "linear-gradient(180deg, #150608 0%, #250a0f 50%, #0e0305 100%)",
+        "--card-surface": "rgba(37, 10, 15, 0.92)",
+        "--card-surface-hover": "rgba(55, 15, 22, 0.98)",
+        "--card-border": "1.5px solid #d4af37",
+        "--text-primary": "#fff9f2",
+        "--text-secondary": "#e7c480",
+        "--text-muted": "rgba(231, 196, 128, 0.72)",
+        "--accent-gold": "#d4af37",
+        "--accent-gold-light": "#fae19c",
+        "--accent-foil": "linear-gradient(110deg, #6b0c1b 0%, #d4af37 35%, #fffbe8 50%, #d4af37 65%, #6b0c1b 100%)",
+        "--accent-jewel": "#6b0c1b",
+        "--card-font-display": "'Cinzel', Georgia, serif",
+        "--card-font-body": "'Cormorant Garamond', Georgia, serif",
+        "--card-font-accent": "'Great Vibes', cursive",
+        "--frame-motif": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d4af37' stroke-width='1.5'%3E%3Cpath d='M50 0 C20 30 20 70 50 100 C80 70 80 30 50 0 Z' stroke-opacity='0.35'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-opacity='0.4'/%3E%3C/svg%3E\")",
+        "--corner-motif": "radial-gradient(circle at 0 0, rgba(212, 175, 55, 0.45) 0%, transparent 70%)",
+        "--border-radius-card": "26px",
+        "--border-radius-btn": "40px",
+        "--card-shadow": "0 24px 60px rgba(21, 6, 8, 0.85), inset 0 1px 0 rgba(255, 230, 180, 0.2)"
+      }
     }
   ]
 }

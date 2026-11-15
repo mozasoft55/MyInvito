@@ -2046,7 +2046,63 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
       musicBtn.setAttribute('aria-pressed', String(play));
       musicBtn.textContent = play ? '♪' : '♫';
     });
-    undo.push(() => audio.pause());
+
+    let wasPlayingBeforeHide = false;
+    const onVisibility = () => {
+      if (typeof doc === 'undefined') return;
+      if (doc.hidden) {
+        if (!audio.paused) {
+          wasPlayingBeforeHide = true;
+          audio.pause();
+          musicBtn.setAttribute('aria-pressed', 'false');
+          musicBtn.textContent = '♫';
+        }
+      } else if (wasPlayingBeforeHide) {
+        wasPlayingBeforeHide = false;
+        audio.play().then(() => {
+          musicBtn.setAttribute('aria-pressed', 'true');
+          musicBtn.textContent = '♪';
+        }).catch(() => {});
+      }
+    };
+    const onBlur = () => {
+      if (!audio.paused) {
+        wasPlayingBeforeHide = true;
+        audio.pause();
+        musicBtn.setAttribute('aria-pressed', 'false');
+        musicBtn.textContent = '♫';
+      }
+    };
+    const onFocus = () => {
+      if (wasPlayingBeforeHide && (typeof doc === 'undefined' || !doc.hidden)) {
+        wasPlayingBeforeHide = false;
+        audio.play().then(() => {
+          musicBtn.setAttribute('aria-pressed', 'true');
+          musicBtn.textContent = '♪';
+        }).catch(() => {});
+      }
+    };
+
+    if (typeof doc !== 'undefined' && doc.addEventListener) {
+      doc.addEventListener('visibilitychange', onVisibility);
+    }
+    if (typeof win !== 'undefined' && win.addEventListener) {
+      win.addEventListener('blur', onBlur);
+      win.addEventListener('focus', onFocus);
+      win.addEventListener('pagehide', onBlur);
+    }
+
+    undo.push(() => {
+      audio.pause();
+      if (typeof doc !== 'undefined' && doc.removeEventListener) {
+        doc.removeEventListener('visibilitychange', onVisibility);
+      }
+      if (typeof win !== 'undefined' && win.removeEventListener) {
+        win.removeEventListener('blur', onBlur);
+        win.removeEventListener('focus', onFocus);
+        win.removeEventListener('pagehide', onBlur);
+      }
+    });
   }
 
   applyLang(lang);
