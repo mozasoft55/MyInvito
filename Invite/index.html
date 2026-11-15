@@ -1074,6 +1074,32 @@
         }
       }
 
+      function normalizeSongUrl(url) {
+        if (!url) return '';
+        const s = String(url).trim();
+        if (s.startsWith('data:') || s.startsWith('http://') || s.startsWith('https://')) return s;
+        if (s.startsWith('../music/')) return './music/' + s.slice(9);
+        if (s.startsWith('/music/')) return '.' + s;
+        if (s.startsWith('music/')) return './' + s;
+        return s;
+      }
+
+      function stopSynthesizer() {
+        if (musicInterval) {
+          clearInterval(musicInterval);
+          musicInterval = null;
+        }
+        if (window._activeDrones) {
+          window._activeDrones.forEach(d => { try { d.stop(); } catch {} });
+          window._activeDrones = null;
+        }
+        if (masterGain && audioCtx) {
+          try {
+            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+          } catch {}
+        }
+      }
+
       function startMusic() {
         const currentWedding = window.__CURRENT_WEDDING || wedding || {};
         const isMuted = (currentWedding.music_url === 'none' || currentWedding.music_disabled);
@@ -1081,20 +1107,47 @@
 
         isMusicPlaying = true;
         try {
+          // Priority: User's explicitly chosen music in localStorage takes precedence
+          const storedChoice = (typeof localStorage !== 'undefined' && localStorage.getItem('wedding_music_url_' + (currentWedding.order_reference || '')))
+            || (typeof localStorage !== 'undefined' && localStorage.getItem('wedding-music-url'));
+          let musicSrc = (storedChoice && storedChoice !== 'none') ? storedChoice : (currentWedding.music_url || currentWedding.audio_url || './invitation.mp3');
+          musicSrc = normalizeSongUrl(musicSrc);
+
           if (!bgAudio) {
-            let musicSrc = currentWedding.music_url
-              || currentWedding.audio_url
-              || (typeof localStorage !== 'undefined' && localStorage.getItem('wedding_music_url_' + (currentWedding.order_reference || '')))
-              || (typeof localStorage !== 'undefined' && localStorage.getItem('wedding-music-url'))
-              || './invitation.mp3';
-            if (musicSrc.startsWith('../music/')) musicSrc = './music/' + musicSrc.slice(9);
             bgAudio = new Audio(musicSrc);
             bgAudio.loop = true;
             bgAudio.volume = 0.35; // Plays softly when guests open invite
+          } else {
+            const currentFull = bgAudio.src;
+            let targetFull = musicSrc;
+            try {
+              targetFull = new URL(musicSrc, window.location.href).href;
+            } catch (_) {}
+            if (currentFull !== targetFull) {
+              bgAudio.pause();
+              bgAudio.src = musicSrc;
+              bgAudio.load();
+            }
           }
+
           const p = bgAudio.play();
           if (p && typeof p.catch === 'function') {
-            p.catch(() => { startSynthesizer(); });
+            p.then(() => {
+              stopSynthesizer();
+            }).catch(() => {
+              // If browser autoplay policy temporarily holds playback, trigger on first user touch/click
+              const onNextInteraction = () => {
+                if (isMusicPlaying && bgAudio && bgAudio.paused) {
+                  bgAudio.play().then(() => stopSynthesizer()).catch(() => {});
+                }
+                document.removeEventListener('click', onNextInteraction);
+                document.removeEventListener('touchstart', onNextInteraction);
+              };
+              document.addEventListener('click', onNextInteraction, { once: true });
+              document.addEventListener('touchstart', onNextInteraction, { once: true });
+            });
+          } else {
+            stopSynthesizer();
           }
         } catch {
           startSynthesizer();
@@ -1107,14 +1160,7 @@
         if (bgAudio) {
           try { bgAudio.pause(); } catch {}
         }
-        if (musicInterval) {
-          clearInterval(musicInterval);
-          musicInterval = null;
-        }
-        if (window._activeDrones) {
-          window._activeDrones.forEach(d => { try { d.stop(); } catch {} });
-          window._activeDrones = null;
-        }
+        stopSynthesizer();
         updateMusicUi(false);
       }
 
@@ -1435,7 +1481,7 @@
 
       document.addEventListener('click', e => {
         const trigger = e.target.closest(
-          '.t9-bindi, .t9-entry, [data-open], [data-open-gate], .t04-wax-trigger, .t04-door-btn, .t03-seal, .t8-seal, .royal-envelope'
+          '.t9-bindi, .t9-entry, [data-open], [data-open-gate], .t04-wax-trigger, .t04-door-btn, .t03-seal, .t8-seal, .royal-envelope, .t11-obtn, #t11-open-btn, .t11-hit, .t12-obtn, #t12-open-btn, .t12-hit, .t13-obtn, #t13-open-btn, .t13-hit, .t14-obtn, #t14-open-btn, .t14-hit, .t7-obtn, #t7-open-btn, .t7-hit, .t12-skip-btn, .t13-skip-btn, .t14-skip-btn'
         );
         if (trigger) {
           setTimeout(unveilInvitation, 350);
@@ -1778,56 +1824,59 @@
         try {
           weddingPayload = await fetchInvitationByCode(inviteCode);
         } catch (fetchErr) {
-          if (!inviteCode) {
-            let localOrder = null;
-            try {
-              localOrder = JSON.parse(localStorage.getItem('primeecard_last_order') || localStorage.getItem('primeecard_onboard_draft') || 'null');
-            } catch (_) {}
+          console.warn('Backend lookup fallback to local order / preview:', fetchErr?.message || fetchErr);
+          let localOrder = null;
+          try {
+            localOrder = JSON.parse(localStorage.getItem('primeecard_last_order') || localStorage.getItem('primeecard_onboard_draft') || 'null');
+          } catch (_) {}
 
-            const bride = localOrder?.bride_name || 'Sanjukta';
-            const groom = localOrder?.groom_name || 'Purushottam';
-            const venueName = localOrder?.venue || localOrder?.venue_name || localOrder?.banquet_name || 'Grand Heritage Palace Grounds';
-            const eventDate = localOrder?.event_date || localOrder?.date || '2026-12-05';
-            const ceremonyTime = localOrder?.ceremony_time || localOrder?.time || '7:00 PM';
-            const phone = localOrder?.phone || '9477929927';
+          const bride = localOrder?.bride_name || 'Sanjukta';
+          const groom = localOrder?.groom_name || 'Purushottam';
+          const venueName = localOrder?.venue || localOrder?.venue_name || localOrder?.banquet_name || 'Grand Heritage Palace Grounds';
+          const eventDate = localOrder?.event_date || localOrder?.date || '2026-12-05';
+          const ceremonyTime = localOrder?.ceremony_time || localOrder?.time || '7:00 PM';
+          const phone = localOrder?.phone || '9477929927';
+          const chosenMusicUrl = localOrder?.music_url || '';
+          const chosenMusicTitle = localOrder?.music_title || '';
+          const chosenMusicId = localOrder?.music_id || '';
 
-            weddingPayload = {
-              guest: {
-                name: 'Respected Guest',
-                persons: 1,
-                with_family: false,
-                invite_code: 'preview'
-              },
-              wedding: {
-                bride_name: bride,
-                groom_name: groom,
-                couple_name: `${bride} & ${groom}`,
-                event_date: eventDate,
-                date: eventDate,
-                ceremony_time: ceremonyTime,
-                ceremony_title: localOrder?.ceremony_title || 'Shubho Bibaho · Sacred Royal Heritage',
-                invocation: localOrder?.invocation || '॥ শ্রী শ্রী প্রজাপতয়ে নমঃ ॥',
-                venue: venueName,
-                venue_name: venueName,
-                venue_title: localOrder?.venue_title || 'The Royal Mandap & Banquet Courtyard',
-                address: localOrder?.address || localOrder?.location || 'Riverfront Promenade, Heritage Boulevard',
-                city: localOrder?.city || 'Kolkata, West Bengal',
-                rsvp_phone: phone,
-                phone: phone,
-                bride_photo: localOrder?.bride_photo || '',
-                groom_photo: localOrder?.groom_photo || '',
-                venue_photo: localOrder?.venue_photo || '',
-                template_id: p.get('template') || localOrder?.template_style || 'hindu-vedic-crimson'
-              },
-              events: (localOrder?.events && Array.isArray(localOrder.events) && localOrder.events.length) ? localOrder.events : [
-                { name: 'Mehendi & Sangeet', date: '2026-12-04', time: '5:00 PM', venue: venueName || 'Royal Palace Banquet' },
-                { name: 'Wedding Ceremony (Phere)', date: '2026-12-05', time: '7:00 PM', venue: venueName || 'Royal Palace Mandap' },
-                { name: 'Grand Reception', date: '2026-12-06', time: '7:30 PM', venue: venueName || 'Imperial Ballroom' }
-              ]
-            };
-          } else {
-            throw fetchErr;
-          }
+          weddingPayload = {
+            guest: {
+              name: 'Respected Guest',
+              persons: 1,
+              with_family: false,
+              invite_code: inviteCode || 'preview'
+            },
+            wedding: {
+              bride_name: bride,
+              groom_name: groom,
+              couple_name: `${bride} & ${groom}`,
+              event_date: eventDate,
+              date: eventDate,
+              ceremony_time: ceremonyTime,
+              ceremony_title: localOrder?.ceremony_title || 'Shubho Bibaho · Sacred Royal Heritage',
+              invocation: localOrder?.invocation || '॥ শ্রী শ্রী প্রজাপতয়ে নমঃ ॥',
+              venue: venueName,
+              venue_name: venueName,
+              venue_title: localOrder?.venue_title || 'The Royal Mandap & Banquet Courtyard',
+              address: localOrder?.address || localOrder?.location || 'Riverfront Promenade, Heritage Boulevard',
+              city: localOrder?.city || 'Kolkata, West Bengal',
+              rsvp_phone: phone,
+              phone: phone,
+              bride_photo: localOrder?.bride_photo || '',
+              groom_photo: localOrder?.groom_photo || '',
+              venue_photo: localOrder?.venue_photo || '',
+              music_url: chosenMusicUrl,
+              music_title: chosenMusicTitle,
+              music_id: chosenMusicId,
+              template_id: p.get('template') || localOrder?.template_style || 'hindu-vedic-crimson'
+            },
+            events: (localOrder?.events && Array.isArray(localOrder.events) && localOrder.events.length) ? localOrder.events : [
+              { name: 'Mehendi & Sangeet', date: '2026-12-04', time: '5:00 PM', venue: venueName || 'Royal Palace Banquet' },
+              { name: 'Wedding Ceremony (Phere)', date: '2026-12-05', time: '7:00 PM', venue: venueName || 'Royal Palace Mandap' },
+              { name: 'Grand Reception', date: '2026-12-06', time: '7:30 PM', venue: venueName || 'Imperial Ballroom' }
+            ]
+          };
         }
 
         const guest = weddingPayload.guest;
@@ -1897,16 +1946,35 @@
         wedding.hero_image = couplePhoto || wedding.hero_image;
         wedding.venue_image = venuePhoto || wedding.venue_image;
 
-        const storedMusicUrl = wedding.music_url
-          || getStored('wedding_music_url_' + (wedding.order_reference || ''))
-          || getStored('wedding-music-url')
-          || '';
-        const storedMusicTitle = wedding.music_title
-          || getStored('wedding_music_title_' + (wedding.order_reference || ''))
-          || getStored('wedding-music-title')
-          || '';
-        if (storedMusicUrl) wedding.music_url = storedMusicUrl;
-        if (storedMusicTitle) wedding.music_title = storedMusicTitle;
+        function normalizeMusicUrl(url) {
+          if (!url) return '';
+          const s = String(url).trim();
+          if (s.startsWith('data:') || s.startsWith('http://') || s.startsWith('https://')) return s;
+          if (s.startsWith('../music/')) return './music/' + s.slice(9);
+          if (s.startsWith('/music/')) return '.' + s;
+          if (s.startsWith('music/')) return './' + s;
+          return s;
+        }
+
+        const userMusicChoice = getStored('wedding_music_url_' + (wedding.order_reference || ''))
+          || getStored('wedding-music-url');
+        const userMusicTitle = getStored('wedding_music_title_' + (wedding.order_reference || ''))
+          || getStored('wedding-music-title');
+
+        if (userMusicChoice && userMusicChoice !== 'none') {
+          wedding.music_url = normalizeMusicUrl(userMusicChoice);
+        } else if (wedding.music_url) {
+          wedding.music_url = normalizeMusicUrl(wedding.music_url);
+        } else {
+          wedding.music_url = './invitation.mp3';
+        }
+
+        if (userMusicTitle) {
+          wedding.music_title = userMusicTitle;
+        }
+
+        weddingPayload.wedding.music_url = wedding.music_url;
+        weddingPayload.wedding.music_title = wedding.music_title;
         window.__CURRENT_WEDDING = wedding;
 
         const isTokenTemplate = tokenCatalog && Array.isArray(tokenCatalog.templates) && tokenCatalog.templates.some(t => t.id === templateId);

@@ -1847,6 +1847,13 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     busy = true;
     if (intro && intro.classList) intro.classList.add('t12-go');
 
+    const win = typeof window !== 'undefined' ? window : null;
+    if (win && typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+      try {
+        win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+      } catch {}
+    }
+
     const T = (fn, ms) => {
       const t = setTimeout(fn, ms);
       timers.push(t);

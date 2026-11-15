@@ -25,6 +25,12 @@ const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
 const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
+const safeAudioUrl = u => {
+  const s = clean(u);
+  if (!s || /^(javascript|vbscript):/i.test(s)) return '';
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:audio\/|music\/|user-music\/|[a-z0-9_.-]+\.mp3)/i.test(s)) return esc(s);
+  return '';
+};
 const safeImg = u => {
   const s = clean(u);
   if (!s) return '';
@@ -598,7 +604,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
 <link href="${FONT_HREF}" rel="stylesheet" data-t9-fonts>
 <style>${STYLE}</style>
 <noscript><style>.t9-gate{display:none!important}.t9.t9-locked{height:auto!important;max-height:none!important;overflow:visible!important}.t9-reveal{opacity:1!important;transform:none!important}.t9 img.t9-fi{opacity:1!important}.t9-hero-img{opacity:1}</style></noscript>
-<div class="t9 t9-js t9-locked t9-boot" style="${themeVars(w)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeUrl(w.music_url)}" data-hero-imgs="${esc(JSON.stringify(heroList))}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
+<div class="t9 t9-js t9-locked t9-boot" style="${themeVars(w)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeAudioUrl(w.music_url)}" data-hero-imgs="${esc(JSON.stringify(heroList))}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
   ${DEFS}
   <div class="t9-progress" aria-hidden="true"></div>
 

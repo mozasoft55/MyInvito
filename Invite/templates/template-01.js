@@ -36,6 +36,12 @@ const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
 const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
+const safeAudioUrl = u => {
+  const s = clean(u);
+  if (!s || /^(javascript|vbscript):/i.test(s)) return '';
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:audio\/|music\/|user-music\/|[a-z0-9_.-]+\.mp3)/i.test(s)) return esc(s);
+  return '';
+};
 const safeImg = u => {
   const s = clean(u);
   if (!s) return '';
@@ -668,7 +674,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
 <link href="${FONT_HREF}" rel="stylesheet" data-t8-fonts>
 <style>${STYLE}</style>
 <noscript><style>.t8-entry{display:none!important}.t8.t8-locked{height:auto!important;max-height:none!important;overflow:visible!important}.t8-reveal{opacity:1!important;transform:none!important}.t8 img.t8-fi{opacity:1!important}</style></noscript>
-<div class="t8 t8-js t8-locked t8-boot" style="${esc(rootVars)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeUrl(w.music_url)}" data-theme="${esc(clean(w.theme).toLowerCase())}" data-accent="${esc(hex6(w.accent_color) || '')}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
+<div class="t8 t8-js t8-locked t8-boot" style="${esc(rootVars)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeAudioUrl(w.music_url)}" data-theme="${esc(clean(w.theme).toLowerCase())}" data-accent="${esc(hex6(w.accent_color) || '')}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
   ${BIRD}
   <div class="t8-scene" aria-hidden="true">
     <div class="t8-stars">${stars}</div>

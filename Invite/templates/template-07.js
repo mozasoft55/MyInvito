@@ -1721,6 +1721,12 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     if (isOpened) return;
     isOpened = true;
 
+    if (win && typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+      try {
+        win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+      } catch {}
+    }
+
     const overlay = byId('t07LightsOffOverlay');
     if (!overlay) return;
 

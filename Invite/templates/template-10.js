@@ -18,6 +18,12 @@ const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
 const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
+const safeAudioUrl = u => {
+  const s = clean(u);
+  if (!s || /^(javascript|vbscript):/i.test(s)) return '';
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:audio\/|music\/|user-music\/|[a-z0-9_.-]+\.mp3)/i.test(s)) return esc(s);
+  return '';
+};
 const safeImg = u => {
   const s = clean(u);
   if (!s) return '';
@@ -431,7 +437,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
   const t10Th = T10_THEMES[t10Key] || T10_THEMES.navy;
   const t10Vars = `--ink:${t10Th.ink};--lapis:${t10Th.lapis};--orch:${t10Th.orch};--peach:${t10Th.peach};--teal:${t10Th.teal};--lotus:${t10Th.lotus};--pearl:${t10Th.pearl};--gold:${t10Th.gold};--gold2:${t10Th.gold2};--line:${t10Th.line};background:${t10Th.bg};`;
 
-  const defaultMusic = safeUrl(w.music_url) || 'invitation.mp3';
+  const defaultMusic = safeAudioUrl(w.music_url) || 'invitation.mp3';
   const targetTs = parseWhen(w.date, w.time, offset) ?? parseWhen(w.date, '', offset);
   const stCal = ms => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   const calDesc = encodeURIComponent(`We cordially invite you to celebrate the wedding of ${firstRaw} & ${secondRaw}.${where ? ` Venue: ${where.replace(/&amp;/g, '&')}.` : ''}`);

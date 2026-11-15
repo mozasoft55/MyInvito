@@ -1771,6 +1771,13 @@ export function initTemplate14(container) {
     if (busy || isDone) return;
     busy = true;
 
+    const win = typeof window !== 'undefined' ? window : null;
+    if (win && typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+      try {
+        win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+      } catch {}
+    }
+
     if (carpetTap) {
       carpetTap.classList.add('h');
       carpetTap.style.pointerEvents = 'none';

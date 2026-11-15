@@ -61,3 +61,22 @@ test('templates.json contains complete metadata for templates 01 through 14', ()
     assert.ok(exists, `Expected templates.json to include entry for ${legacyKey}`);
   }
 });
+
+test('Templates 01 and 06 preserve chosen soundtrack without reverting to invitation.mp3', async () => {
+  const t06 = (await import('../templates/template-06.js')).default;
+  const t01 = (await import('../templates/template-01.js')).default;
+
+  const sampleWedding = {
+    bride_name: 'Pari',
+    groom_name: 'Param',
+    date: '2026-11-28',
+    music_url: '../music/raataan-lambiyan.mp3',
+    music_title: 'Raataan Lambiyan'
+  };
+
+  const html06 = t06({ guest: { name: 'Friend' }, wedding: sampleWedding, events: [] });
+  assert.ok(html06.includes('data-music="../music/raataan-lambiyan.mp3"'), 'Template 06 should embed the selected soundtrack in data-music');
+
+  const html01 = t01({ guest: { name: 'Friend' }, wedding: sampleWedding, events: [] });
+  assert.ok(html01.includes('data-music="../music/raataan-lambiyan.mp3"'), 'Template 01 should embed the selected soundtrack in data-music');
+});

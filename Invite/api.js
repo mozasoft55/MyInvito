@@ -234,6 +234,25 @@ function findLocalInvitation(code) {
           wedding.venue_photo = venuePhoto || wedding.venue_photo;
           wedding.banquet_photo = venuePhoto || wedding.banquet_photo;
 
+          const musicUrl = wedding.music_url
+            || order.music_url
+            || localStorage.getItem('wedding_music_url_' + ref)
+            || localStorage.getItem('wedding-music-url')
+            || '';
+          const musicTitle = wedding.music_title
+            || order.music_title
+            || localStorage.getItem('wedding_music_title_' + ref)
+            || localStorage.getItem('wedding-music-title')
+            || '';
+          const musicId = wedding.music_id
+            || order.music_id
+            || localStorage.getItem('wedding-music-id')
+            || '';
+
+          if (musicUrl) wedding.music_url = musicUrl;
+          if (musicTitle) wedding.music_title = musicTitle;
+          if (musicId) wedding.music_id = musicId;
+
           return {
             guest: {
               id: guest.id,

@@ -22,6 +22,12 @@ const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
 const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
+const safeAudioUrl = u => {
+  const s = clean(u);
+  if (!s || /^(javascript|vbscript):/i.test(s)) return '';
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:audio\/|music\/|user-music\/|[a-z0-9_.-]+\.mp3)/i.test(s)) return esc(s);
+  return '';
+};
 const safeImg = u => {
   const s = clean(u);
   if (!s) return '';
@@ -528,7 +534,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
 <link href="${FONT_HREF}" rel="stylesheet" data-t8-fonts>
 <style>${STYLE}</style>
 <noscript><style>.t8-gate{display:none!important}.t8.t8-locked{height:auto!important;max-height:none!important;overflow:visible!important}.t8-reveal{opacity:1!important;transform:none!important}.t8 img.t8-fi{opacity:1!important}.t8-hero-img{opacity:1}</style></noscript>
-<div class="t8 t8-js t8-locked" style="${themeVars(w)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeUrl(w.music_url)}" data-hero-imgs="${esc(JSON.stringify(heroList))}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
+<div class="t8 t8-js t8-locked" style="${themeVars(w)}" data-when="${esc(String(whenTs ?? parseWhen(w.date, '', offset) ?? ''))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeAudioUrl(w.music_url)}" data-hero-imgs="${esc(JSON.stringify(heroList))}" data-names="${esc(`${rawGroom} & ${rawBride}`)}" data-venue="${esc(clean(w.venue))}">
   ${DEFS}
   <div class="t8-progress" aria-hidden="true"></div>
 

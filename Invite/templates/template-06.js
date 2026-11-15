@@ -21,6 +21,12 @@ const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 const clean = v => String(v ?? '').trim();
 const safeUrl = u => (/^https?:\/\//i.test(clean(u)) ? esc(clean(u)) : '');
+const safeAudioUrl = u => {
+  const s = clean(u);
+  if (!s || /^(javascript|vbscript):/i.test(s)) return '';
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:audio\/|music\/|user-music\/|[a-z0-9_.-]+\.mp3)/i.test(s)) return esc(s);
+  return '';
+};
 const safeImg = u => {
   const s = clean(u);
   if (!s) return '';
@@ -1143,7 +1149,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
 <link href="${FONT_HREF}" rel="stylesheet" data-t9-fonts>
 <style>${STYLE}</style>
 <noscript><style>.t9-entry{display:none!important}.t9.t9-locked{height:auto!important;max-height:none!important;overflow:visible!important}.t9-rv{opacity:1!important;transform:none!important}.t9 img.t9-fi{opacity:1!important}.t9-alp path.t9-draw-path,.t9-alp circle.t9-draw-path{stroke-dashoffset:0!important}</style></noscript>
-<div class="t9 t9-js t9-locked t9-boot" data-lang="${lang0}" style="${esc(themeStyle)}" data-when="${esc(String(activeWhen))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeUrl(w.music_url)}" data-names-en="${esc(`${fEn} & ${sEn}`)}" data-names-bn="${esc(`${fBn} ও ${sBn}`)}" data-venue="${esc(clean(w.venue))}" data-venue-bn="${esc(clean(w.venue_bn) || clean(w.venue))}" data-order-ref="${esc(clean(w.order_reference) || clean(w.ref))}">
+<div class="t9 t9-js t9-locked t9-boot" data-lang="${lang0}" style="${esc(themeStyle)}" data-when="${esc(String(activeWhen))}" data-wa="${esc(canRsvp ? wa : '')}" data-music="${safeAudioUrl(w.music_url)}" data-names-en="${esc(`${fEn} & ${sEn}`)}" data-names-bn="${esc(`${fBn} ও ${sBn}`)}" data-venue="${esc(clean(w.venue))}" data-venue-bn="${esc(clean(w.venue_bn) || clean(w.venue))}" data-order-ref="${esc(clean(w.order_reference) || clean(w.ref))}">
   ${DEFS}
   <div class="t9-progress" aria-hidden="true"></div>
   <div class="t9-petals" aria-hidden="true"></div>

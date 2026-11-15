@@ -1630,6 +1630,10 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     if (busy || isDone) return;
     busy = true;
 
+    try {
+      window.dispatchEvent(new CustomEvent('invitation-unveiled'));
+    } catch {}
+
     stage.classList.add('t11-lit');
     playCrackleSound();
 
