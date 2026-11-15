@@ -201,6 +201,33 @@
             </div>
             <div id="theme-preview" class="theme-preview" aria-live="polite"></div>
             <p id="design-warning" class="inline-error" role="status" hidden></p>
+
+            <!-- Wedding Invitation Music Selection (Optional) -->
+            <div class="subsection-head music-section-head">
+              <div>
+                <h4>Your song <span class="optional">Optional</span></h4>
+                <p>Plays softly when guests open the invite. Only that song will play.</p>
+              </div>
+              <button type="button" class="button button-outline button-small" id="open-music-picker-btn">
+                ♪ Select your Music
+              </button>
+            </div>
+            <div id="selected-music-card" class="selected-music-card" style="display:none;">
+              <div class="smc-left">
+                <span class="smc-icon" aria-hidden="true">♪</span>
+                <div class="smc-text">
+                  <strong id="selected-music-title">Raataan Lambiyan</strong>
+                  <span id="selected-music-sub">Shershaah · soft and warm</span>
+                </div>
+              </div>
+              <div class="smc-actions">
+                <button type="button" class="button button-outline button-small" id="change-music-btn">Change music</button>
+                <button type="button" class="smc-remove-btn" id="remove-music-btn" title="Remove selected song" aria-label="Remove music">✕</button>
+              </div>
+            </div>
+            <input type="hidden" name="music_id" id="input-music-id" value="">
+            <input type="hidden" name="music_title" id="input-music-title" value="">
+            <input type="hidden" name="music_url" id="input-music-url" value="">
           </section>
 
           <section class="form-step" data-step="2" hidden>
@@ -355,6 +382,39 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Royal Wedding Music Picker Modal -->
+  <div class="mp-back" id="mpBack" role="dialog" aria-modal="true" aria-labelledby="mpTitle" style="display:none;">
+    <div class="mp-modal">
+      <div class="mp-head">
+        <div>
+          <p class="eyebrow" style="margin-bottom:4px;">Atmosphere &amp; Music</p>
+          <h2 id="mpTitle">Invite music</h2>
+          <p>Plays softly when guests open the invite. Pick one of our curated tracks or add your own.</p>
+        </div>
+        <button type="button" class="mp-x" id="mpClose" aria-label="Close">×</button>
+      </div>
+      <div class="mp-body">
+        <div class="mp-sec">Curated wedding songs</div>
+        <div id="mpList"></div>
+        <div class="mp-sec">Or add your own</div>
+        <div class="mp-up">
+          <div class="mp-up-text">
+            <b>Your own song</b>
+            <small>MP3, M4A, AAC, WAV or OGG, up to 1 MB</small>
+          </div>
+          <button type="button" class="button button-gold button-small" id="mpUpBtn">Upload</button>
+          <input type="file" id="mpFile" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
+        </div>
+        <div class="mp-msg" id="mpMsg" role="status"></div>
+        <p class="mp-note">We shrink your song to about 200 KB (first 40 seconds, soft fade-out) so the invite opens fast. It is removed automatically after 3 months. Please only upload music you have the right to share.</p>
+      </div>
+      <div class="mp-foot">
+        <button type="button" class="button button-muted button-small" id="mpSkip">No music</button>
+        <button type="button" class="button button-gold button-small" id="mpSave" disabled>Save song</button>
+      </div>
     </div>
   </div>
 

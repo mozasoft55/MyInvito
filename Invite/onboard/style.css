@@ -458,3 +458,205 @@ button,a{-webkit-tap-highlight-color:transparent}
   .aob-actions, .drb-actions{width:100%;justify-content:space-between}
   .recovery-modal-card{padding:20px 16px}
 }
+
+/* ── Wedding Music Selection & Royal Music Picker Modal ────────────────── */
+.music-section-head{margin-top:24px}
+.selected-music-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  background:#fffdf9;
+  border:1px solid #d2b678;
+  border-radius:12px;
+  padding:12px 18px;
+  margin-top:12px;
+  box-shadow:0 4px 14px rgba(68,19,33,0.06);
+}
+.smc-left{display:flex;align-items:center;gap:12px;min-width:0}
+.smc-icon{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#f4e6d4;
+  color:var(--wine);
+  border:1px solid #d9ccba;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  flex:none;
+}
+.smc-text{min-width:0}
+.smc-text strong{
+  display:block;
+  font:600 17px/1.2 "Playfair Display",Georgia,serif;
+  color:var(--wine);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.smc-text span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.smc-actions{display:flex;align-items:center;gap:8px;flex:none}
+.smc-remove-btn{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid #e2d4c0;
+  background:#faf4ea;
+  color:var(--muted);
+  font-size:14px;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:all .15s ease;
+}
+.smc-remove-btn:hover{background:#ecdcc7;color:var(--error)}
+
+/* Modal Backdrop & Window */
+.mp-back{
+  position:fixed;
+  inset:0;
+  background:rgba(26,9,17,0.76);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  z-index:99999;
+}
+.mp-back.on{display:flex}
+.mp-modal{
+  width:min(540px,100%);
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+  background:#fffdfa;
+  border:1.5px solid #d2b678;
+  border-radius:24px;
+  box-shadow:0 24px 70px rgba(24,7,13,0.45);
+  animation:mp-in .22s ease-out;
+  overflow:hidden;
+}
+@keyframes mp-in{from{transform:translateY(14px) scale(.98);opacity:0}}
+.mp-head{
+  padding:24px 26px 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  border-bottom:1px solid #f0e6d6;
+}
+.mp-head h2{margin:0;font:600 26px/1.15 "Playfair Display",Georgia,serif;color:var(--wine)}
+.mp-head p{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
+.mp-x{
+  flex:none;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:1px solid #e2d4c0;
+  background:#faf4ea;
+  color:var(--ink);
+  font-size:20px;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:background .15s;
+}
+.mp-x:hover{background:#eddcc6}
+.mp-body{padding:14px 26px;overflow-y:auto;flex:1}
+.mp-sec{
+  font:700 12px Arial,sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:#a2824b;
+  margin:16px 0 8px;
+}
+.mp-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 14px;
+  margin-bottom:8px;
+  background:#fffaf2;
+  border:1.5px solid #e8dcce;
+  border-radius:14px;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.mp-row:hover{border-color:#c79b51;background:#fbf5e8;transform:translateY(-1px)}
+.mp-row.sel{
+  background:linear-gradient(135deg,#502132 0%,#30111c 100%);
+  border-color:#d2b678;
+  color:#fffaf1;
+  box-shadow:0 4px 16px rgba(80,33,50,0.22);
+}
+.mp-play{
+  flex:none;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:1px solid #d9ccba;
+  background:#f6ecde;
+  color:var(--wine);
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.mp-play:hover{background:#ecdcc7;transform:scale(1.05)}
+.mp-row.sel .mp-play{background:#fffaf1;color:var(--wine);border-color:#d2b678}
+.mp-play svg{width:13px;height:13px;fill:currentColor}
+.mp-txt{flex:1;min-width:0}
+.mp-txt b{
+  display:block;
+  font:600 17px "Playfair Display",Georgia,serif;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#47393c;
+}
+.mp-row.sel .mp-txt b{color:#fff9ed}
+.mp-txt span{font-size:13px;color:var(--muted)}
+.mp-row.sel .mp-txt span{color:#edd5af}
+.mp-dot{
+  flex:none;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:2px solid #d7cabb;
+  transition:border .15s ease;
+}
+.mp-row.sel .mp-dot{border:6px solid #faeed5;background:var(--wine)}
+.mp-up{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 16px;
+  background:#fff8ef;
+  border-radius:14px;
+  border:1.5px dashed #d2b678;
+}
+.mp-up-text b{font:600 17px "Playfair Display",Georgia,serif;color:#502132}
+.mp-up-text small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.mp-msg{min-height:18px;margin:10px 2px 0;font-size:14px;color:var(--muted)}
+.mp-msg.err{color:var(--error)}
+.mp-note{font-size:12px;color:#887a7b;margin:10px 2px 0;line-height:1.5}
+.mp-foot{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:10px;
+  padding:14px 26px 18px;
+  border-top:1px solid #f0e6d6;
+  background:#fffdfa;
+}
+:where(.mp-modal button,.mp-modal input):focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.mp-modal{animation:none}}
+@media(max-width:600px){
+  .mp-head{padding:18px 18px 10px}
+  .mp-body{padding:12px 18px}
+  .mp-foot{padding:12px 18px 16px}
+  .selected-music-card{flex-direction:column;align-items:flex-start}
+  .smc-actions{width:100%;justify-content:space-between}
+}

@@ -55,7 +55,11 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'template-07',
   'template-08',
   'template-09',
-  'template-10'
+  'template-10',
+  'template-11',
+  'template-12',
+  'template-13',
+  'template-14'
 ]);
 
 export const DEFAULT_STYLES = Object.freeze([
@@ -68,7 +72,11 @@ export const DEFAULT_STYLES = Object.freeze([
   { template_id: 'template-07', style_name: 'Envelope & Arch' },
   { template_id: 'template-08', style_name: 'Celestial Gate' },
   { template_id: 'template-09', style_name: 'Celestial Palace' },
-  { template_id: 'template-10', style_name: 'Jannat Bagh' }
+  { template_id: 'template-10', style_name: 'Jannat Bagh' },
+  { template_id: 'template-11', style_name: 'Royal Gate & Ivory Arch' },
+  { template_id: 'template-12', style_name: 'Regal Gateway' },
+  { template_id: 'template-13', style_name: 'Temple Palace Sanctuary' },
+  { template_id: 'template-14', style_name: 'Grand Royal Pavilion' }
 ]);
 
 export const DEFAULT_THEMES = Object.freeze([
@@ -196,6 +204,9 @@ export function validateOnboarding(input) {
     bride_photo: text('bride_photo', 500000),
     couple_photo: text('couple_photo', 500000),
     venue_photo: text('venue_photo', 500000),
+    music_id: text('music_id', 100),
+    music_title: text('music_title', 200),
+    music_url: text('music_url', 500000),
     template_style: template,
     theme_name: required('theme_name', 'Theme', 60),
     package_code: required('package_code', 'Package', 40),

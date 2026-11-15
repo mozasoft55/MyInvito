@@ -1,11 +1,38 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
+
+// User music configuration: 90 days retention, max 400KB compressed
+const USER_MUSIC_DIR = path.join(__dirname, 'user-music');
+const DAYS_90_MS = 90 * 864e5;
+const MAX_UPLOAD_BYTES = 400 * 1024; // 400 KB
+
+if (!fs.existsSync(USER_MUSIC_DIR)) {
+  fs.mkdirSync(USER_MUSIC_DIR, { recursive: true });
+}
+
+// 90-day retention cleanup
+function cleanupOldMusic() {
+  const cutoff = Date.now() - DAYS_90_MS;
+  try {
+    for (const file of fs.readdirSync(USER_MUSIC_DIR)) {
+      const filePath = path.join(USER_MUSIC_DIR, file);
+      try {
+        if (fs.statSync(filePath).mtimeMs < cutoff) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+}
+cleanupOldMusic();
+setInterval(cleanupOldMusic, 36e5); // run hourly
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -30,7 +57,7 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
   // CORS & caching headers for local development
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
@@ -43,6 +70,84 @@ const server = http.createServer((req, res) => {
   // Parse path & sanitize
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(parsedUrl.pathname);
+
+  // POST /api/music: Upload compressed wedding song
+  if (req.method === 'POST' && (pathname === '/api/music' || pathname === '/api/music/')) {
+    const contentType = req.headers['content-type'] || '';
+    const chunks = [];
+    let totalSize = 0;
+
+    req.on('data', chunk => {
+      chunks.push(chunk);
+      totalSize += chunk.length;
+      if (totalSize > 2 * 1024 * 1024) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'File size exceeds maximum allowable limit' }));
+        req.destroy();
+      }
+    });
+
+    req.on('end', () => {
+      const fullBuffer = Buffer.concat(chunks);
+      let fileBytes = fullBuffer;
+
+      // Extract file from multipart if boundary exists
+      if (contentType.includes('multipart/form-data')) {
+        const match = contentType.match(/boundary=([-a-zA-Z0-9'()+_./:=?]+)/);
+        if (match && match[1]) {
+          const boundaryBuf = Buffer.from('--' + match[1]);
+          const startIdx = fullBuffer.indexOf(boundaryBuf);
+          if (startIdx !== -1) {
+            const headerSep = Buffer.from('\r\n\r\n');
+            const headerStart = startIdx + boundaryBuf.length + 2;
+            const headerEnd = fullBuffer.indexOf(headerSep, headerStart);
+            if (headerEnd !== -1) {
+              const fileStart = headerEnd + 4;
+              const nextBoundary = fullBuffer.indexOf(boundaryBuf, fileStart);
+              if (nextBoundary !== -1) {
+                let fileEnd = nextBoundary;
+                if (fullBuffer[fileEnd - 2] === 13 && fullBuffer[fileEnd - 1] === 10) fileEnd -= 2;
+                fileBytes = fullBuffer.slice(fileStart, fileEnd);
+              }
+            }
+          }
+        }
+      }
+
+      if (!fileBytes || fileBytes.length === 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'No audio data received' }));
+        return;
+      }
+
+      if (fileBytes.length > MAX_UPLOAD_BYTES) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `File too large (${(fileBytes.length / 1024).toFixed(0)} KB). Limit is 400 KB.` }));
+        return;
+      }
+
+      const songFileName = crypto.randomBytes(8).toString('hex') + '.mp3';
+      const destPath = path.join(USER_MUSIC_DIR, songFileName);
+      fs.writeFileSync(destPath, fileBytes);
+
+      // Mirror to Invite/user-music and mcard/Invite/user-music for path flexibility
+      for (const subDir of [path.join(__dirname, 'Invite', 'user-music'), path.join(__dirname, 'mcard', 'Invite', 'user-music')]) {
+        try {
+          if (!fs.existsSync(subDir)) fs.mkdirSync(subDir, { recursive: true });
+          fs.writeFileSync(path.join(subDir, songFileName), fileBytes);
+        } catch (_) {}
+      }
+
+      const responsePayload = {
+        url: '/user-music/' + songFileName,
+        expiresAt: Date.now() + DAYS_90_MS
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(responsePayload));
+    });
+    return;
+  }
 
   // Canonical alias: Map root and legacy duplicate names seamlessly to single index.html
   if (['/', '/index.html', '/vivaah.html', '/vivaah-cards.html', '/vivaah', '/vivaah-cards', '/showcase.html'].includes(pathname)) {

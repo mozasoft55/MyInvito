@@ -41,8 +41,6 @@ let designConfigurationLoaded = false;
 let cashRequestMode = false;
 let busy = false;
 
-const getSupabaseBase = () => (ONBOARDING_CONFIG.supabaseUrl || 'https://skpcxbdrmsnwmggjodkz.supabase.co').replace(/\/+$/, '');
-
 // ── Photo Upload & Compression Pipeline ──────────────────────────────
 function persistUploadedPhoto(slot, result) {
   const dataUrl = result.dataUrl || result.previewUrl || '';
@@ -118,7 +116,8 @@ if (uploaderContainer) {
 
 async function uploadPhotoToSupabase(file, prefix = 'photo') {
   if (!file) return '';
-  const supabaseBase = getSupabaseBase();
+  const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+    || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
   const bucket = 'wedding-photos';
   const cleanName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
   const uploadUrl = `${supabaseBase}/storage/v1/object/${bucket}/${cleanName}`;
@@ -152,6 +151,382 @@ async function uploadPhotoToSupabase(file, prefix = 'photo') {
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 }[character]));
+
+// ── Wedding Invitation Music Engine & Picker ──────────────────────────
+const MP_TRACKS = [
+  { id: 'raataan-lambiyan', title: 'Raataan Lambiyan', sub: 'Shershaah · soft and warm',        src: '../music/raataan-lambiyan.mp3' },
+  { id: 'tere-vaaste',      title: 'Tere Vaaste',      sub: 'Zara Hatke Zara Bachke · sweet',   src: '../music/tere-vaaste.mp3' },
+  { id: 'din-shagna-da',    title: 'Din Shagna Da',    sub: 'Phillauri · wedding classic',      src: '../music/din-shagna-da.mp3' },
+  { id: 'kabira-encore',    title: 'Kabira (Encore)',  sub: 'Yeh Jawaani Hai Deewani · emotional', src: '../music/kabira-encore.mp3' },
+  { id: 'piya-ghar-aavenge',title: 'Piya Ghar Aavenge',sub: 'Folk · warm and traditional',      src: '../music/piya-ghar-aavenge.mp3' },
+  { id: 'aaj-se-teri',      title: 'Aaj Se Teri',      sub: 'Padman · romantic',                src: '../music/aaj-se-teri.mp3' },
+  { id: 'tere-dware',       title: 'Tere Dware Pe Aayi Baraat', sub: 'Baraat · festive',        src: '../music/tere-dware-pe-aayi-baraat.mp3' },
+  { id: 'flute',            title: 'Flute',            sub: 'Instrumental · calm',              src: '../music/flute.mp3' },
+  { id: 'instrumental-1',   title: 'Instrumental 1',   sub: 'Instrumental',                     src: '../music/instrumental-1.mp3' },
+  { id: 'instrumental-2',   title: 'Instrumental 2',   sub: 'Instrumental',                     src: '../music/instrumental-2.mp3' }
+];
+
+const MP_UPLOAD_ENDPOINT = '/api/music';
+const MP_MAX_INPUT = 1024 * 1024; // 1 MB
+const MP_TARGET_KB = 200;
+const MP_MAX_SECONDS = 40;
+
+const ICON_PLAY = '<svg viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 14 14"><path d="M2.5 1.5h3v11h-3zM8.5 1.5h3v11h-3z"/></svg>';
+
+let selectedMusic = null; // { id, title, sub, src, type }
+let mpTracks = MP_TRACKS.slice();
+let mpSelId = null;
+let mpUpload = null;
+let mpAudio = new Audio();
+let mpPlayingId = null;
+
+function updateSelectedMusicUi() {
+  const card = document.getElementById('selected-music-card');
+  const openBtn = document.getElementById('open-music-picker-btn');
+  const titleEl = document.getElementById('selected-music-title');
+  const subEl = document.getElementById('selected-music-sub');
+  const idInput = document.getElementById('input-music-id');
+  const titleInput = document.getElementById('input-music-title');
+  const urlInput = document.getElementById('input-music-url');
+
+  if (selectedMusic && selectedMusic.id) {
+    if (card) card.style.display = 'flex';
+    if (openBtn) openBtn.style.display = 'none';
+    if (titleEl) titleEl.textContent = selectedMusic.title;
+    if (subEl) subEl.textContent = selectedMusic.sub || 'Selected wedding soundtrack';
+    if (idInput) idInput.value = selectedMusic.id;
+    if (titleInput) titleInput.value = selectedMusic.title;
+    if (urlInput) urlInput.value = selectedMusic.src;
+  } else {
+    if (card) card.style.display = 'none';
+    if (openBtn) {
+      openBtn.style.display = 'inline-flex';
+      openBtn.textContent = '♪ Select your Music';
+    }
+    if (idInput) idInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (urlInput) urlInput.value = '';
+  }
+}
+
+function renderMpList() {
+  const list = document.getElementById('mpList');
+  if (!list) return;
+  list.innerHTML = '';
+  const allTracks = mpUpload ? [mpUpload.track, ...mpTracks] : mpTracks;
+  allTracks.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'mp-row' + (t.id === mpSelId ? ' sel' : '');
+    row.setAttribute('role', 'radio');
+    row.setAttribute('aria-checked', t.id === mpSelId);
+    row.tabIndex = 0;
+    row.innerHTML = `
+      <button type="button" class="mp-play" aria-label="Play ${escapeHtml(t.title)}">${mpPlayingId === t.id ? ICON_PAUSE : ICON_PLAY}</button>
+      <div class="mp-txt"><b>${escapeHtml(t.title)}</b><span>${escapeHtml(t.sub || '')}</span></div>
+      <div class="mp-dot"></div>
+    `;
+    const playBtn = row.querySelector('.mp-play');
+    playBtn.onclick = e => {
+      e.stopPropagation();
+      toggleMpAudio(t);
+    };
+    row.onclick = () => {
+      mpSelId = t.id;
+      const saveBtn = document.getElementById('mpSave');
+      if (saveBtn) saveBtn.disabled = false;
+      renderMpList();
+    };
+    row.onkeydown = e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        row.click();
+      }
+    };
+    list.appendChild(row);
+  });
+}
+
+function toggleMpAudio(t) {
+  if (mpPlayingId === t.id) {
+    mpAudio.pause();
+    mpPlayingId = null;
+    return renderMpList();
+  }
+  mpAudio.src = t.src;
+  const p = mpAudio.play();
+  if (p && typeof p.catch === 'function') p.catch(() => {});
+  mpPlayingId = t.id;
+  renderMpList();
+}
+mpAudio.onended = () => {
+  mpPlayingId = null;
+  renderMpList();
+};
+
+function stopMpAudio() {
+  try {
+    mpAudio.pause();
+  } catch (_) {}
+  mpPlayingId = null;
+}
+
+function openMpModal() {
+  const modal = document.getElementById('mpBack');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.classList.add('on');
+  mpSelId = selectedMusic ? selectedMusic.id : null;
+  const saveBtn = document.getElementById('mpSave');
+  if (saveBtn) saveBtn.disabled = !mpSelId;
+  renderMpList();
+  const closeBtn = document.getElementById('mpClose');
+  if (closeBtn) closeBtn.focus();
+}
+
+function closeMpModal() {
+  stopMpAudio();
+  const modal = document.getElementById('mpBack');
+  if (!modal) return;
+  modal.classList.remove('on');
+  modal.style.display = 'none';
+  renderMpList();
+}
+
+function setMpMsg(text, isErr = false) {
+  const m = document.getElementById('mpMsg');
+  if (!m) return;
+  m.textContent = text;
+  m.className = 'mp-msg' + (isErr ? ' err' : '');
+}
+
+function loadLameJs() {
+  return new Promise((resolve, reject) => {
+    if (window.lamejs) return resolve(window.lamejs);
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js';
+    s.onload = () => resolve(window.lamejs);
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function compressMpAudio(file) {
+  await loadLameJs();
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioCtx();
+  const buf = await ctx.decodeAudioData(await file.arrayBuffer());
+  ctx.close();
+
+  const RATE = 22050;
+  const secs = Math.min(buf.duration, MP_MAX_SECONDS);
+  const frames = Math.floor(secs * RATE);
+  const off = new OfflineAudioContext(1, frames, RATE);
+  const src = off.createBufferSource();
+  src.buffer = buf;
+  src.connect(off.destination);
+  src.start(0);
+
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const fade = Math.min(2 * RATE, frames);
+  const i16 = new Int16Array(frames);
+  for (let i = 0; i < frames; i++) {
+    let v = pcm[i];
+    if (i > frames - fade) v *= (frames - i) / fade;
+    i16[i] = Math.max(-1, Math.min(1, v)) * 32767;
+  }
+  const kbps = Math.max(24, Math.min(64, Math.floor(MP_TARGET_KB * 1024 * 8 / secs / 1000)));
+  const enc = new window.lamejs.Mp3Encoder(1, RATE, kbps);
+  const out = [];
+  for (let i = 0; i < i16.length; i += 1152) {
+    const c = enc.encodeBuffer(i16.subarray(i, i + 1152));
+    if (c.length) out.push(c);
+  }
+  const end = enc.flush();
+  if (end.length) out.push(end);
+  return new Blob(out, { type: 'audio/mpeg' });
+}
+
+function initMusicPicker() {
+  const openBtn = document.getElementById('open-music-picker-btn');
+  const changeBtn = document.getElementById('change-music-btn');
+  const removeBtn = document.getElementById('remove-music-btn');
+  const closeBtn = document.getElementById('mpClose');
+  const skipBtn = document.getElementById('mpSkip');
+  const saveBtn = document.getElementById('mpSave');
+  const modalBack = document.getElementById('mpBack');
+  const upBtn = document.getElementById('mpUpBtn');
+  const fileInput = document.getElementById('mpFile');
+
+  if (openBtn) openBtn.onclick = openMpModal;
+  if (changeBtn) changeBtn.onclick = openMpModal;
+  if (closeBtn) closeBtn.onclick = closeMpModal;
+  if (modalBack) {
+    modalBack.onclick = e => {
+      if (e.target === modalBack) closeMpModal();
+    };
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modalBack && modalBack.classList.contains('on')) {
+      closeMpModal();
+    }
+  });
+
+  if (removeBtn) {
+    removeBtn.onclick = () => {
+      selectedMusic = null;
+      mpSelId = null;
+      try {
+        localStorage.removeItem('wedding-music-url');
+        localStorage.removeItem('wedding-music-title');
+        localStorage.removeItem('wedding-music-id');
+        sessionStorage.removeItem('wedding-music-url');
+      } catch (_) {}
+      updateSelectedMusicUi();
+    };
+  }
+
+  if (skipBtn) {
+    skipBtn.onclick = () => {
+      selectedMusic = null;
+      mpSelId = null;
+      try {
+        localStorage.removeItem('wedding-music-url');
+        localStorage.removeItem('wedding-music-title');
+        localStorage.removeItem('wedding-music-id');
+        sessionStorage.removeItem('wedding-music-url');
+      } catch (_) {}
+      updateSelectedMusicUi();
+      closeMpModal();
+    };
+  }
+
+  if (upBtn && fileInput) {
+    upBtn.onclick = () => fileInput.click();
+    fileInput.onchange = async e => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      if (!/^audio\//.test(f.type) && !/\.(mp3|m4a|aac|wav|ogg)$/i.test(f.name)) {
+        return setMpMsg('Please choose an audio file (MP3, M4A, AAC, WAV or OGG).', true);
+      }
+      if (f.size > MP_MAX_INPUT) {
+        return setMpMsg(`That file is ${(f.size / 1048576).toFixed(1)} MB. Please choose a song under 1 MB.`, true);
+      }
+      upBtn.disabled = true;
+      setMpMsg('Preparing and optimizing your song…');
+
+      try {
+        const blob = await compressMpAudio(f);
+        if (mpUpload && mpUpload.url) URL.revokeObjectURL(mpUpload.url);
+        const url = URL.createObjectURL(blob);
+        const cleanTitle = f.name.replace(/\.[^.]+$/, '');
+        mpUpload = {
+          blob,
+          url,
+          track: {
+            id: 'upload',
+            title: cleanTitle,
+            sub: 'Your song · ' + Math.round(blob.size / 1024) + ' KB',
+            src: url,
+            type: 'upload'
+          }
+        };
+        mpSelId = 'upload';
+        if (saveBtn) saveBtn.disabled = false;
+        renderMpList();
+        setMpMsg(`Optimized: ${(f.size / 1024).toFixed(0)} KB reduced to ${Math.round(blob.size / 1024)} KB.`);
+      } catch (err) {
+        console.error('Audio compression failed:', err);
+        setMpMsg('We could not read that file. Try another MP3 or WAV.', true);
+      }
+      upBtn.disabled = false;
+    };
+  }
+
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      stopMpAudio();
+      if (mpSelId === 'upload' && mpUpload) {
+        let finalSrc = mpUpload.url;
+        saveBtn.disabled = true;
+        setMpMsg('Saving your song…');
+
+        // Attempt server upload
+        try {
+          const fd = new FormData();
+          fd.append('song', mpUpload.blob, 'song.mp3');
+          const res = await fetch(MP_UPLOAD_ENDPOINT, { method: 'POST', body: fd });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.url) finalSrc = data.url;
+          } else {
+            finalSrc = await new Promise(r => {
+              const reader = new FileReader();
+              reader.onload = () => r(reader.result);
+              reader.readAsDataURL(mpUpload.blob);
+            });
+          }
+        } catch (_) {
+          try {
+            finalSrc = await new Promise(r => {
+              const reader = new FileReader();
+              reader.onload = () => r(reader.result);
+              reader.readAsDataURL(mpUpload.blob);
+            });
+          } catch (e) {
+            finalSrc = mpUpload.url;
+          }
+        }
+
+        selectedMusic = {
+          id: 'custom-upload',
+          title: mpUpload.track.title,
+          sub: 'Custom uploaded song',
+          src: finalSrc,
+          type: 'upload'
+        };
+      } else {
+        const found = mpTracks.find(t => t.id === mpSelId);
+        if (found) {
+          selectedMusic = { ...found, type: 'preset' };
+        } else {
+          selectedMusic = null;
+        }
+      }
+
+      if (selectedMusic) {
+        try {
+          localStorage.setItem('wedding-music-url', selectedMusic.src);
+          localStorage.setItem('wedding-music-title', selectedMusic.title);
+          localStorage.setItem('wedding-music-id', selectedMusic.id);
+          sessionStorage.setItem('wedding-music-url', selectedMusic.src);
+          sessionStorage.setItem('wedding-music-title', selectedMusic.title);
+        } catch (_) {}
+      }
+
+      updateSelectedMusicUi();
+      closeMpModal();
+    };
+  }
+
+  // Restore saved music if present
+  try {
+    const savedUrl = localStorage.getItem('wedding-music-url') || sessionStorage.getItem('wedding-music-url');
+    const savedTitle = localStorage.getItem('wedding-music-title') || sessionStorage.getItem('wedding-music-title');
+    const savedId = localStorage.getItem('wedding-music-id') || sessionStorage.getItem('wedding-music-id');
+    if (savedUrl && savedTitle) {
+      selectedMusic = {
+        id: savedId || 'saved-song',
+        title: savedTitle,
+        sub: 'Selected wedding soundtrack',
+        src: savedUrl,
+        type: savedId === 'custom-upload' ? 'upload' : 'preset'
+      };
+      updateSelectedMusicUi();
+    }
+  } catch (_) {}
+}
 
 // ── Time helpers (12h AM/PM <-> 24h HH:MM) ──────────────────────────────────
 function to12h(time24) {
@@ -597,6 +972,11 @@ function collectInput(overrideData = null) {
       formData.venue_photo = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-venue-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-venue-photo') : '') || '';
     }
   }
+  if (selectedMusic && selectedMusic.src) {
+    formData.music_id = selectedMusic.id || '';
+    formData.music_title = selectedMusic.title || '';
+    formData.music_url = selectedMusic.src || '';
+  }
   return validateOnboarding({
     ...formData,
     events: eventRows
@@ -677,6 +1057,7 @@ function updateReview() {
     ['Ceremony', [input.ceremony_title, input.invocation].filter(Boolean).join(' · ') || 'To be confirmed'],
     ['Venue', input.venue || 'To be confirmed'],
     ['Design', `${input.template_style} · ${input.theme_name}`],
+    ['Music', selectedMusic ? `${selectedMusic.title}` : 'Ambient Instrumental (Default)'],
     ['Programme', `${input.events.length} event(s)`],
     ['Package', pack?.name ?? 'Standard Package'],
     ['List price', pack ? formatINR(pack.list_price_paise) : '₹4,000.00'],
@@ -691,36 +1072,8 @@ function updateReview() {
 
 async function loadConfiguration() {
   try {
-    const supabaseBase = getSupabaseBase();
-    
-    // 1. Try Edge Function if deployed
-    if (ONBOARDING_CONFIG.onboardingEndpoint) {
-      try {
-        const efRes = await fetch(ONBOARDING_CONFIG.onboardingEndpoint, {
-          method: 'GET',
-          headers: {
-            'apikey': ONBOARDING_CONFIG.publishableKey,
-            'Authorization': `Bearer ${ONBOARDING_CONFIG.publishableKey}`
-          },
-          cache: 'no-store'
-        });
-        if (efRes.ok) {
-          const config = await efRes.json();
-          packages = config.packages || [];
-          paymentConfig = config.payment || { upi_vpa: ONBOARDING_CONFIG.defaultUpiVpa || '9477929927@okbizaxis', merchant_name: ONBOARDING_CONFIG.defaultMerchantName || 'Prime eCard' };
-          const styles = (config.styles && config.styles.length) ? config.styles : DEFAULT_STYLES;
-          themes = (config.themes && config.themes.length) ? config.themes : DEFAULT_THEMES;
-          packageConfigurationLoaded = true;
-          designConfigurationLoaded = true;
-          renderDesignChoices(styles, themes, '');
-          renderPackageChoices();
-          updatePaymentPanel();
-          return;
-        }
-      } catch (_) {}
-    }
-
-    // 2. Try RPC get_onboarding_config
+    const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+      || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
     const rpcConfigUrl = `${supabaseBase}/rest/v1/rpc/get_onboarding_config`;
 
     const response = await fetch(rpcConfigUrl, {
@@ -737,7 +1090,7 @@ async function loadConfiguration() {
     if (response.ok) {
       const config = await response.json();
       packages = config.packages || [];
-      paymentConfig = config.payment || { upi_vpa: ONBOARDING_CONFIG.defaultUpiVpa || '9477929927@okbizaxis', merchant_name: ONBOARDING_CONFIG.defaultMerchantName || 'Prime eCard' };
+      paymentConfig = config.payment || { upi_vpa: '9477929927@okbizaxis', merchant_name: 'Prime eCard' };
       const styles = (config.styles && config.styles.length) ? config.styles : DEFAULT_STYLES;
       themes = (config.themes && config.themes.length) ? config.themes : DEFAULT_THEMES;
       packageConfigurationLoaded = true;
@@ -770,7 +1123,7 @@ async function loadConfiguration() {
       features: ['Custom Themes & Audio', 'Full 5-Day Event Timeline', 'Dedicated Support']
     }
   ];
-  paymentConfig = { upi_vpa: ONBOARDING_CONFIG.defaultUpiVpa || '9477929927@okbizaxis', merchant_name: ONBOARDING_CONFIG.defaultMerchantName || 'Prime eCard' };
+  paymentConfig = { upi_vpa: '9477929927@okbizaxis', merchant_name: 'Prime eCard' };
   packageConfigurationLoaded = true;
   designConfigurationLoaded = true;
   renderDesignChoices(DEFAULT_STYLES, DEFAULT_THEMES, '');
@@ -984,7 +1337,8 @@ form.addEventListener('submit', async event => {
 
     submitButton.textContent = cashRequestMode ? 'Sending request…' : 'Creating your order…';
 
-    const supabaseBase = getSupabaseBase();
+    const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+      || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
     const rpcUrl = `${supabaseBase}/rest/v1/rpc/submit_customer_onboarding`;
 
     const response = await fetch(rpcUrl, {
@@ -1033,6 +1387,9 @@ form.addEventListener('submit', async event => {
       groom_name: rawFormData.groom_name || '',
       payment_status: result.payment_status || 'Pending Verification',
       order_status: result.order_status || 'draft',
+      music_url: selectedMusic?.src || '',
+      music_title: selectedMusic?.title || '',
+      music_id: selectedMusic?.id || '',
       created_at: new Date().toISOString()
     };
     try {
@@ -1043,6 +1400,17 @@ form.addEventListener('submit', async event => {
       localStorage.removeItem('primeecard_onboard_draft'); // clear draft since order is completed
     } catch (e) {
       console.warn('[Onboard] Could not persist order in localStorage:', e);
+    }
+
+    // Persist chosen music into storage
+    if (selectedMusic && selectedMusic.src) {
+      try {
+        localStorage.setItem('wedding-music-url', selectedMusic.src);
+        localStorage.setItem('wedding-music-title', selectedMusic.title);
+        localStorage.setItem('wedding-music-id', selectedMusic.id);
+        localStorage.setItem('wedding_music_url_' + currentOrderReference, selectedMusic.src);
+        localStorage.setItem('wedding_music_title_' + currentOrderReference, selectedMusic.title);
+      } catch (e) {}
     }
 
     // Persist photo URLs into storage for instant access across dashboard, studio, and guest preview
@@ -1115,7 +1483,8 @@ if (refreshStatusBtn) {
     }
 
     try {
-      const supabaseBase = getSupabaseBase();
+      const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+        || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
       const rpcUrl = `${supabaseBase}/rest/v1/rpc/manage_customer_dashboard`;
 
       const response = await fetch(rpcUrl, {
@@ -1381,7 +1750,8 @@ function initTrackOrderModal() {
       }
 
       // 2. Query server RPC to verify and retrieve fresh status
-      const supabaseBase = getSupabaseBase();
+      const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+        || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
       const rpcUrl = `${supabaseBase}/rest/v1/rpc/manage_customer_dashboard`;
 
       let serverVerified = false;
@@ -1515,6 +1885,16 @@ function initFormDraftPersistence() {
           eventRows = draft.events;
           renderEvents();
         }
+        if (draft.music_url && draft.music_title) {
+          selectedMusic = {
+            id: draft.music_id || 'saved-song',
+            title: draft.music_title,
+            sub: draft.music_sub || 'Selected wedding soundtrack',
+            src: draft.music_url,
+            type: draft.music_id === 'custom-upload' ? 'upload' : 'preset'
+          };
+          updateSelectedMusicUi();
+        }
         if (draftBanner) draftBanner.hidden = true;
       } catch (e) {
         console.warn('[Onboard] Failed restoring draft:', e);
@@ -1539,6 +1919,12 @@ function initFormDraftPersistence() {
         delete formData.proof;
         delete formData.consent;
         formData.events = eventRows;
+        if (selectedMusic && selectedMusic.src) {
+          formData.music_id = selectedMusic.id;
+          formData.music_title = selectedMusic.title;
+          formData.music_sub = selectedMusic.sub;
+          formData.music_url = selectedMusic.src;
+        }
         if (formData.customer_name || formData.bride_name || formData.groom_name || formData.phone) {
           localStorage.setItem('primeecard_onboard_draft', JSON.stringify(formData));
         }
@@ -1550,8 +1936,9 @@ function initFormDraftPersistence() {
   form.addEventListener('change', autoSaveDraft);
 }
 
-// Initialize recovery, banners, and listeners
+// Initialize recovery, banners, music picker, and listeners
 setupCopyRefButton();
 initActiveOrderDetection();
 initTrackOrderModal();
 initFormDraftPersistence();
+initMusicPicker();

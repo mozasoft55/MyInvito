@@ -1064,12 +1064,22 @@
       }
 
       function startMusic() {
+        const currentWedding = window.__CURRENT_WEDDING || wedding || {};
+        const isMuted = (currentWedding.music_url === 'none' || currentWedding.music_disabled);
+        if (isMuted) return;
+
         isMusicPlaying = true;
         try {
           if (!bgAudio) {
-            bgAudio = new Audio('./invitation.mp3');
+            let musicSrc = currentWedding.music_url
+              || currentWedding.audio_url
+              || (typeof localStorage !== 'undefined' && localStorage.getItem('wedding_music_url_' + (currentWedding.order_reference || '')))
+              || (typeof localStorage !== 'undefined' && localStorage.getItem('wedding-music-url'))
+              || './invitation.mp3';
+            if (musicSrc.startsWith('../music/')) musicSrc = './music/' + musicSrc.slice(9);
+            bgAudio = new Audio(musicSrc);
             bgAudio.loop = true;
-            bgAudio.volume = 0.45;
+            bgAudio.volume = 0.35; // Plays softly when guests open invite
           }
           const p = bgAudio.play();
           if (p && typeof p.catch === 'function') {
@@ -1378,6 +1388,9 @@
         window._invitationUnveiled = true;
         document.body.classList.add('invitation-unveiled');
         updateDockVisibility();
+        if (!isMusicPlaying) {
+          startMusic();
+        }
       }
 
       window.addEventListener('invitation-unveiled', unveilInvitation);
@@ -1799,6 +1812,18 @@
         wedding.hero_image = couplePhoto || wedding.hero_image;
         wedding.venue_image = venuePhoto || wedding.venue_image;
 
+        const storedMusicUrl = wedding.music_url
+          || getStored('wedding_music_url_' + (wedding.order_reference || ''))
+          || getStored('wedding-music-url')
+          || '';
+        const storedMusicTitle = wedding.music_title
+          || getStored('wedding_music_title_' + (wedding.order_reference || ''))
+          || getStored('wedding-music-title')
+          || '';
+        if (storedMusicUrl) wedding.music_url = storedMusicUrl;
+        if (storedMusicTitle) wedding.music_title = storedMusicTitle;
+        window.__CURRENT_WEDDING = wedding;
+
         const isTokenTemplate = tokenCatalog && Array.isArray(tokenCatalog.templates) && tokenCatalog.templates.some(t => t.id === templateId);
 
         if (isTokenTemplate) {
@@ -1867,15 +1892,23 @@
             console.warn('Particle canvas init:', e);
           }
 
-          // 2. Ambient Wedding Music Controller (invitation.mp3)
+          // 2. Ambient Wedding Music Controller (invitation.mp3 or chosen song)
           let audio = null;
           try {
-            audio = new AudioController({
-              audioSrc: './invitation.mp3',
-              loop: true,
-              volume: 0.45,
-              label: 'Wedding Music'
-            });
+            let musicSrc = wedding.music_url
+              || wedding.audio_url
+              || getStored('wedding_music_url_' + (wedding.order_reference || ''))
+              || getStored('wedding-music-url')
+              || './invitation.mp3';
+            if (musicSrc.startsWith('../music/')) musicSrc = './music/' + musicSrc.slice(9);
+            if (wedding.music_url !== 'none' && !wedding.music_disabled) {
+              audio = new AudioController({
+                audioSrc: musicSrc,
+                loop: true,
+                volume: 0.35,
+                label: wedding.music_title || 'Wedding Music'
+              });
+            }
           } catch (e) {
             console.warn('Audio controller init:', e);
           }
