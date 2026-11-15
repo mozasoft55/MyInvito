@@ -156,8 +156,14 @@ const server = http.createServer((req, res) => {
 
   let filePath = path.join(__dirname, pathname);
 
-  // If path points to directory, look for index.html inside
+  // If path points to directory, ensure trailing slash so relative paths (./app.js, ./style.css) resolve correctly
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
+    if (!pathname.endsWith('/')) {
+      const redirectUrl = pathname + '/' + (parsedUrl.search || '');
+      res.writeHead(301, { Location: redirectUrl });
+      res.end();
+      return;
+    }
     filePath = path.join(filePath, 'index.html');
   }
 
