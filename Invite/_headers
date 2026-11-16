@@ -1,0 +1,70 @@
+# Cloudflare Pages _headers (Standard Compliant, Zero-Overlap)
+
+# 1. Global Security Headers for all requests
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# 2. Static Media Assets (Audio & Graphic Assets)
+# Mutually exclusive paths to avoid duplicate Cache-Control header inheritance
+/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/Invite/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/music/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/user-music/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/invitation.mp3
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/Invite/invitation.mp3
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+# 3. Dynamic & Unversioned Application Code (HTML, JS, CSS, JSON, Unversioned Vendor)
+# Enforces safe 304 ETag revalidation with zero stale code risk
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/templates/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/templates/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/token-engine/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/token-engine/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/vendor/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/vendor/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/Invite/*.css
+  Cache-Control: public, max-age=0, must-revalidate

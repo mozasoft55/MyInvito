@@ -6,9 +6,16 @@
   <meta name="theme-color" content="#32030B">
   <title>Royal Wedding Invitation</title>
 
+  <!-- Early preconnect for Supabase backend and Google Fonts to optimize connection handshakes -->
+  <link rel="preconnect" href="https://skpcxbdrmsnwmggjodkz.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://skpcxbdrmsnwmggjodkz.supabase.co">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  </noscript>
 
   <style>
     html {
@@ -1046,9 +1053,17 @@
       animation: royalRsvpGlowPulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
     }
   </style>
-  <link rel="stylesheet" href="./token-engine/base-card.css">
-  <link rel="stylesheet" href="./token-engine/editorial-story-venue.css">
-  <link rel="stylesheet" href="./token-engine/royal-animations.css">
+  <link rel="preload" as="style" href="./token-engine/base-card.css">
+  <link rel="stylesheet" href="./token-engine/base-card.css" media="print" onload="this.media='all'">
+  <link rel="preload" as="style" href="./token-engine/editorial-story-venue.css">
+  <link rel="stylesheet" href="./token-engine/editorial-story-venue.css" media="print" onload="this.media='all'">
+  <link rel="preload" as="style" href="./token-engine/royal-animations.css">
+  <link rel="stylesheet" href="./token-engine/royal-animations.css" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="./token-engine/base-card.css">
+    <link rel="stylesheet" href="./token-engine/editorial-story-venue.css">
+    <link rel="stylesheet" href="./token-engine/royal-animations.css">
+  </noscript>
 </head>
 <body>
 
@@ -1060,12 +1075,14 @@
     // Fail-safe watchdog: Guarantee luxury-loader is dismissed even under slowest network or module errors
     setTimeout(function() {
       var l = document.getElementById('luxury-loader');
-      if (l) {
-        l.style.transition = 'opacity 0.4s ease';
+      if (l && !l._dismissed) {
+        l._dismissed = true;
+        l.style.transition = 'opacity 0.25s ease';
         l.style.opacity = '0';
-        setTimeout(function() { if (l && l.parentNode) l.remove(); }, 400);
+        l.style.pointerEvents = 'none';
+        setTimeout(function() { if (l && l.parentNode) l.remove(); }, 260);
       }
-    }, 3000);
+    }, 4000);
   </script>
 
   <canvas id="ambient-particle-canvas" aria-hidden="true"></canvas>
@@ -1073,35 +1090,73 @@
 
   <script type="module">
     import { fetchInvitationByCode, submitRsvp } from './api.js';
-    import { localizeHtml, translateText } from './i18n.js';
-    import { TokenTemplateController } from './token-engine/TokenTemplateController.js';
-    import { ScrollReveal } from './token-engine/ScrollReveal.js';
-    import { RoyalEnvelope } from './token-engine/RoyalEnvelope.js';
-    import { ParticleCanvas } from './token-engine/ParticleCanvas.js';
-    import { AudioController } from './token-engine/AudioController.js';
+
+    // Performance Instrumentation: Real User Monitoring (FCP, LCP, CLS, TTFB, Frame Render)
+    window.__PERF_METRICS = { fcp: null, lcp: null, cls: 0, ttfb: null, dom_mounted: null, first_frame: null };
+    try {
+      if (typeof performance !== 'undefined' && typeof PerformanceObserver !== 'undefined') {
+        const paintObs = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.name === 'first-contentful-paint') {
+              window.__PERF_METRICS.fcp = Math.round(entry.startTime);
+            }
+          }
+        });
+        paintObs.observe({ type: 'paint', buffered: true });
+
+        const lcpObs = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          if (entries.length > 0) {
+            window.__PERF_METRICS.lcp = Math.round(entries[entries.length - 1].startTime);
+          }
+        });
+        lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+
+        const clsObs = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) {
+              window.__PERF_METRICS.cls += entry.value;
+            }
+          }
+        });
+        clsObs.observe({ type: 'layout-shift', buffered: true });
+      }
+    } catch (_) {}
 
     function removeLoader() {
       const loader = document.getElementById('luxury-loader');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 500);
+      if (!loader || loader._dismissed) return;
+      loader._dismissed = true;
+
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        if (loader.parentNode) loader.remove();
+        return;
       }
+
+      loader.style.transition = 'opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+      loader.style.opacity = '0';
+      loader.style.pointerEvents = 'none';
+      setTimeout(() => { if (loader && loader.parentNode) loader.remove(); }, 260);
     }
 
-    function showPageError(message) {
+    function showPageError(message, isRetryable = false) {
       const mount = document.getElementById('app-mount');
       const isCancelled = (message && (message.includes('cancelled') || message.includes('withdrawn')));
-      const title = isCancelled ? 'Invitation Withdrawn' : 'Invitation unavailable';
+      const title = isCancelled ? 'Invitation Withdrawn' : (isRetryable ? 'Connection Timeout' : 'Invitation unavailable');
       const displayMsg = isCancelled
         ? 'Sorry, your invitation card is cancelled or withdrawn. Please confirm.'
         : message;
 
       mount.innerHTML = `
         <section role="alert" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;color:#ECC880;background:radial-gradient(circle at center, #260710 0%, #120104 100%);font-family:Georgia,serif;z-index:99999;">
-          <div style="font-size:3rem;margin-bottom:12px;">${isCancelled ? '✉️🚫' : '⚜️'}</div>
+          <div style="font-size:3rem;margin-bottom:12px;">${isCancelled ? '✉️🚫' : (isRetryable ? '📡' : '⚜️')}</div>
           <h1 style="font-family:Georgia,serif;font-size:1.6rem;color:#f3d692;margin-bottom:12px;">${title}</h1>
           <p style="font-size:1.05rem;line-height:1.6;color:#fdf4dc;max-width:440px;margin-bottom:24px;">${displayMsg}</p>
-          <a href="../" style="display:inline-block;padding:12px 26px;border:1px solid #D4AF37;border-radius:24px;background:#3a040d;color:#ECC880;text-decoration:none;font:inherit;">Return to Home</a>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+            ${isRetryable ? '<button onclick="window.location.reload()" style="cursor:pointer;padding:12px 26px;border:1px solid #D4AF37;border-radius:24px;background:#D4AF37;color:#1a0307;font-weight:700;font:inherit;">Try Again</button>' : ''}
+            <a href="../" style="display:inline-block;padding:12px 26px;border:1px solid #D4AF37;border-radius:24px;background:#3a040d;color:#ECC880;text-decoration:none;font:inherit;">Return to Home</a>
+          </div>
         </section>`;
     }
 
@@ -1900,6 +1955,13 @@
       setTimeout(initRsvpScrollHighlight, 350);
     }
 
+    const LEGACY_TEMPLATES = new Set([
+      'template-01', 'template-02', 'template-03', 'template-04',
+      'template-05', 'template-06', 'template-07', 'template-08',
+      'template-09', 'template-10', 'template-11', 'template-12',
+      'template-13', 'template-14'
+    ]);
+
     async function bootstrap() {
       const p = new URLSearchParams(window.location.search);
       const inviteCode = (p.get('code') || '').trim();
@@ -1908,11 +1970,38 @@
       document.documentElement.lang = language;
       document.documentElement.dir = language === 'ur' ? 'rtl' : 'ltr';
 
+      const urlTemplate = (p.get('template') || '').trim();
+
+      // Parallel optimization:
+      // 1. If language is non-English, start fetching i18n dictionary in parallel
+      const i18nPromise = language !== 'en' ? import('./i18n.js') : null;
+
+      // 2. If template was explicitly provided in URL and is a known legacy template,
+      // preload the template module concurrently with the backend lookup
+      const templatePreloadPromise = (urlTemplate && LEGACY_TEMPLATES.has(urlTemplate))
+        ? import(`./templates/${urlTemplate}.js`)
+        : null;
+
+      const isPreviewMode = !inviteCode || inviteCode.toLowerCase() === 'preview' || inviteCode.toLowerCase().startsWith('preview-') || p.get('preview') === 'true';
+
       try {
         let weddingPayload;
         try {
           weddingPayload = await fetchInvitationByCode(inviteCode);
         } catch (fetchErr) {
+          if (!isPreviewMode) {
+            // For published invitations, NEVER display incorrect fallback data (e.g. sample couple).
+            // Differentiate network timeouts/offline errors from non-existent invitations.
+            const isNetworkError = fetchErr && (fetchErr.name === 'AbortError' || /network|failed to fetch|timeout|timed out/i.test(fetchErr.message || ''));
+            const customErr = new Error(
+              isNetworkError
+                ? 'We encountered a connection issue while loading your invitation. Please tap Try Again.'
+                : (fetchErr.message || 'Invitation not found.')
+            );
+            customErr.isRetryable = isNetworkError;
+            throw customErr;
+          }
+
           console.warn('Backend lookup fallback to local order / preview:', fetchErr?.message || fetchErr);
           let localOrder = null;
           try {
@@ -1958,7 +2047,7 @@
               music_url: chosenMusicUrl,
               music_title: chosenMusicTitle,
               music_id: chosenMusicId,
-              template_id: p.get('template') || localOrder?.template_style || 'hindu-vedic-crimson'
+              template_id: p.get('template') || localOrder?.template_style || 'template-02'
             },
             events: (localOrder?.events && Array.isArray(localOrder.events) && localOrder.events.length) ? localOrder.events : [
               { name: 'Mehendi & Sangeet', date: '2026-12-04', time: '5:00 PM', venue: venueName || 'Royal Palace Banquet' },
@@ -1970,16 +2059,8 @@
 
         const guest = weddingPayload.guest;
         const wedding = weddingPayload.wedding || {};
-        const templateId = String(p.get('template') || wedding.template_id || 'hindu-vedic-crimson').trim();
-
-        // 1. Fetch Token Catalog to verify if template is a token-driven design
-        let tokenCatalog = null;
-        try {
-          const tokenRes = await fetch('./token-engine/templates.json');
-          tokenCatalog = await tokenRes.json();
-        } catch (e) {
-          console.warn('Token catalog load error:', e);
-        }
+        const templateId = String(urlTemplate || wedding.template_id || 'template-02').trim();
+        const isLegacyTemplate = LEGACY_TEMPLATES.has(templateId);
 
         const getStored = (k) => {
           try {
@@ -2052,10 +2133,83 @@
         weddingPayload.wedding.music_title = wedding.music_title;
         window.__CURRENT_WEDDING = wedding;
 
-        const isTokenTemplate = tokenCatalog && Array.isArray(tokenCatalog.templates) && tokenCatalog.templates.some(t => t.id === templateId);
+        if (isLegacyTemplate) {
+          // --- High-Speed Legacy Template Pipeline (template-01..template-14) ---
+          const fixedTemplates = ['template-02'];
+          const isFixed = fixedTemplates.includes(templateId);
+          document.documentElement.classList.toggle('fixed-template', isFixed);
+          document.body.classList.toggle('fixed-template', isFixed);
 
-        if (isTokenTemplate) {
-          // --- Unified Token-Driven & Editorial Guest Engine ---
+          const templateModule = (templatePreloadPromise && urlTemplate === templateId)
+            ? await templatePreloadPromise
+            : await import(`./templates/${templateId}.js`);
+
+          const i18nModule = i18nPromise ? await i18nPromise : null;
+          const rawHtml = templateModule.default({
+            guest,
+            wedding: weddingPayload.wedding,
+            events: weddingPayload.events || []
+          });
+
+          const localizedHtml = (i18nModule && typeof i18nModule.localizeHtml === 'function')
+            ? i18nModule.localizeHtml(rawHtml, language)
+            : rawHtml;
+
+          const mount = document.getElementById('app-mount');
+          mount.innerHTML = localizedHtml;
+
+          if (typeof templateModule.mount === 'function') {
+            templateModule.mount(mount, {
+              guest,
+              wedding: weddingPayload.wedding,
+              events: weddingPayload.events || []
+            });
+          }
+          mountRsvpWidget(mount, weddingPayload, guest.invite_code, language);
+
+          // Mark critical render visible & immediately dismiss loader
+          try {
+            performance.mark('invitation_dom_mounted');
+            if (window.__PERF_METRICS) window.__PERF_METRICS.dom_mounted = Math.round(performance.now());
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                try {
+                  performance.mark('invitation_first_frame');
+                  if (window.__PERF_METRICS) window.__PERF_METRICS.first_frame = Math.round(performance.now());
+                  performance.measure('invitation_first_frame_render', 'invitation_dom_mounted', 'invitation_first_frame');
+                } catch (_) {}
+              });
+            });
+            performance.mark('invitation_visible');
+          } catch (_) {}
+          removeLoader();
+        } else {
+          // --- Token-Driven Dynamic Template Pipeline ---
+          const [
+            tokenCatalogRes,
+            { TokenTemplateController },
+            { ScrollReveal },
+            { RoyalEnvelope },
+            { ParticleCanvas },
+            { AudioController },
+            i18nModule
+          ] = await Promise.all([
+            fetch('./token-engine/templates.json').then(r => r.json()).catch(() => null),
+            import('./token-engine/TokenTemplateController.js'),
+            import('./token-engine/ScrollReveal.js'),
+            import('./token-engine/RoyalEnvelope.js'),
+            import('./token-engine/ParticleCanvas.js'),
+            import('./token-engine/AudioController.js'),
+            i18nPromise
+          ]);
+
+          const tokenCatalog = tokenCatalogRes;
+          const isTokenTemplate = tokenCatalog && Array.isArray(tokenCatalog.templates) && tokenCatalog.templates.some(t => t.id === templateId);
+
+          if (!isTokenTemplate) {
+            throw new Error('This invitation is configured with an unsupported design.');
+          }
+
           document.documentElement.classList.remove('fixed-template');
           document.body.classList.remove('fixed-template');
 
@@ -2160,46 +2314,41 @@
             selector: '.reveal-up, .reveal-fade, .reveal-scale, .reveal-motif, .editorial-section',
             rootMargin: '0px 0px -40px 0px'
           });
-        } else {
-          // --- Legacy Template Fallback (template-01..template-14) ---
-          if (!['template-01', 'template-02', 'template-03', 'template-04', 'template-05', 'template-06', 'template-07', 'template-08', 'template-09', 'template-10', 'template-11', 'template-12', 'template-13', 'template-14'].includes(templateId)) {
-            throw new Error('This invitation is configured with an unsupported design.');
-          }
 
-          const fixedTemplates = ['template-02'];
-          const isFixed = fixedTemplates.includes(templateId);
-          document.documentElement.classList.toggle('fixed-template', isFixed);
-          document.body.classList.toggle('fixed-template', isFixed);
-
-          const module = await import(`./templates/${templateId}.js`);
-
-          const mount = document.getElementById('app-mount');
-          mount.innerHTML = localizeHtml(module.default({
-            guest,
-            wedding: weddingPayload.wedding,
-            events: weddingPayload.events || []
-          }), language);
-
-          if (typeof module.mount === 'function') {
-            module.mount(mount, {
-              guest,
-              wedding: weddingPayload.wedding,
-              events: weddingPayload.events || []
+          // Mark critical render visible & immediately dismiss loader
+          try {
+            performance.mark('invitation_dom_mounted');
+            if (window.__PERF_METRICS) window.__PERF_METRICS.dom_mounted = Math.round(performance.now());
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                try {
+                  performance.mark('invitation_first_frame');
+                  if (window.__PERF_METRICS) window.__PERF_METRICS.first_frame = Math.round(performance.now());
+                  performance.measure('invitation_first_frame_render', 'invitation_dom_mounted', 'invitation_first_frame');
+                } catch (_) {}
+              });
             });
-          }
-          mountRsvpWidget(mount, weddingPayload, guest.invite_code, language);
+            performance.mark('invitation_visible');
+          } catch (_) {}
+          removeLoader();
         }
 
-        // Initialize Universal Scratch Phuljhari & Firecracker Engine across all templates
-        try {
-          const { initUniversalScratchCracker } = await import('./utils/scratch-cracker.js');
-          initUniversalScratchCracker(document);
-        } catch (e) {
-          console.warn('Scratch cracker init error:', e);
+        // Deferred non-critical: Universal Scratch Phuljhari & Firecracker Engine
+        const initScratch = () => {
+          import('./utils/scratch-cracker.js')
+            .then(({ initUniversalScratchCracker }) => {
+              initUniversalScratchCracker(document);
+            })
+            .catch(e => console.warn('Scratch cracker init error:', e));
+        };
+        if (typeof requestIdleCallback === 'function') {
+          requestIdleCallback(initScratch, { timeout: 2000 });
+        } else {
+          setTimeout(initScratch, 350);
         }
       } catch (err) {
         console.error('Invitation loading error:', err);
-        showPageError(err.message || 'We could not load this invitation. Please try again.');
+        showPageError(err.message || 'We could not load this invitation. Please try again.', Boolean(err.isRetryable));
       } finally {
         removeLoader();
       }

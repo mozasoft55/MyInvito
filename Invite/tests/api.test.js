@@ -160,3 +160,85 @@ test('submitRsvp sends zero attendees for declined and tentative responses', asy
     ['tentative', 0]
   ]);
 });
+
+test('fetchInvitationByCode retries transient HTTP 408 once, but never retries HTTP 404 or caller aborts', async t => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  // 1. HTTP 408: should retry once
+  let attempts408 = 0;
+  globalThis.fetch = async () => {
+    attempts408++;
+    if (attempts408 === 1) {
+      return new Response(JSON.stringify({ message: 'Request Timeout' }), { status: 408 });
+    }
+    return Response.json({
+      guest: { wedding_id: 'w1', invite_code: 'CODE-408', guest_name: 'Test', family_members: 1 },
+      wedding: { couple_name: 'A & B', template_style: 'template-02', event_date: '2026-12-05' },
+      events: []
+    });
+  };
+
+  const res408 = await fetchInvitationByCode('CODE-408');
+  assert.equal(attempts408, 2, 'HTTP 408 should trigger exactly one retry');
+  assert.equal(res408.guest.name, 'Test');
+
+  // 2. HTTP 404: client error, should NOT retry
+  let attempts404 = 0;
+  globalThis.fetch = async () => {
+    attempts404++;
+    return new Response(JSON.stringify({ message: 'Not Found' }), { status: 404 });
+  };
+
+  await assert.rejects(fetchInvitationByCode('CODE-404'), /Not Found/);
+  assert.equal(attempts404, 1, 'HTTP 404 should never be retried');
+
+  // 3. Caller Abort: should NOT retry
+  let attemptsAbort = 0;
+  const callerController = new AbortController();
+  globalThis.fetch = async () => {
+    attemptsAbort++;
+    callerController.abort();
+    const abortErr = new Error('The user aborted a request.');
+    abortErr.name = 'AbortError';
+    throw abortErr;
+  };
+
+  await assert.rejects(
+    fetchInvitationByCode('CODE-ABORT', { signal: callerController.signal }),
+    /cancelled|aborted/i
+  );
+  assert.equal(attemptsAbort, 1, 'Explicit caller abort should never be retried');
+});
+
+test('fetchInvitationByCode aborts immediately if caller cancels during the 400ms retry backoff and never starts a second request', async t => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  let fetchCallCount = 0;
+  const callerController = new AbortController();
+
+  globalThis.fetch = async () => {
+    fetchCallCount++;
+    if (fetchCallCount === 1) {
+      // Simulate transient 503 gateway error, then abort callerController during backoff (at 50ms)
+      setTimeout(() => {
+        callerController.abort();
+      }, 50);
+      return new Response(JSON.stringify({ message: 'Service Unavailable' }), { status: 503 });
+    }
+    // If a second request ever starts, this should fail the test
+    fetchCallCount++;
+    return Response.json({ success: true });
+  };
+
+  const startTime = Date.now();
+  await assert.rejects(
+    fetchInvitationByCode('CODE-ABORT-DURING-BACKOFF', { signal: callerController.signal }),
+    /cancelled|aborted/i
+  );
+  const elapsed = Date.now() - startTime;
+
+  assert.equal(fetchCallCount, 1, 'Second network request must NEVER start when caller aborts during backoff');
+  assert.ok(elapsed < 350, `Backoff should terminate early upon abort (elapsed: ${elapsed}ms)`);
+});

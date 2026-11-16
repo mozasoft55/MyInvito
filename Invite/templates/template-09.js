@@ -650,7 +650,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
     </footer>
   </main>
 
-  <audio class="t9-audio" preload="auto" src="${esc(defaultMusic)}"></audio>
+  <audio class="t9-audio" preload="none" src="${esc(defaultMusic)}"></audio>
   <button class="t9-music" type="button" aria-label="Toggle music" aria-pressed="false" title="Toggle music">♫</button>
 </div>`;
 }

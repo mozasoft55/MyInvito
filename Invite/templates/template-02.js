@@ -312,7 +312,7 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g id="fl"><path d="M8 8h60M92 8h60" stroke="var(--ox)" stroke-width="1.2"/><path d="M80 2l4 6-4 6-4-6z" fill="var(--ox)"/><circle cx="71" cy="8" r="1.6" fill="var(--ox)"/><circle cx="89" cy="8" r="1.6" fill="var(--ox)"/></g>
 <g id="sp"><path d="M12 0l2.6 9.4L24 12l-9.4 2.6L12 24l-2.6-9.4L0 12l9.4-2.6z"/></g></defs></svg>
 <div class="ru">
- <button class="aud" id="aud" type="button" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><audio id="au" preload="auto"><source src="${esc(wedding.music_url || 'invitation.mp3')}" type="audio/mpeg"></audio></button>
+ <button class="aud" id="aud" type="button" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><audio id="au" preload="none"><source src="${esc(wedding.music_url || 'invitation.mp3')}" type="audio/mpeg"></audio></button>
  <div class="vp">
 ${P(0, `${crest(ini, 7.4)}<div class="cap" style="font-size:.8em">Walima &amp; Nikah Invitation</div>
   <div><div class="sc" style="font-size:clamp(3.6em,22vw,4.8em)">Welcome</div>${fl(13)}</div>

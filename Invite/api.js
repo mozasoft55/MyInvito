@@ -1,7 +1,8 @@
 import { SUPABASE_CONFIG } from './supabase-config.js';
 
-const REQUEST_TIMEOUT_MS = 15000;
+const REQUEST_TIMEOUT_MS = 8000;
 const THEME_COLOR_KEYS = ['primary', 'primary_dark', 'accent', 'paper_top', 'paper_bottom', 'text'];
+const inflightInvitationRequests = new Map();
 
 function cleanText(value, maxLength) {
   if (typeof value !== 'string' && typeof value !== 'number') return '';
@@ -100,10 +101,28 @@ function assertSupabaseConfig() {
   }
 }
 
-async function supabaseRequest(path, { method = 'GET', body } = {}) {
+async function supabaseRequest(path, { method = 'GET', body, signal } = {}) {
   assertSupabaseConfig();
+  if (signal?.aborted) {
+    const cancelErr = new Error('Request cancelled by caller.');
+    cancelErr.name = 'AbortError';
+    cancelErr.isCallerAbort = true;
+    throw cancelErr;
+  }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
+
+  const onCallerAbort = () => {
+    controller.abort();
+  };
+  if (signal) {
+    signal.addEventListener('abort', onCallerAbort, { once: true });
+  }
+
   try {
     const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/${path}`, {
       method,
@@ -124,17 +143,32 @@ async function supabaseRequest(path, { method = 'GET', body } = {}) {
       } catch {
         // Preserve the HTTP status when the service response is not JSON.
       }
-      throw new Error(message);
+      const httpErr = new Error(message);
+      httpErr.status = response.status;
+      throw httpErr;
     }
     const responseText = await response.text();
     return responseText ? JSON.parse(responseText) : null;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error('Supabase took too long to respond. Please try again.');
+    if (signal?.aborted || error.isCallerAbort) {
+      const cancelErr = new Error('Request cancelled by caller.');
+      cancelErr.name = 'AbortError';
+      cancelErr.isCallerAbort = true;
+      throw cancelErr;
+    }
+    if (timedOut || error.name === 'AbortError') {
+      const timeoutErr = new Error('Supabase took too long to respond. Please try again.');
+      timeoutErr.name = 'TimeoutError';
+      timeoutErr.isTimeout = true;
+      timeoutErr.status = 408;
+      throw timeoutErr;
     }
     throw error;
   } finally {
     clearTimeout(timeout);
+    if (signal) {
+      signal.removeEventListener('abort', onCallerAbort);
+    }
   }
 }
 
@@ -265,40 +299,123 @@ function findLocalInvitation(code) {
   return null;
 }
 
-export async function fetchInvitationByCode(inviteCode) {
+export function fetchInvitationByCode(inviteCode, { signal } = {}) {
   const code = String(inviteCode || '').trim();
   if (!code || code.length > 120) {
-    throw new Error('Open your personalized invitation using its ?code= invite link.');
+    return Promise.reject(new Error('Open your personalized invitation using its ?code= invite link.'));
   }
 
-  // Check if guest link was explicitly deleted / withdrawn from dashboard
-  try {
-    const deletedCodes = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('primeecard_deleted_invite_codes') || '[]') : [];
-    if (deletedCodes.includes(code) || deletedCodes.includes(code.toUpperCase())) {
-      throw new Error('Sorry, your invitation card is cancelled or withdrawn. Please confirm.');
+  const inflightKey = code.toUpperCase();
+  if (inflightInvitationRequests.has(inflightKey)) {
+    return inflightInvitationRequests.get(inflightKey);
+  }
+
+  const requestPromise = (async () => {
+    try {
+      // Check if guest link was explicitly deleted / withdrawn from dashboard
+      try {
+        const deletedCodes = typeof localStorage !== 'undefined' ? JSON.parse(localStorage.getItem('primeecard_deleted_invite_codes') || '[]') : [];
+        if (deletedCodes.includes(code) || deletedCodes.includes(inflightKey)) {
+          throw new Error('Sorry, your invitation card is cancelled or withdrawn. Please confirm.');
+        }
+      } catch (err) {
+        if (err.message && err.message.includes('cancelled or withdrawn')) throw err;
+      }
+
+      // Fast-path preview codes (e.g. preview or local dashboard)
+      if (inflightKey === 'PREVIEW' || inflightKey.startsWith('PREVIEW-')) {
+        const localMatch = findLocalInvitation(code);
+        if (localMatch) return localMatch;
+      }
+
+      let data;
+      try {
+        data = await supabaseRequest('rpc/lookup_invitation', {
+          method: 'POST',
+          body: { p_invite_code: code },
+          signal
+        });
+      } catch (err) {
+        // Explicit caller cancellation MUST NEVER be retried
+        if (err.isCallerAbort || (signal && signal.aborted)) {
+          throw err;
+        }
+
+        // Automatic 1-time retry strictly for bounded transient failures (application timeout, HTTP 408, network drop, or 5xx server errors).
+        // HTTP 4xx client errors (400, 401, 403, 404), invalid invitations, or caller aborts are NEVER retried.
+        const isClientError = typeof err.status === 'number' && err.status >= 400 && err.status < 500 && err.status !== 408;
+        const isTransient = !isClientError && (
+          err.name === 'TimeoutError' ||
+          err.isTimeout === true ||
+          err.status === 408 ||
+          (typeof err.status === 'number' && err.status >= 500 && err.status <= 599) ||
+          /network|failed to fetch|fetch failed|connection/i.test(err.message || '')
+        );
+
+        if (isTransient) {
+          try {
+            if (signal?.aborted) {
+              const cancelErr = new Error('Request cancelled by caller.');
+              cancelErr.name = 'AbortError';
+              cancelErr.isCallerAbort = true;
+              throw cancelErr;
+            }
+
+            // Await 400ms backoff, cancellable immediately if caller aborts during backoff
+            await new Promise((resolve, reject) => {
+              const timer = setTimeout(resolve, 400);
+              if (signal) {
+                const onAbort = () => {
+                  clearTimeout(timer);
+                  const cancelErr = new Error('Request cancelled by caller.');
+                  cancelErr.name = 'AbortError';
+                  cancelErr.isCallerAbort = true;
+                  reject(cancelErr);
+                };
+                signal.addEventListener('abort', onAbort, { once: true });
+              }
+            });
+
+            if (signal?.aborted) {
+              const cancelErr = new Error('Request cancelled by caller.');
+              cancelErr.name = 'AbortError';
+              cancelErr.isCallerAbort = true;
+              throw cancelErr;
+            }
+
+            data = await supabaseRequest('rpc/lookup_invitation', {
+              method: 'POST',
+              body: { p_invite_code: code },
+              signal
+            });
+          } catch (retryErr) {
+            if (retryErr.isCallerAbort || (signal && signal.aborted)) {
+              throw retryErr;
+            }
+            const localMatch = findLocalInvitation(code);
+            if (localMatch) return localMatch;
+            throw retryErr;
+          }
+        } else {
+          const localMatch = findLocalInvitation(code);
+          if (localMatch) return localMatch;
+          throw err;
+        }
+      }
+
+      if (!data || !data.guest || !data.wedding) {
+        const localMatch = findLocalInvitation(code);
+        if (localMatch) return localMatch;
+      }
+
+      return normalizeInvitation(data, code);
+    } finally {
+      inflightInvitationRequests.delete(inflightKey);
     }
-  } catch (err) {
-    if (err.message && err.message.includes('cancelled or withdrawn')) throw err;
-  }
+  })();
 
-  let data;
-  try {
-    data = await supabaseRequest('rpc/lookup_invitation', {
-      method: 'POST',
-      body: { p_invite_code: code }
-    });
-  } catch (err) {
-    const localMatch = findLocalInvitation(code);
-    if (localMatch) return localMatch;
-    throw err;
-  }
-
-  if (!data || !data.guest || !data.wedding) {
-    const localMatch = findLocalInvitation(code);
-    if (localMatch) return localMatch;
-  }
-
-  return normalizeInvitation(data, code);
+  inflightInvitationRequests.set(inflightKey, requestPromise);
+  return requestPromise;
 }
 
 export async function fetchWeddingById(id) {

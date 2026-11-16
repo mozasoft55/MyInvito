@@ -638,7 +638,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
     <button class="t10-dk" type="button" data-fx="pari" aria-label="Call the Pari">🧚<small>Pari</small></button>
     <button class="t10-dk t10-music" type="button" aria-label="Toggle music" aria-pressed="false">♫<small>Music</small></button>
   </nav>
-  <audio class="t10-audio" preload="auto" src="${esc(defaultMusic)}"></audio>
+  <audio class="t10-audio" preload="none" src="${esc(defaultMusic)}"></audio>
 </div>`;
 }
 
