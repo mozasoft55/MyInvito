@@ -552,24 +552,19 @@ function buildWeddingState(tpl) {
   const city = F.address.value.trim() || 'Kolkata, India';
   const phone = F.rsvp_phone.value.replace(/\D/g, '') || '9477929927';
 
-  const getStored = (k) => {
-    try {
-      return (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function' && localStorage.getItem(k))
-        || (typeof sessionStorage !== 'undefined' && typeof sessionStorage.getItem === 'function' && sessionStorage.getItem(k))
-        || '';
-    } catch { return ''; }
-  };
-  const storedBride = getStored('wedding-bride-photo') || getStored('wedding_bride_photo') || getStored('onboard-bride-photo');
-  const storedGroom = getStored('wedding-groom-photo') || getStored('wedding_groom_photo') || getStored('onboard-groom-photo');
-  const storedCouple = getStored('wedding-couple-photo') || getStored('wedding_couple_photo') || getStored('onboard-couple-photo');
-  const storedVenue = getStored('wedding-venue-photo') || getStored('wedding_venue_photo') || getStored('onboard-venue-photo');
+  // Studio strictly displays standard default/placeholder assets (or in-studio test upload) to prevent customer photo leakage
+  const studioTestCouple = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('studio_test_couple_photo') : '') || '';
+  const studioTestVenue = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('studio_test_venue_photo') : '') || '';
 
-  const bridePhoto = storedBride || './assets/default-bride.webp';
-  const groomPhoto = storedGroom || './assets/default-groom.webp';
-  const couplePhoto = storedCouple || '';
-  const venuePhoto = storedVenue || '';
+  const bridePhoto = './assets/default-bride.webp';
+  const groomPhoto = './assets/default-groom.webp';
+  const couplePhoto = studioTestCouple || '';
+  const venuePhoto = studioTestVenue || '';
 
   return {
+    template_id: tpl?.id || '',
+    order_reference: '',
+    is_studio_preview: true,
     couple: { bride, groom, name_order: F.name_order.value || 'bride_first', photo: couplePhoto },
     bride_photo: bridePhoto,
     bride_image: bridePhoto,
@@ -871,11 +866,19 @@ function initStudioPhotoControls() {
   const venueStat = $('#studio-venue-stat');
   const resetBtn = $('#btn-reset-photos');
 
+  // Purge legacy un-scoped customer photo keys to ensure strict zero-leakage in Studio
+  ['wedding-couple-photo', 'wedding_couple_photo', 'wedding-venue-photo', 'wedding_venue_photo', 'wedding-bride-photo', 'wedding_bride_photo', 'wedding-groom-photo', 'wedding_groom_photo', 'onboard-couple-photo', 'onboard-venue-photo', 'onboard-bride-photo', 'onboard-groom-photo', 'selected_bride_photo', 'selected_groom_photo', 'selected_couple_photo', 'selected_venue_photo'].forEach(k => {
+    try {
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    } catch (_) {}
+  });
+
   const updateStats = () => {
-    const c = lsGet('wedding-couple-photo') || sessionStorage.getItem('wedding-couple-photo');
-    const v = lsGet('wedding-venue-photo') || sessionStorage.getItem('wedding-venue-photo');
-    if (coupleStat) coupleStat.textContent = c ? '✓ Custom photo active' : 'Default couple artwork';
-    if (venueStat) venueStat.textContent = v ? '✓ Custom photo active' : 'Default banquet arch';
+    const c = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('studio_test_couple_photo') : '';
+    const v = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('studio_test_venue_photo') : '';
+    if (coupleStat) coupleStat.textContent = c ? '✓ Studio test photo active' : 'Default couple artwork';
+    if (venueStat) venueStat.textContent = v ? '✓ Studio test photo active' : 'Default banquet arch';
   };
   updateStats();
 
@@ -884,10 +887,9 @@ function initStudioPhotoControls() {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result;
-      lsSet(key, dataUrl);
-      lsSet(key.replace(/-/g, '_'), dataUrl);
-      sessionStorage.setItem(key, dataUrl);
-      sessionStorage.setItem(key.replace(/-/g, '_'), dataUrl);
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(key, dataUrl);
+      }
       updateStats();
       paintCard({ keepScroll: false });
       toast(successMsg);
@@ -897,32 +899,30 @@ function initStudioPhotoControls() {
 
   coupleInput?.addEventListener('change', e => {
     const file = e.target.files?.[0];
-    handleUpload(file, 'wedding-couple-photo', coupleStat, 'Couple photo updated!');
+    handleUpload(file, 'studio_test_couple_photo', coupleStat, 'Studio test couple photo updated!');
   });
 
   venueInput?.addEventListener('change', e => {
     const file = e.target.files?.[0];
-    handleUpload(file, 'wedding-venue-photo', venueStat, 'Banquet photo updated!');
+    handleUpload(file, 'studio_test_venue_photo', venueStat, 'Studio test banquet photo updated!');
   });
 
   resetBtn?.addEventListener('click', () => {
     try {
-      localStorage.removeItem('wedding-couple-photo');
-      localStorage.removeItem('wedding_couple_photo');
-      localStorage.removeItem('wedding-venue-photo');
-      localStorage.removeItem('wedding_venue_photo');
-      sessionStorage.removeItem('wedding-couple-photo');
-      sessionStorage.removeItem('wedding-venue-photo');
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('studio_test_couple_photo');
+        sessionStorage.removeItem('studio_test_venue_photo');
+      }
     } catch (_) {}
     if (coupleInput) coupleInput.value = '';
     if (venueInput) venueInput.value = '';
     updateStats();
     paintCard({ keepScroll: false });
-    toast('Photos reset to default');
+    toast('Photos reset to default assets');
   });
 
   window.addEventListener('storage', e => {
-    if (e.key === 'wedding-couple-photo' || e.key === 'wedding-venue-photo') {
+    if (e.key === 'studio_test_couple_photo' || e.key === 'studio_test_venue_photo') {
       updateStats();
       paintCard({ keepScroll: false });
     }

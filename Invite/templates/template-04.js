@@ -1496,7 +1496,10 @@ export default function renderT04(data = {}) {
   const coverImg = `${assetBase}template-04-cover.webp`;
   const innerImg = `${assetBase}template-04-inner.webp`;
 
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo');
+  const orderRef = clean(w.order_reference) || clean(w.ref) || '';
+  const isT04Match = !w.template_id || w.template_id === 'template-04' || w.template_id === '04';
+
+  const storedVenue = (isT04Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
   const venuePhoto = safeImg(w.venue_photo || w.hall_photo || storedVenue) || 'assets/template-06-palace.jpg';
   const venueRawName = clean(w.comment || w.venue || w.venue_name || w.hall_name || '');
   const venueName = venueRawName || 'Venue To Follow';
@@ -1507,7 +1510,7 @@ export default function renderT04(data = {}) {
   const hasCalendar = Boolean(w.date || (evs.length && evs[0].event_date));
   const weddingTarget = weddingWhen(w, evs);
 
-  const storedCouple = getStoredPhoto('selected_couple_photo');
+  const storedCouple = (isT04Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
   const couplePhoto = safeUrl(w.couple_photo || w.couple_photo_url || storedCouple);
   const bridePhoto = safeUrl(w.bride_photo || w.bride_photo_url || w.bride_image || (!w.groom_photo && couplePhoto ? couplePhoto : ''));
   const groomPhoto = safeUrl(w.groom_photo || w.groom_photo_url || w.groom_image);

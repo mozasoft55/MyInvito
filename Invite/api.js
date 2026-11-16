@@ -200,32 +200,20 @@ function findLocalInvitation(code) {
 
           const bridePhoto = wedding.bride_photo
             || wedding.bride_image
-            || localStorage.getItem('wedding_bride_photo_' + ref)
-            || localStorage.getItem('wedding-bride-photo')
-            || localStorage.getItem('wedding_bride_photo')
-            || localStorage.getItem('onboard-bride-photo')
+            || (ref ? localStorage.getItem('wedding_bride_photo_' + ref) : '')
             || '';
           const groomPhoto = wedding.groom_photo
             || wedding.groom_image
-            || localStorage.getItem('wedding_groom_photo_' + ref)
-            || localStorage.getItem('wedding-groom-photo')
-            || localStorage.getItem('wedding_groom_photo')
-            || localStorage.getItem('onboard-groom-photo')
+            || (ref ? localStorage.getItem('wedding_groom_photo_' + ref) : '')
             || '';
           const couplePhoto = wedding.couple_photo
             || wedding.hero_image
-            || localStorage.getItem('wedding_couple_photo_' + ref)
-            || localStorage.getItem('wedding-couple-photo')
-            || localStorage.getItem('wedding_couple_photo')
-            || localStorage.getItem('onboard-couple-photo')
+            || (ref ? localStorage.getItem('wedding_couple_photo_' + ref) : '')
             || '';
           const venuePhoto = wedding.venue_photo
             || wedding.venue_image
             || wedding.banquet_photo
-            || localStorage.getItem('wedding_venue_photo_' + ref)
-            || localStorage.getItem('wedding-venue-photo')
-            || localStorage.getItem('wedding_venue_photo')
-            || localStorage.getItem('onboard-venue-photo')
+            || (ref ? localStorage.getItem('wedding_venue_photo_' + ref) : '')
             || '';
 
           wedding.bride_photo = bridePhoto || wedding.bride_photo;

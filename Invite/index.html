@@ -1492,8 +1492,6 @@
 
       function closeRsvp() {
         if (rsvpModal) rsvpModal.classList.add('hidden');
-        const btn = document.getElementById('royalDockRsvp');
-        if (btn) btn.classList.remove('active');
       }
 
       window.__openRoyalRsvpModal = openRsvp;
@@ -1610,7 +1608,7 @@
           e.stopPropagation();
           openRsvp();
         }
-      }, true);
+      });
 
       // --- 4. Interactive Response Cards Logic ---
       let currentResponse = 'accepting';
@@ -1832,42 +1830,28 @@
           } catch { return ''; }
         };
 
+        const orderRef = wedding.order_reference || '';
+
         const couplePhoto = wedding.couple_photo
           || wedding.hero_image
-          || getStored('wedding_couple_photo_' + (wedding.order_reference || ''))
-          || getStored('wedding-couple-photo')
-          || getStored('wedding_couple_photo')
-          || getStored('onboard-couple-photo')
+          || (orderRef ? getStored('wedding_couple_photo_' + orderRef) : '')
           || '';
 
         const venuePhoto = wedding.venue_photo
           || wedding.venue_image
-          || getStored('wedding_venue_photo_' + (wedding.order_reference || ''))
-          || getStored('wedding-venue-photo')
-          || getStored('wedding_venue_photo')
-          || getStored('onboard-venue-photo')
+          || (orderRef ? getStored('wedding_venue_photo_' + orderRef) : '')
           || '';
 
         const bridePhoto = wedding.bride_photo
           || wedding.bride_image
           || wedding.photo_bride
-          || getStored('wedding_bride_photo_' + (wedding.order_reference || ''))
-          || getStored('wedding-bride-photo')
-          || getStored('wedding_bride_photo')
-          || getStored('onboard-bride-photo')
-          || getStored('selected_bride_photo')
-          || getStored('bride_photo')
+          || (orderRef ? getStored('wedding_bride_photo_' + orderRef) : '')
           || '';
 
         const groomPhoto = wedding.groom_photo
           || wedding.groom_image
           || wedding.photo_groom
-          || getStored('wedding_groom_photo_' + (wedding.order_reference || ''))
-          || getStored('wedding-groom-photo')
-          || getStored('wedding_groom_photo')
-          || getStored('onboard-groom-photo')
-          || getStored('selected_groom_photo')
-          || getStored('groom_photo')
+          || (orderRef ? getStored('wedding_groom_photo_' + orderRef) : '')
           || '';
 
         wedding.bride_photo = bridePhoto || wedding.bride_photo;

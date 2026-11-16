@@ -241,6 +241,7 @@ export class TokenTemplateController {
     const isHindu = community.includes('hindu') || templateId.includes('hindu') || templateId.includes('vedic') || templateId.includes('alta') || templateId === 'template-06' || templateId === 'template-03';
     const isMuslim = community.includes('muslim') || templateId.includes('muslim') || templateId.includes('noor') || templateId.includes('jaali') || templateId === 'template-04' || templateId === 'template-02';
 
+    const orderRef = state.order_reference || state.wedding?.order_reference || '';
     const esc = TokenTemplateController.escapeHtml;
     const getStored = (k) => {
       try {
@@ -249,8 +250,8 @@ export class TokenTemplateController {
           || '';
       } catch { return ''; }
     };
-    const storedCouple = getStored('wedding-couple-photo') || getStored('wedding_couple_photo') || getStored('onboard-couple-photo');
-    const storedVenue = getStored('wedding-venue-photo') || getStored('wedding_venue_photo') || getStored('onboard-venue-photo');
+    const storedCouple = orderRef ? getStored(`wedding_couple_photo_${orderRef}`) : '';
+    const storedVenue = orderRef ? getStored(`wedding_venue_photo_${orderRef}`) : '';
 
     const couplePhoto = esc(state.couple?.photo || state.couple_photo || state.story?.image || storedCouple || '');
     const venuePhoto = esc(state.venue?.image || state.venue_photo || state.venue_image || storedVenue || '');
@@ -910,7 +911,8 @@ export class TokenTemplateController {
     const dateStr = esc(story.date || 'October 18, 2023');
     const quote = esc(story.quote || '“One serendipitous afternoon over hot chai blossomed into shared dreams, unending laughter, and a love that feels like home.”');
     const narrative = esc(story.text || 'What began as a quiet conversation along the promenade soon unfolded into thousands of shared memories. Today, surrounded by our loved ones, we step together into our forever.');
-    const storedCouple = (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function' ? (localStorage.getItem('wedding-couple-photo') || localStorage.getItem('wedding_couple_photo')) : '') || (typeof sessionStorage !== 'undefined' && typeof sessionStorage.getItem === 'function' ? (sessionStorage.getItem('wedding-couple-photo') || sessionStorage.getItem('onboard-couple-photo')) : '') || '';
+    const orderRef = couple.order_reference || '';
+    const storedCouple = (orderRef && typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') ? (localStorage.getItem('wedding_couple_photo_' + orderRef) || '') : '';
     const photoUrl = esc(story.image || couple.photo || storedCouple || '');
 
     const photoHtml = photoUrl ? `
@@ -959,7 +961,8 @@ export class TokenTemplateController {
     const address = esc(venue.address || 'Riverfront Heritage Estate');
     const city = esc(venue.city || 'Kolkata, India');
     const mapUrl = venue.map_url ? esc(venue.map_url) : `https://maps.google.com/?q=${encodeURIComponent(`${venueName}, ${address}, ${city}`)}`;
-    const storedVenue = (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function' ? (localStorage.getItem('wedding-venue-photo') || localStorage.getItem('wedding_venue_photo')) : '') || (typeof sessionStorage !== 'undefined' && typeof sessionStorage.getItem === 'function' ? (sessionStorage.getItem('wedding-venue-photo') || sessionStorage.getItem('onboard-venue-photo')) : '') || '';
+    const orderRef = venue.order_reference || '';
+    const storedVenue = (orderRef && typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') ? (localStorage.getItem('wedding_venue_photo_' + orderRef) || '') : '';
     const photoUrl = esc(venue.image || venue.photo || storedVenue || '');
 
     const photoHtml = photoUrl ? `

@@ -209,53 +209,34 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   const mapLink = safeUrl(wedding.map_url) || `https://maps.google.com/?q=${encodeURIComponent(venueName + ' ' + venueAddr)}`;
   const calLink = buildGoogleCalendarUrl({ wedding, guest });
 
+  const orderRef = clean(wedding.order_reference) || clean(wedding.ref) || '';
+  const isT11Match = !wedding.template_id || wedding.template_id === 'template-11' || wedding.template_id === '11';
+
   // Photos
-  const bridePhoto = safeImg(wedding.bride_photo)
+  const bridePhoto = (isT11Match ? (safeImg(wedding.bride_photo)
     || safeImg(wedding.bride_image)
     || safeImg(wedding.bridePhoto)
     || safeImg(wedding.photo_bride)
     || safeImg(wedding.bride_img)
-    || getStoredPhoto(
-         wedding.order_reference ? `wedding_bride_photo_${wedding.order_reference}` : '',
-         'wedding-bride-photo',
-         'wedding_bride_photo',
-         'onboard-bride-photo',
-         'selected_bride_photo',
-         'bride_photo'
-       )
-    || safeImg(wedding.couple_photo)
+    || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '')
+    || safeImg(wedding.couple_photo)) : '')
     || './assets/template-06-bride.webp';
 
-  const groomPhoto = safeImg(wedding.groom_photo)
+  const groomPhoto = (isT11Match ? (safeImg(wedding.groom_photo)
     || safeImg(wedding.groom_image)
     || safeImg(wedding.groomPhoto)
     || safeImg(wedding.photo_groom)
     || safeImg(wedding.groom_img)
-    || getStoredPhoto(
-         wedding.order_reference ? `wedding_groom_photo_${wedding.order_reference}` : '',
-         'wedding-groom-photo',
-         'wedding_groom_photo',
-         'onboard-groom-photo',
-         'selected_groom_photo',
-         'groom_photo'
-       )
-    || safeImg(wedding.couple_photo)
+    || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')
+    || safeImg(wedding.couple_photo)) : '')
     || './assets/template-06-groom.webp';
 
-  const banquetPhoto = safeImg(wedding.venue_photo)
+  const banquetPhoto = (isT11Match ? (safeImg(wedding.venue_photo)
     || safeImg(wedding.banquet_photo)
     || safeImg(wedding.venue_image)
     || safeImg(wedding.banquet_image)
     || safeImg(wedding.photo_venue)
-    || getStoredPhoto(
-         wedding.order_reference ? `wedding_venue_photo_${wedding.order_reference}` : '',
-         'wedding-venue-photo',
-         'wedding_venue_photo',
-         'onboard-venue-photo',
-         'selected_venue_photo',
-         'venue_photo',
-         'banquet_photo'
-       )
+    || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')) : '')
     || './assets/template-06-shubho-bibaho.webp';
 
   // Normalized Events

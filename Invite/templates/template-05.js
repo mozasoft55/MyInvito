@@ -1003,10 +1003,13 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
   const mandapFrame = `${assetBase.replace(/\/?$/, '/') }template-05-mandap-frame.webp`;
   const starryBg = `${assetBase.replace(/\/?$/, '/') }template-05-starry-bg.webp`;
 
-  const storedBride = getStoredPhoto('wedding-bride-photo') || getStoredPhoto('wedding_bride_photo') || getStoredPhoto('onboard-bride-photo');
-  const storedGroom = getStoredPhoto('wedding-groom-photo') || getStoredPhoto('wedding_groom_photo') || getStoredPhoto('onboard-groom-photo');
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo');
+  const orderRef = clean(w.order_reference) || clean(w.ref) || '';
+  const isT05Match = !w.template_id || w.template_id === 'template-05' || w.template_id === '05';
+
+  const storedBride = (isT05Match && orderRef) ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '';
+  const storedGroom = (isT05Match && orderRef) ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '';
+  const storedCouple = (isT05Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
+  const storedVenue = (isT05Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
 
   const brideFallback = (custom !== '/' ? `${custom}default-bride.webp` : '') || `${assetBase}default-bride.webp` || A('bride');
   const groomFallback = (custom !== '/' ? `${custom}default-groom.webp` : '') || `${assetBase}default-groom.webp` || A('groom');

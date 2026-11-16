@@ -328,12 +328,6 @@
       `;
     });
 
-    try {
-      const c = localStorage.getItem('wedding-couple-photo') || sessionStorage.getItem('wedding-couple-photo');
-      const v = localStorage.getItem('wedding-venue-photo') || sessionStorage.getItem('wedding-venue-photo');
-      if (c) { const img = document.getElementById('story-img'); if (img) img.src = c; }
-      if (v) { const img = document.getElementById('venue-img'); if (img) img.src = v; }
-    } catch (_) {}
   </script>
 </body>
 </html>

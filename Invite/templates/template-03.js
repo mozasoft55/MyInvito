@@ -515,8 +515,10 @@ const STYLE = `
 /* ---------- render ---------- */
 export default function render({ guest, wedding, events = [] } = {}) {
   const w = wedding || {};
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo');
+  const orderRef = clean(w.order_reference) || clean(w.ref) || '';
+  const isT03Match = !w.template_id || w.template_id === 'template-03' || w.template_id === '03';
+  const storedCouple = (isT03Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
+  const storedVenue = (isT03Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
   const evs = Array.isArray(events) ? events : [];
   const offset = clean(w.timezone_offset) || '+05:30';
 

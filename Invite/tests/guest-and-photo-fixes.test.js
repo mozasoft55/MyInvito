@@ -54,3 +54,57 @@ test('Template 11, 12, 13, 14 properly distinguish 1 Person Personal Invitation 
     assert.match(html, /Aarav Gupta &amp; Family/, `Template ${t.id} must append Family for family invitation`);
   }
 });
+
+test('Strict data isolation: customer uploaded photos are strictly isolated to selected template and never leak to other templates or studio', async () => {
+  const t06 = (await import('../templates/template-06.js')).default;
+  const t11 = (await import('../templates/template-11.js')).default;
+  const t12 = (await import('../templates/template-12.js')).default;
+  const t13 = (await import('../templates/template-13.js')).default;
+  const t14 = (await import('../templates/template-14.js')).default;
+
+  const uploadedBride = 'https://example.com/customer-uploaded-bride-private.jpg';
+  const uploadedGroom = 'https://example.com/customer-uploaded-groom-private.jpg';
+  const uploadedVenue = 'https://example.com/customer-uploaded-banquet-private.jpg';
+
+  // Order created specifically for Template 12
+  const orderRef = 'ORDER-T12-CONFIDENTIAL';
+  const weddingT12 = {
+    template_id: 'template-12',
+    order_reference: orderRef,
+    bride_photo: uploadedBride,
+    groom_photo: uploadedGroom,
+    venue_photo: uploadedVenue
+  };
+
+  // 1. Template 12 must render the customer's uploaded photos
+  const htmlT12 = t12({ guest: { name: 'Respected Guest' }, wedding: weddingT12 });
+  assert.ok(htmlT12.includes(uploadedBride), 'Template 12 must render customer bride photo');
+  assert.ok(htmlT12.includes(uploadedGroom), 'Template 12 must render customer groom photo');
+  assert.ok(htmlT12.includes(uploadedVenue), 'Template 12 must render customer venue photo');
+
+  // 2. Template 11, 13, 14, 06 previewing another template or standard catalog must NOT leak Template 12's photos
+  const otherTemplates = [
+    { id: '11', fn: t11, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-06-shubho-bibaho.webp' },
+    { id: '13', fn: t13, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-13-page.webp' },
+    { id: '14', fn: t14, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-14-page.webp' },
+    { id: '06', fn: t06, defaultBride: 'default-bride.webp', defaultVenue: 'template-06-palace.jpg' }
+  ];
+
+  for (const ot of otherTemplates) {
+    // If other template is rendered with its own template_id (or in Studio)
+    const otherWedding = {
+      template_id: `template-${ot.id}`,
+      order_reference: 'ORDER-OTHER-001'
+    };
+    const htmlOther = ot.fn({ guest: { name: 'Guest' }, wedding: otherWedding });
+    
+    // Verify customer's private photos do NOT appear in other templates
+    assert.ok(!htmlOther.includes(uploadedBride), `Template ${ot.id} must NOT leak customer bride photo`);
+    assert.ok(!htmlOther.includes(uploadedGroom), `Template ${ot.id} must NOT leak customer groom photo`);
+    assert.ok(!htmlOther.includes(uploadedVenue), `Template ${ot.id} must NOT leak customer venue photo`);
+
+    // Verify default fallback placeholder is used
+    assert.ok(htmlOther.includes(ot.defaultBride), `Template ${ot.id} must use standard default bride placeholder`);
+    assert.ok(htmlOther.includes(ot.defaultVenue), `Template ${ot.id} must use standard default venue placeholder`);
+  }
+});

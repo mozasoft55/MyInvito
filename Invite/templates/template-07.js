@@ -894,10 +894,13 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
   const g = guest || {};
   const assetBase = clean(w.asset_base) || './assets/';
 
-  const storedBride = getStoredPhoto('wedding-bride-photo') || getStoredPhoto('wedding_bride_photo') || getStoredPhoto('onboard-bride-photo');
-  const storedGroom = getStoredPhoto('wedding-groom-photo') || getStoredPhoto('wedding_groom_photo') || getStoredPhoto('onboard-groom-photo');
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo') || getStoredPhoto('venue_photo') || getStoredPhoto('banquet_photo');
+  const orderRef = clean(w.order_reference) || clean(w.ref) || '';
+  const isT07Match = !w.template_id || w.template_id === 'template-07' || w.template_id === '07';
+
+  const storedBride = (isT07Match && orderRef) ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '';
+  const storedGroom = (isT07Match && orderRef) ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '';
+  const storedCouple = (isT07Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
+  const storedVenue = (isT07Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
 
   const rawBride = clean(w.bride_name) || 'Sanjukta';
   const rawGroom = clean(w.groom_name) || 'Purushottam';

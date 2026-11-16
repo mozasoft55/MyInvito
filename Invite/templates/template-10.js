@@ -403,8 +403,10 @@ const WA_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.057 24l1
 /* ---------- render ---------- */
 export default function render({ guest, wedding, events = [] } = {}) {
   const w = wedding || {};
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo');
+  const orderRef = clean(w.order_reference) || clean(w.ref) || '';
+  const isT10Match = !w.template_id || w.template_id === 'template-10' || w.template_id === '10';
+  const storedCouple = (isT10Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
+  const storedVenue = (isT10Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
   const evs = Array.isArray(events) ? events : [];
   const offset = clean(w.timezone_offset) || '+05:30';
 

@@ -222,8 +222,10 @@ const fl = (w = 12) => `<svg viewBox="0 0 160 16" style="width:${w}em;height:${w
 // ============================================================================
 export default function render({ guest, wedding: rawWedding, events = [] } = {}) {
   const w = rawWedding || {};
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo') || getStoredPhoto('wedding_venue_photo') || getStoredPhoto('onboard-venue-photo');
+  const orderRef = String(w.order_reference || w.ref || '').trim();
+  const isT02Match = !w.template_id || w.template_id === 'template-02' || w.template_id === '02';
+  const storedCouple = (isT02Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
+  const storedVenue = (isT02Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
   const wedding = w;
   const g = guest || {};
   const evsList = Array.isArray(events) ? events : [];

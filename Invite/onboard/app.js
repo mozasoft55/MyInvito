@@ -45,20 +45,16 @@ let busy = false;
 function persistUploadedPhoto(slot, result) {
   const dataUrl = result.dataUrl || result.previewUrl || '';
   if (!dataUrl) return;
-  const storageKey = `wedding-${slot}-photo`;
-  const legacyKey = `wedding_${slot}_photo`;
-  const onboardKey = `onboard-${slot}-photo`;
 
   try {
-    localStorage.setItem(storageKey, dataUrl);
-    localStorage.setItem(legacyKey, dataUrl);
-    sessionStorage.setItem(storageKey, dataUrl);
-    sessionStorage.setItem(onboardKey, dataUrl);
+    sessionStorage.setItem(`onboard_session_${slot}_photo`, dataUrl);
+    // Purge any legacy un-scoped keys so customer photos never leak to other templates or Studio
+    localStorage.removeItem(`wedding-${slot}-photo`);
+    localStorage.removeItem(`wedding_${slot}_photo`);
+    sessionStorage.removeItem(`wedding-${slot}-photo`);
+    sessionStorage.removeItem(`onboard-${slot}-photo`);
   } catch (err) {
-    console.warn(`[Onboard] Could not persist ${slot} photo to localStorage:`, err);
-    try {
-      sessionStorage.setItem(storageKey, dataUrl);
-    } catch (_) {}
+    console.warn(`[Onboard] Could not persist ${slot} photo to sessionStorage:`, err);
   }
 
   if (typeof window !== 'undefined') {
@@ -67,15 +63,12 @@ function persistUploadedPhoto(slot, result) {
 }
 
 function clearUploadedPhoto(slot) {
-  const storageKey = `wedding-${slot}-photo`;
-  const legacyKey = `wedding_${slot}_photo`;
-  const onboardKey = `onboard-${slot}-photo`;
-
   try {
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(legacyKey);
-    sessionStorage.removeItem(storageKey);
-    sessionStorage.removeItem(onboardKey);
+    sessionStorage.removeItem(`onboard_session_${slot}_photo`);
+    localStorage.removeItem(`wedding-${slot}-photo`);
+    localStorage.removeItem(`wedding_${slot}_photo`);
+    sessionStorage.removeItem(`wedding-${slot}-photo`);
+    sessionStorage.removeItem(`onboard-${slot}-photo`);
   } catch (_) {}
 
   if (typeof window !== 'undefined') {
@@ -100,10 +93,18 @@ if (uploaderContainer) {
     });
 
     try {
-      const savedGroom = localStorage.getItem('wedding-groom-photo') || sessionStorage.getItem('wedding-groom-photo');
-      const savedBride = localStorage.getItem('wedding-bride-photo') || sessionStorage.getItem('wedding-bride-photo');
-      const savedCouple = localStorage.getItem('wedding-couple-photo') || sessionStorage.getItem('wedding-couple-photo');
-      const savedVenue = localStorage.getItem('wedding-venue-photo') || sessionStorage.getItem('wedding-venue-photo');
+      // Purge legacy un-scoped keys to ensure strict privacy and data isolation
+      ['groom', 'bride', 'couple', 'venue'].forEach(s => {
+        localStorage.removeItem(`wedding-${s}-photo`);
+        localStorage.removeItem(`wedding_${s}_photo`);
+        sessionStorage.removeItem(`wedding-${s}-photo`);
+        sessionStorage.removeItem(`onboard-${s}-photo`);
+      });
+
+      const savedGroom = sessionStorage.getItem('onboard_session_groom_photo');
+      const savedBride = sessionStorage.getItem('onboard_session_bride_photo');
+      const savedCouple = sessionStorage.getItem('onboard_session_couple_photo');
+      const savedVenue = sessionStorage.getItem('onboard_session_venue_photo');
       if (savedGroom) photoUploader.loadExisting('groom', savedGroom, 'Saved');
       if (savedBride) photoUploader.loadExisting('bride', savedBride, 'Saved');
       if (savedCouple) photoUploader.loadExisting('couple', savedCouple, 'Saved');
@@ -946,30 +947,30 @@ function collectInput(overrideData = null) {
   if (photoUploader) {
     if (!formData.groom_photo) {
       const res = photoUploader.getResult('groom');
-      const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-groom-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-groom-photo') : null);
+      const stored = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('onboard_session_groom_photo') : null);
       if (res?.dataUrl || res?.previewUrl || stored) formData.groom_photo = res?.dataUrl || res?.previewUrl || stored;
     }
     if (!formData.bride_photo) {
       const res = photoUploader.getResult('bride');
-      const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-bride-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-bride-photo') : null);
+      const stored = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('onboard_session_bride_photo') : null);
       if (res?.dataUrl || res?.previewUrl || stored) formData.bride_photo = res?.dataUrl || res?.previewUrl || stored;
     }
     if (!formData.couple_photo) {
       const res = photoUploader.getResult('couple');
-      const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-couple-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-couple-photo') : null);
+      const stored = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('onboard_session_couple_photo') : null);
       if (res?.dataUrl || res?.previewUrl || stored) formData.couple_photo = res?.dataUrl || res?.previewUrl || stored;
     }
     if (!formData.venue_photo) {
       const res = photoUploader.getResult('venue');
-      const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-venue-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-venue-photo') : null);
+      const stored = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('onboard_session_venue_photo') : null);
       if (res?.dataUrl || res?.previewUrl || stored) formData.venue_photo = res?.dataUrl || res?.previewUrl || stored;
     }
   } else {
     if (!formData.couple_photo) {
-      formData.couple_photo = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-couple-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-couple-photo') : '') || '';
+      formData.couple_photo = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('onboard_session_couple_photo') : '') || '';
     }
     if (!formData.venue_photo) {
-      formData.venue_photo = (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-venue-photo') : null) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('wedding-venue-photo') : '') || '';
+      formData.venue_photo = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('onboard_session_venue_photo') : '') || '';
     }
   }
   if (selectedMusic && selectedMusic.src) {
@@ -1442,43 +1443,38 @@ form.addEventListener('submit', async event => {
       } catch (e) {}
     }
 
-    // Persist photo URLs into storage for instant access across dashboard, studio, and guest preview
+    // Persist photo URLs strictly scoped to currentOrderReference (never in global un-scoped keys)
     if (groomPhoto) {
       try {
-        localStorage.setItem('wedding-groom-photo', groomPhoto);
-        localStorage.setItem('wedding_groom_photo', groomPhoto);
         localStorage.setItem('wedding_groom_photo_' + currentOrderReference, groomPhoto);
       } catch (e) {}
-      sessionStorage.setItem('wedding-groom-photo', groomPhoto);
-      sessionStorage.setItem('onboard-groom-photo', groomPhoto);
     }
     if (bridePhoto) {
       try {
-        localStorage.setItem('wedding-bride-photo', bridePhoto);
-        localStorage.setItem('wedding_bride_photo', bridePhoto);
         localStorage.setItem('wedding_bride_photo_' + currentOrderReference, bridePhoto);
       } catch (e) {}
-      sessionStorage.setItem('wedding-bride-photo', bridePhoto);
-      sessionStorage.setItem('onboard-bride-photo', bridePhoto);
     }
     if (couplePhoto) {
       try {
-        localStorage.setItem('wedding-couple-photo', couplePhoto);
-        localStorage.setItem('wedding_couple_photo', couplePhoto);
         localStorage.setItem('wedding_couple_photo_' + currentOrderReference, couplePhoto);
       } catch (e) {}
-      sessionStorage.setItem('wedding-couple-photo', couplePhoto);
-      sessionStorage.setItem('onboard-couple-photo', couplePhoto);
     }
     if (venuePhoto) {
       try {
-        localStorage.setItem('wedding-venue-photo', venuePhoto);
-        localStorage.setItem('wedding_venue_photo', venuePhoto);
         localStorage.setItem('wedding_venue_photo_' + currentOrderReference, venuePhoto);
       } catch (e) {}
-      sessionStorage.setItem('wedding-venue-photo', venuePhoto);
-      sessionStorage.setItem('onboard-venue-photo', venuePhoto);
     }
+
+    // Clean up temporary session upload keys and purge any legacy un-scoped keys
+    ['groom', 'bride', 'couple', 'venue'].forEach(s => {
+      try {
+        sessionStorage.removeItem(`onboard_session_${s}_photo`);
+        localStorage.removeItem(`wedding-${s}-photo`);
+        localStorage.removeItem(`wedding_${s}_photo`);
+        sessionStorage.removeItem(`wedding-${s}-photo`);
+        sessionStorage.removeItem(`onboard-${s}-photo`);
+      } catch (_) {}
+    });
 
     applyPaymentStatusState(result.payment_status || 'Pending Verification', 0, '');
   } catch (error) {

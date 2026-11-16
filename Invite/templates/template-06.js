@@ -887,17 +887,12 @@ textarea.t9-input{height:110px;padding:12px 16px;resize:none;line-height:1.5}
 /* ---------- Render Function ---------- */
 export default function render({ guest, wedding, events = [] } = {}) {
   const w = wedding || {};
-  const storedBride = getStoredPhoto('wedding-bride-photo') || getStoredPhoto('wedding_bride_photo') || getStoredPhoto('onboard-bride-photo');
-  const storedGroom = getStoredPhoto('wedding-groom-photo') || getStoredPhoto('wedding_groom_photo') || getStoredPhoto('onboard-groom-photo');
-  const storedCouple = getStoredPhoto('wedding-couple-photo') || getStoredPhoto('wedding_couple_photo') || getStoredPhoto('onboard-couple-photo');
-  const storedVenue = getStoredPhoto('wedding-venue-photo')
-    || getStoredPhoto('wedding_venue_photo')
-    || getStoredPhoto('onboard-venue-photo')
-    || getStoredPhoto('wedding-banquet-photo')
-    || getStoredPhoto('wedding_banquet_photo')
-    || getStoredPhoto('onboard-banquet-photo')
-    || getStoredPhoto('venue_photo')
-    || getStoredPhoto('banquet_photo');
+  const orderRef = clean(w.order_reference) || clean(w.ref) || '';
+  const isT06Match = !w.template_id || w.template_id === 'template-06' || w.template_id === '06' || w.template_id === 'hindu-bengali-alta';
+  const storedBride = (isT06Match && orderRef) ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '';
+  const storedGroom = (isT06Match && orderRef) ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '';
+  const storedCouple = (isT06Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
+  const storedVenue = (isT06Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
   const assetBase = clean(w.asset_base) || './assets/';
 
   const hallBanquet = clean(w.venue_title) || clean(w.hall) || clean(w.banquet) || clean(w.comment) || '';
