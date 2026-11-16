@@ -2050,8 +2050,16 @@ export function initTemplate14(container) {
 
   /* 7. Open Royal RSVP Trigger */
   if (openRsvpBtn) {
-    openRsvpBtn.addEventListener('click', () => {
-      const dockBtn = document.querySelector('.bottom-dock__btn[data-action="rsvp"]') || document.querySelector('[data-action="rsvp"]');
+    openRsvpBtn.addEventListener('click', (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (typeof window.__openRoyalRsvpModal === 'function') {
+        window.__openRoyalRsvpModal();
+        return;
+      }
+      const dockBtn = document.getElementById('royalDockRsvp') || document.querySelector('.bottom-dock__btn[data-action="rsvp"]') || document.querySelector('[data-action="rsvp"]');
       if (dockBtn && typeof dockBtn.click === 'function') {
         dockBtn.click();
       } else {

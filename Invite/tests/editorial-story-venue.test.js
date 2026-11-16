@@ -176,13 +176,11 @@ test('Template 06 hero has invocation/title top before photo and guaranteed RSVP
   assert.ok(titlePos < photoPos, 'Ceremony title must be above the photo frame');
   assert.ok(html.includes('t9-lotus-flourish'), 'Sacred lotus flourish divider must exist at top');
 
-  // 2. RSVP section MUST include interactive inputs, chips, and WhatsApp submit
-  assert.ok(html.includes('data-rsvp'), 'RSVP form must exist');
-  assert.ok(html.includes('data-att="yes"'), 'RSVP attendance yes button must exist');
-  assert.ok(html.includes('data-att="no"'), 'RSVP attendance no button must exist');
-  assert.ok(html.includes('t9-chips-row'), 'RSVP function chips row must exist');
-  assert.ok(html.includes('t9-send'), 'RSVP WhatsApp submit button must exist');
-  assert.ok(html.includes('Gaye Holud &amp; Mehendi') || html.includes('Gaye Holud & Mehendi'), 'Default Bengali event chip must exist');
+  // 2. RSVP section MUST include RSVP launch button redirecting to Royal RSVP popup
+  assert.ok(html.includes('t9-rsvp-launch-btn'), 'RSVP launch button must exist');
+  assert.ok(html.includes('open-rsvp-modal-btn'), 'RSVP trigger button must have open-rsvp-modal-btn ID');
+  assert.ok(html.includes('data-trigger-rsvp'), 'RSVP trigger attribute must exist for popup redirection');
+  assert.ok(html.includes('Kindly RSVP'), 'Kindly RSVP heading must exist');
 
   // 3. Bengali Hindu royal assets & features (Entry frame, swinging bells, Google Calendar)
   assert.ok(html.includes("t9-entry-pillars") || html.includes("bengali-entry-frame"), "Page 1 Entry gate card must be framed with authentic Bengali design");

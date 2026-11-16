@@ -1442,7 +1442,7 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
           <p>Please let us know if you will be celebrating with us by filling in your response below.</p>
         </div>
         <div style="display:flex;justify-content:center;margin:28px 0 10px">
-          <button type="button" class="t07-rsvp-launch-btn" id="open-rsvp-modal-btn" data-open-rsvp aria-haspopup="dialog">
+          <button type="button" class="t07-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" data-open-rsvp aria-label="Respond to Invitation RSVP">
             <span style="font-size:28px">💌</span>
             <span style="display:flex;flex-direction:column;text-align:left">
               <span style="font-family:'Cinzel',serif;font-size:20px;font-weight:700">Respond to Invitation · RSVP</span>
@@ -1452,80 +1452,6 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
           </button>
         </div>
       </div>
-
-      <!-- Royal RSVP Modal Dialog -->
-      <dialog id="t07-rsvp-dialog" class="t07-rsvp-modal" aria-labelledby="t07-rsvp-modal-title">
-        <div class="t07-modal-card">
-          <button type="button" class="t07-modal-close" id="close-t07-rsvp-modal-btn" aria-label="Close RSVP form">&times;</button>
-          <div style="text-align:center;margin-bottom:20px">
-            <div class="t07-eyebrow">Will You Join Us?</div>
-            <h3 id="t07-rsvp-modal-title" style="font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:#881A2B;margin:4px 0 6px">Kindly RSVP</h3>
-            <p style="font-size:14px;color:var(--muted);margin:0">Kindly confirm your presence to help us celebrate together.</p>
-          </div>
-          <form class="t07-rsvp" id="t07RsvpForm" novalidate>
-            ${postEl}${stampEl}
-
-            <!-- 1. Guest Name (read-only auto-filled) -->
-            <div class="t07-fld">
-              <label class="t07-lab" for="t07-guest-name">Guest Name</label>
-              <input class="t07-input t07-input-readonly" id="t07-guest-name" name="name" type="text" value="${esc(guestName)}" readonly disabled>
-            </div>
-
-            <!-- 2. Response Toggle -->
-            <div class="t07-fld" role="group" aria-label="Your Response">
-              <label class="t07-lab">Your Response</label>
-              <button type="button" class="t07-opt" data-att="yes" aria-pressed="true"><span class="t07-rd">${CHECK_SVG}</span><span>Gladly Accepting</span></button>
-              <button type="button" class="t07-opt" data-att="no" aria-pressed="false" style="margin-bottom:0"><span class="t07-rd">${CHECK_SVG}</span><span>Unable to Attend</span></button>
-            </div>
-
-            <!-- Conditional Details (shown when Gladly Accepting) -->
-            <div id="t07AcceptDetails">
-              <!-- 3. Category & Guest Count -->
-              <div class="t07-fld">
-                <label class="t07-lab" for="t07-category">Category</label>
-                <select class="t07-input" id="t07-category" name="category">
-                  <option value="Family" ${hasFamily ? 'selected' : ''}>Family Invitation</option>
-                  <option value="Person" ${!hasFamily ? 'selected' : ''}>Person Invitation</option>
-                </select>
-              </div>
-
-              <div class="t07-fld" id="t07GuestCountWrap">
-                <label class="t07-lab" for="t07-guest-count">Number of Guests Attending</label>
-                <select class="t07-input" id="t07-guest-count" name="guest_count">
-                  <option value="1" ${guestPersons === 1 ? 'selected' : ''}>1 Person</option>
-                  <option value="2" ${guestPersons === 2 ? 'selected' : ''}>2 Persons</option>
-                  <option value="3" ${guestPersons === 3 ? 'selected' : ''}>3 Persons</option>
-                  <option value="4" ${guestPersons === 4 ? 'selected' : ''}>4 Persons</option>
-                  <option value="5" ${guestPersons >= 5 ? 'selected' : ''}>5 Persons</option>
-                </select>
-              </div>
-
-              <!-- 4. Phone / WhatsApp -->
-              <div class="t07-fld">
-                <label class="t07-lab" for="t07-phone">Phone / WhatsApp</label>
-                <input class="t07-input" id="t07-phone" name="phone" type="tel" placeholder="e.g. 9876543210" value="${esc(g.phone || '')}">
-              </div>
-
-              <!-- 5. Ceremony Selection Pills -->
-              ${fchips ? `
-                <div class="t07-fld">
-                  <label class="t07-lab">Ceremonies Attending</label>
-                  <div class="t07-chips-row">${fchips}</div>
-                </div>
-              ` : ''}
-
-              <!-- 6. Note for Couple -->
-              <div class="t07-fld">
-                <label class="t07-lab" for="t07-note">Note for Couple &amp; Family (Optional)</label>
-                <textarea class="t07-input" id="t07-note" name="note" placeholder="Heartfelt wishes or blessings for the couple..."></textarea>
-              </div>
-            </div>
-
-            <button class="t07-send" type="submit">${WHATSAPP_SVG}<span>Save &amp; Send RSVP on WhatsApp</span></button>
-            <p style="text-align:center;font-size:12px;color:var(--muted);margin:12px 0 0">WhatsApp opens with your reply pre-filled. Just press send.</p>
-          </form>
-        </div>
-      </dialog>
     </section>
 
     <!-- =====================================================================
@@ -1908,60 +1834,21 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     });
   });
 
-  // 5. Royal RSVP Modal Dialog
-  const rsvpDialog = byId('t07-rsvp-dialog');
-  const openRsvpBtns = byQueryAll('[data-open-rsvp]');
-  const closeRsvpBtn = byId('close-t07-rsvp-modal-btn');
-
-  const openRsvp = () => {
-    if (rsvpDialog) {
-      if (typeof rsvpDialog.showModal === 'function') {
-        try { rsvpDialog.showModal(); } catch { rsvpDialog.setAttribute('open', ''); }
-      } else {
-        rsvpDialog.setAttribute('open', '');
-      }
+  // 5. Royal RSVP Trigger -> Opens Global Royal RSVP Modal Popup
+  const openRsvp = (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (typeof win.__openRoyalRsvpModal === 'function') {
+      win.__openRoyalRsvpModal();
+    } else {
+      const dockRsvp = doc?.getElementById ? doc.getElementById('royalDockRsvp') : null;
+      if (dockRsvp) dockRsvp.click();
     }
   };
-  const closeRsvp = () => {
-    if (rsvpDialog) {
-      if (typeof rsvpDialog.close === 'function') {
-        try { rsvpDialog.close(); } catch { rsvpDialog.removeAttribute('open'); }
-      } else {
-        rsvpDialog.removeAttribute('open');
-      }
-    }
-  };
-
+  const openRsvpBtns = byQueryAll('[data-open-rsvp], .t07-rsvp-launch-btn, #open-rsvp-modal-btn');
   openRsvpBtns.forEach(btn => addEvt(btn, 'click', openRsvp));
-  if (closeRsvpBtn) addEvt(closeRsvpBtn, 'click', closeRsvp);
-  if (rsvpDialog) {
-    addEvt(rsvpDialog, 'click', e => {
-      if (e.target === rsvpDialog) closeRsvp();
-    });
-  }
-
-  // Attendance Toggle (Gladly Accepting / Unable to Attend)
-  const attBtns = byQueryAll('.t07-opt[data-att]');
-  const acceptDetails = byId('t07AcceptDetails');
-  attBtns.forEach(btn => {
-    addEvt(btn, 'click', () => {
-      attBtns.forEach(b => b.setAttribute('aria-pressed', 'false'));
-      btn.setAttribute('aria-pressed', 'true');
-      const isYes = btn.dataset.att === 'yes';
-      if (acceptDetails) {
-        acceptDetails.style.display = isYes ? 'block' : 'none';
-      }
-    });
-  });
-
-  // Ceremony Pills Multi-Select
-  const ceremonyChips = byQueryAll('.t07-chip');
-  ceremonyChips.forEach(chip => {
-    addEvt(chip, 'click', () => {
-      const curr = chip.getAttribute('aria-pressed') === 'true';
-      chip.setAttribute('aria-pressed', String(!curr));
-    });
-  });
 
   // Banquet Map Button
   const banquetMapBtn = byId('t07BanquetMapBtn');
@@ -1976,41 +1863,6 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
           venueSec.scrollIntoView({ behavior: 'smooth' });
         }
       }
-    });
-  }
-
-  // WhatsApp RSVP Form Submission
-  const rsvpForm = byId('t07RsvpForm');
-  if (rsvpForm) {
-    addEvt(rsvpForm, 'submit', e => {
-      e.preventDefault();
-      const guestNameVal = clean(byId('t07-guest-name')?.value) || 'Respected Guest';
-      const isAttending = byQuery('.t07-opt[data-att="yes"]')?.getAttribute('aria-pressed') === 'true';
-      const category = byId('t07-category')?.value || 'Family';
-      const guestCount = byId('t07-guest-count')?.value || '4';
-      const phone = clean(byId('t07-phone')?.value);
-      const note = clean(byId('t07-note')?.value);
-
-      const selectedFns = byQueryAll('.t07-chip[aria-pressed="true"]').map(c => c.dataset.fn).filter(Boolean);
-
-      let msg = `*RSVP for Wedding Celebrations*\n`;
-      msg += `Guest: ${guestNameVal}\n`;
-      msg += `Status: ${isAttending ? 'Gladly Accepting ✅' : 'Unable to Attend ❌'}\n`;
-      if (isAttending) {
-        msg += `Category: ${category}\n`;
-        msg += `Guests Attending: ${guestCount}\n`;
-        if (selectedFns.length) msg += `Ceremonies: ${selectedFns.join(', ')}\n`;
-        if (phone) msg += `Phone: ${phone}\n`;
-      }
-      if (note) msg += `Note: ${note}\n`;
-
-      const rsvpPhone = clean(wedding.rsvp_number || wedding.phone || wedding.whatsapp) || '919477929927';
-      const digits = rsvpPhone.replace(/\D/g, '') || '919477929927';
-      const waNumber = digits.length === 10 ? `91${digits}` : digits;
-
-      const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
-      if (win) win.open(waUrl, '_blank');
-      closeRsvp();
     });
   }
 

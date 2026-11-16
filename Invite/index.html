@@ -1417,25 +1417,6 @@
                   </button>
                 </div>
               </form>
-
-              <!-- Confirmation View -->
-              <div id="royalConfirmationView" class="royal-confirm-view hidden">
-                <div class="confirm-crest">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
-                </div>
-                <div style="margin-top:4px">
-                  <span class="royal-sub-kicker">Confirmed</span>
-                  <h3 class="royal-confirm-heading">RSVP Saved</h3>
-                  <p class="royal-confirm-sub">Thank you! Your response has been recorded for the wedding celebrations.</p>
-                </div>
-
-                <div id="royalSummaryBox" class="royal-summary-box"></div>
-
-                <div class="royal-action-row" style="width:100%">
-                  <button type="button" class="royal-btn-secondary" id="royalEditAgainBtn">Edit Response</button>
-                  <button type="button" class="royal-btn-primary" id="royalDoneBtn">Done</button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1511,7 +1492,11 @@
 
       function closeRsvp() {
         if (rsvpModal) rsvpModal.classList.add('hidden');
+        const btn = document.getElementById('royalDockRsvp');
+        if (btn) btn.classList.remove('active');
       }
+
+      window.__openRoyalRsvpModal = openRsvp;
 
       function openMap() {
         setActiveNav('map');
@@ -1617,12 +1602,15 @@
 
       // Delegated click listener for inline template RSVP buttons
       document.addEventListener('click', e => {
-        const trg = e.target.closest('[data-open-rsvp], .t04-rsvp-wa, .t9-send, .btn-open-rsvp');
+        const trg = e.target.closest(
+          '#open-rsvp-modal-btn, .t9-rsvp-launch-btn, [data-trigger-rsvp], [data-open-rsvp], .t04-rsvp-wa, .t9-send, .btn-open-rsvp, .t11-ev-rsvp-link, .t12-ev-rsvp-link, .t13-event-rsvp, .t14-ev-badge, #t07-open-rsvp-modal-btn, .t07-rsvp-launch-btn, #t11-rsvp-btn, #t12-rsvp-btn, .t13-action-btn, #t14-open-rsvp-btn'
+        );
         if (trg && !trg.closest('#royalRsvpModal')) {
           e.preventDefault();
+          e.stopPropagation();
           openRsvp();
         }
-      });
+      }, true);
 
       // --- 4. Interactive Response Cards Logic ---
       let currentResponse = 'accepting';
@@ -1669,9 +1657,6 @@
       const form = document.getElementById('royalRsvpForm');
       const submitBtn = document.getElementById('royalSubmitBtn');
       const statusMsg = document.getElementById('royalRsvpStatus');
-      const confirmView = document.getElementById('royalConfirmationView');
-      const summaryBox = document.getElementById('royalSummaryBox');
-      const editAgainBtn = document.getElementById('royalEditAgainBtn');
 
       if (form) {
         form.addEventListener('submit', async e => {
@@ -1736,77 +1721,24 @@
             console.warn('Local storage save:', localErr);
           }
 
-          // 3. Build summary pass
-          let summaryHtml = `
-            <div class="summary-row">
-              <span class="summary-label">Guest Name:</span>
-              <span class="summary-val">${escapeHtml(guestName)}</span>
-            </div>
-            <div class="summary-row">
-              <span class="summary-label">Your Response:</span>
-              <span class="summary-val" style="color:#7B1828">${escapeHtml(responseText)}</span>
-            </div>
-          `;
-
-          if (currentResponse === 'accepting') {
-            if (isFamily) {
-              summaryHtml += `
-                <div class="summary-row">
-                  <span class="summary-label">Coming:</span>
-                  <span class="summary-val">${countVal} ${countVal > 1 ? 'persons' : 'person'}</span>
-                </div>
-              `;
-            }
-            if (phoneVal) {
-              summaryHtml += `
-                <div class="summary-row">
-                  <span class="summary-label">Phone / WhatsApp:</span>
-                  <span class="summary-val">${escapeHtml(phoneVal)}</span>
-                </div>
-              `;
-            }
-            if (cityVal) {
-              summaryHtml += `
-                <div class="summary-row">
-                  <span class="summary-label">City / Address:</span>
-                  <span class="summary-val">${escapeHtml(cityVal)}</span>
-                </div>
-              `;
-            }
-            summaryHtml += `
-              <div class="summary-row" style="flex-direction:column;align-items:flex-start">
-                <span class="summary-label">Ceremonies Attending:</span>
-                <span class="summary-val" style="text-align:left;color:#7B1828">
-                  ${selectedCeremoniesList.length > 0 ? escapeHtml(selectedCeremoniesList.join(', ')) : 'None selected'}
-                </span>
-              </div>
-            `;
+          // 3. Response saved - confirmation view removed
+          if (statusMsg) {
+            statusMsg.textContent = '✓ Response saved successfully!';
+            statusMsg.style.color = '#2d6a4f';
           }
-
-          if (noteVal) {
-            summaryHtml += `
-              <div class="summary-row" style="flex-direction:column;align-items:flex-start">
-                <span class="summary-label">Blessing / Note:</span>
-                <p style="margin:4px 0 0;font-style:italic;color:#3E1F26">“${escapeHtml(noteVal)}”</p>
-              </div>
-            `;
-          }
-
-          if (summaryBox) summaryBox.innerHTML = summaryHtml;
-          if (form) form.classList.add('hidden');
-          if (confirmView) confirmView.classList.remove('hidden');
-
           if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Save RSVP';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '✓ Saved!';
           }
-        });
-      }
 
-      if (editAgainBtn) {
-        editAgainBtn.addEventListener('click', () => {
-          if (confirmView) confirmView.classList.add('hidden');
-          if (form) form.classList.remove('hidden');
+          setTimeout(() => {
+            closeRsvp();
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg> Save RSVP';
+            }
+            if (statusMsg) statusMsg.textContent = '';
+          }, 600);
         });
       }
     }
