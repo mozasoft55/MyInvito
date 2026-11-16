@@ -618,42 +618,24 @@ export default function render({ guest, wedding, events = [] } = {}) {
 
     <section style="padding-bottom:70px">
       <div class="t9-wrap">
-        <div class="t9-head t9-reveal"><div class="t9-lab">Your presence is our present</div><h2 class="t9-rg">Kindly RSVP</h2></div>
-        <form class="t9-rsvp t9-reveal" data-rsvp novalidate>
-          <div class="t9-stamp" aria-hidden="true"><span>${initials}</span></div>
-          <h2>Will you grace us<br>with your presence?</h2>
-          <p class="t9-rsvp-intro">Please let us know if you can join our celebration. We cannot wait to share this special day with you.</p>
-          ${canRsvp ? `
-          <div class="t9-field"><label for="t9-name">Your name</label>
-            <input id="t9-name" name="name" type="text" placeholder="Enter your full name" autocomplete="name" value="${clean(guest?.name) ? esc(guest.name) : ''}" required></div>
-          <div class="t9-field"><label>Will you be joining us?</label>
-            <div class="t9-att" role="radiogroup" aria-label="Will you be joining us?">
-              <button type="button" class="t9-att-btn selected" data-att="Yes, we'll be there" aria-checked="true"><span class="t9-radio">✓</span><strong>Yes, we'll be there</strong></button>
-              <button type="button" class="t9-att-btn" data-att="Sorry, can't make it" aria-checked="false"><span class="t9-radio"></span><strong>Sorry, can't make it</strong></button>
-            </div>
-            <input type="hidden" name="attendance" id="t9-att-val" value="Yes, we'll be there"></div>
-          <div id="t9-details">
-            <div class="t9-field"><label>How many of you?</label>
-              <div class="t9-stepper">
-                <button type="button" class="t9-step" data-step="-1" aria-label="Decrease guest count">−</button>
-                <span class="t9-step-val"><strong id="t9-pc">${esc(guest?.persons || 1)}</strong> <span id="t9-pl">${(guest?.persons || 1) > 1 ? 'persons' : 'person'}</span></span>
-                <button type="button" class="t9-step" data-step="1" aria-label="Increase guest count">+</button>
-              </div>
-              <input type="hidden" name="persons" id="t9-pv" value="${esc(guest?.persons || 1)}"></div>
-            <div class="t9-field"><label>Which functions?</label>
-              <div class="t9-fgrid" role="group" aria-label="Select functions">
-                ${rsvpFns.map(f => `<label class="t9-chip selected"><input type="checkbox" name="functions" value="${esc(f.name)}" checked>
-                  <div class="t9-chead"><span class="t9-chk" aria-hidden="true">✓</span><span class="t9-cname">${esc(f.name)}</span></div>
-                  ${f.date ? `<span class="t9-cdate">${esc(f.date)}</span>` : ''}</label>`).join('')}
-              </div></div>
-            <div class="t9-field"><label for="t9-note">A note for the family (optional)</label>
-              <textarea id="t9-note" name="note" rows="2" placeholder="Share your wishes..."></textarea></div>
+        <div class="royal-unified-rsvp-sec" data-sec="rsvp" style="padding:10px 0 30px;text-align:center">
+          <div class="royal-unified-rsvp-head t9-reveal">
+            <div class="royal-unified-rsvp-eyebrow">YOUR PRESENCE IS OUR PRESENT</div>
+            <h2 class="royal-unified-rsvp-title t9-rg" style="font-size:clamp(26px,5.5vw,36px);margin:4px 0 8px">Kindly RSVP</h2>
+            <p class="royal-unified-rsvp-sub">Your presence is our present — Kindly RSVP to celebrate with us.</p>
           </div>
-          <button class="t9-send" type="submit">${waIcon}<span>Send reply on WhatsApp</span></button>
-          <p class="t9-rnote">Thank you. If WhatsApp did not open, tap the button once more.</p>
-          <p class="t9-status" role="status" aria-live="polite"></p>` : ''}
-          ${contacts.length ? `<div class="t9-contacts">${contacts.map(c => `<a class="t9-contact" href="tel:${esc(c.replace(/[^\d+]/g, ''))}">${esc(c)}</a>`).join('')}</div>` : ''}
-        </form>
+          <div class="royal-unified-rsvp-action t9-reveal" style="display:flex;justify-content:center;margin-top:22px">
+            <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+              <span class="royal-rsvp-icon">💌</span>
+              <span class="royal-rsvp-content">
+                <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                <span class="royal-rsvp-hint">${guestLine} · Click to RSVP &amp; choose ceremonies</span>
+              </span>
+              <span class="royal-rsvp-arrow">➔</span>
+            </button>
+          </div>
+          ${contacts.length ? `<div class="t9-contacts" style="margin-top:20px;justify-content:center">${contacts.map(c => `<a class="t9-contact" href="tel:${esc(c.replace(/[^\d+]/g, ''))}">📞 ${esc(c)}</a>`).join('')}</div>` : ''}
+        </div>
       </div>
     </section>
 
@@ -875,55 +857,18 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     on(flip, 'keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doFlip(); } });
   }
 
-  /* RSVP via WhatsApp */
-  const form = $('[data-rsvp]');
-  const waNum = host.dataset.wa || '';
-  if (form) {
-    const attBtns = $$('.t9-att-btn', form), attVal = $('#t9-att-val', form), details = $('#t9-details', form);
-    attBtns.forEach(btn => on(btn, 'click', () => {
-      attBtns.forEach(b => { b.classList.remove('selected'); b.setAttribute('aria-checked', 'false'); const r = $('.t9-radio', b); if (r) r.textContent = ''; });
-      btn.classList.add('selected'); btn.setAttribute('aria-checked', 'true');
-      const r = $('.t9-radio', btn); if (r) r.textContent = '✓';
-      if (attVal) attVal.value = btn.dataset.att;
-      if (details) details.style.display = btn.dataset.att.startsWith('Yes') ? 'block' : 'none';
-    }));
-
-    const pc = $('#t9-pc', form), pl = $('#t9-pl', form), pv = $('#t9-pv', form);
-    let count = Number(pv?.value || 1);
-    $$('.t9-step', form).forEach(b => on(b, 'click', () => {
-      count = Math.max(1, Math.min(20, count + Number(b.dataset.step || 0)));
-      if (pc) pc.textContent = String(count);
-      if (pl) pl.textContent = count > 1 ? 'persons' : 'person';
-      if (pv) pv.value = String(count);
-    }));
-
-    $$('.t9-chip', form).forEach(chip => {
-      const cb = $('input', chip), chk = $('.t9-chk', chip);
-      if (!cb) return;
-      const sync = () => { chip.classList.toggle('selected', cb.checked); if (chk) chk.textContent = cb.checked ? '✓' : ''; };
-      on(cb, 'change', sync);
-      on(chip, 'click', () => setTimeout(sync, 0));
-    });
-
-    on(form, 'submit', e => {
-      e.preventDefault();
-      const name = $('[name="name"]', form)?.value.trim() || 'Guest';
-      const coming = (attVal?.value || '').startsWith('Yes');
-      const persons = coming ? (pv?.value || '1') : '0';
-      const fns = coming ? $$('[name="functions"]:checked', form).map(c => c.value) : [];
-      const note = $('[name="note"]', form)?.value.trim();
-      const status = $('.t9-status', form);
-      const groom = wedding.groom_name || 'Groom', bride = wedding.bride_name || 'Bride';
-      const greet = /allah|bismillah|insha/i.test(String(wedding.invocation || '')) ? 'Salam! ' : 'Namaste! ';
-      const msg = [
-        `${greet}Reply for ${groom} weds ${bride}.`,
-        `Name: ${name}`,
-        `Coming: ${coming ? `Yes, ${persons} ${Number(persons) > 1 ? 'persons' : 'person'}` : "Sorry, can't make it"}`
-      ];
-      if (coming && fns.length) msg.push(`Functions: - ${fns.join(' - ')}`);
-      if (note) msg.push(`Note: ${note}`);
-      win.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg.join(' '))}`, '_blank', 'noopener,noreferrer');
-      if (status) status.textContent = 'Thank you! Your WhatsApp reply is opening now.';
+  /* RSVP Modal Trigger */
+  const openRsvpBtn = host.querySelector('#open-rsvp-modal-btn');
+  if (openRsvpBtn) {
+    on(openRsvpBtn, 'click', (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      if (typeof win.__openRoyalRsvpModal === 'function') {
+        win.__openRoyalRsvpModal();
+      } else {
+        const dockRsvp = doc?.getElementById ? doc.getElementById('royalDockRsvp') : null;
+        if (dockRsvp) dockRsvp.click();
+      }
     });
   }
 

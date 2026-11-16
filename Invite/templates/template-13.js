@@ -1446,9 +1446,9 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
       <i class="t13-border-l"></i><i class="t13-border-r"></i>
       <div class="t13-framed-content">
         <div>
-          <div class="t13-sec-kicker">Honor &amp; Warm Regards</div>
-          <div class="t13-sec-title">Auspicious Blessings</div>
-          <div class="t13-sec-subtitle">Your gracious presence is the greatest gift of all</div>
+          <div class="t13-sec-kicker">YOUR PRESENCE IS OUR PRESENT</div>
+          <div class="t13-sec-title">Kindly RSVP</div>
+          <p class="t13-sec-sub" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:3cqw;color:#5D3A40;margin:0.5cqw 0 1.2cqw;text-align:center">Your presence is our present — Kindly RSVP to celebrate with us.</p>
           <div class="t13-gold-divider"></div>
         </div>
 
@@ -1459,9 +1459,16 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
           <span class="t13-board-party">${esc(partyBadge)}</span>
         </div>
 
-        <button class="t13-action-btn" data-trigger-rsvp="true" onclick="window.__openRoyalRsvpModal &amp;&amp; window.__openRoyalRsvpModal();">
-          ✉️ Open Royal RSVP Modal
-        </button>
+        <div style="display:flex;justify-content:center;width:100%;margin:1.4cqw 0 0.8cqw">
+          <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+            <span class="royal-rsvp-icon">💌</span>
+            <span class="royal-rsvp-content">
+              <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+              <span class="royal-rsvp-hint">${esc(guestDisplayName)} · Click to RSVP &amp; choose ceremonies</span>
+            </span>
+            <span class="royal-rsvp-arrow">➔</span>
+          </button>
+        </div>
 
         <div class="t13-closing-box">
           <div class="t13-ornament-icon">❖</div>

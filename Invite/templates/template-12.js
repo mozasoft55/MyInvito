@@ -1448,18 +1448,25 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
     <!-- Screen 5: Closing Blessing & RSVP Suite -->
     <section class="t12-page t12-page-framed" id="rsvp-section" data-screen="5" aria-label="RSVP Suite">
       <div class="t12-framed-content">
-        <div class="t12-sec-kicker">WARMEST WISHES &amp; RSVP</div>
-        <h2 class="t12-sec-title">WILL YOU JOIN US?</h2>
-        <p class="t12-sec-sub">Your gracious presence will make this celebration complete and truly unforgettable.</p>
+        <div class="t12-sec-kicker">YOUR PRESENCE IS OUR PRESENT</div>
+        <h2 class="t12-sec-title">Kindly RSVP</h2>
+        <p class="t12-sec-sub">Your presence is our present — Kindly RSVP to celebrate with us.</p>
 
         <div class="t12-rsvp-card">
           <div class="t12-rsvp-badge">${isFamily ? 'FAMILY INVITATION BOARD' : 'PERSONAL INVITATION BOARD'}</div>
           <div class="t12-rsvp-guest">${esc(guestDisplayName)}</div>
           <div class="t12-rsvp-meta">Cordially inviting you ${isFamily ? 'and your family' : ''} (${esc(partyBadge)})</div>
 
-          <button type="button" class="t12-btn-primary" id="t12-rsvp-btn" data-trigger-rsvp style="margin-top:1cqw;width:100%;">
-            <span>✉️</span> OPEN ROYAL RSVP MODAL
-          </button>
+          <div style="display:flex;justify-content:center;width:100%;margin:1.4cqw 0 0.8cqw">
+            <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+              <span class="royal-rsvp-icon">💌</span>
+              <span class="royal-rsvp-content">
+                <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                <span class="royal-rsvp-hint">${esc(guestDisplayName)} · Click to RSVP &amp; choose ceremonies</span>
+              </span>
+              <span class="royal-rsvp-arrow">➔</span>
+            </button>
+          </div>
 
           <div class="t12-closing-box">
             <div class="t12-closing-blessing">With love, affection, and best wishes,</div>

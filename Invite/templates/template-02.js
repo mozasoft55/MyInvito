@@ -340,7 +340,8 @@ ${P(4, `<div>${crest(ini, 4.4)}<div class="sc" style="font-size:2.7em;margin-top
    <div class="cd" id="cd"><div><b id="d">00</b><small>Days</small></div><div><b id="h">00</b><small>Hours</small></div><div><b id="m">00</b><small>Mins</small></div><div><b id="s">00</b><small>Secs</small></div></div></div>
   <div class="pills">${map ? `<a class="pill p2" href="${map}" target="_blank" rel="noopener noreferrer">📍 View Venue Location</a>` : ''}
    <a class="pill p1" id="cal" href="#" target="_blank" rel="noopener noreferrer">📅 Save Date To Calendar</a>
-   <a class="pill p2" id="wa" href="#" target="_blank" rel="noopener noreferrer">💬 Confirm RSVP on WhatsApp</a>
+   <div style="margin:10px 0 4px;text-align:center;width:100%"><div class="cap" style="font-size:.72em;color:#8b6818;font-weight:700">YOUR PRESENCE IS OUR PRESENT</div><div class="nm" style="font-size:1.4em;margin:2px 0 4px">Kindly RSVP</div><div class="it tx" style="font-size:.88em;color:#6b5030">Your presence is our present — Kindly RSVP to celebrate with us.</div></div>
+   <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" style="margin:8px 0;width:100%" aria-label="Respond to Invitation RSVP"><span class="royal-rsvp-icon">💌</span><span class="royal-rsvp-content"><span class="royal-rsvp-title">Respond to Invitation · RSVP</span><span class="royal-rsvp-hint">${esc(guest?.name ? (guest.with_family ? `${guest.name} & Family` : guest.name) : 'Click to RSVP & choose ceremonies')} · Click to RSVP &amp; choose ceremonies</span></span><span class="royal-rsvp-arrow">➔</span></button>
    <button class="pill p3" id="sc" type="button">✨ One Little Surprise</button></div>`, next(0, 'Return To Opening'), 't')}
  </div>
  <div class="sm" id="sm"><div class="pod"><div class="cap" style="font-size:.7rem">Royal Token</div><div class="nm" style="font-size:1.1rem">A Warm Sentiment</div>
@@ -413,9 +414,18 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
     cal.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Wedding: ${w.bride_name} &${w.groom_name}`)}&dates=${st(t)}/${st(t + 9e6)}&location=${encodeURIComponent(loc)}&details=${encodeURIComponent('You are cordially invited to the wedding of ' + w.bride_name + ' & ' + w.groom_name)}`;
   }
 
-  const wa = $('#wa');
-  if (wa) {
-    wa.href = `https://wa.me/${String(w.rsvp_number || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Aadab / Namaste, I will be attending the wedding of ${w.bride_name} & ${w.groom_name}. Guest: ${guest?.name || ''}`)}`;
+  const openRsvpBtn = $('#open-rsvp-modal-btn');
+  if (openRsvpBtn) {
+    openRsvpBtn.onclick = (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      if (typeof window.__openRoyalRsvpModal === 'function') {
+        window.__openRoyalRsvpModal();
+      } else {
+        const dockRsvp = document.getElementById('royalDockRsvp');
+        if (dockRsvp) dockRsvp.click();
+      }
+    };
   }
 
   const sm = $('#sm'), cv = $('#cv');

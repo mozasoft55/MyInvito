@@ -780,6 +780,16 @@ section[data-sec="story"] {
 .t07-rsvp-launch-btn:hover {
   transform: translateY(-3px); box-shadow: 0 22px 48px rgba(136,26,43,0.45);
 }
+@keyframes royalRsvpGlowPulse {
+  0% { box-shadow: 0 16px 36px rgba(136,26,43,0.35), 0 0 0 0 rgba(229,193,108,0.85); transform: scale(1); }
+  30% { box-shadow: 0 22px 50px rgba(136,26,43,0.5), 0 0 32px 10px rgba(229,193,108,0.95); transform: scale(1.035); }
+  60% { box-shadow: 0 16px 36px rgba(136,26,43,0.35), 0 0 18px 4px rgba(229,193,108,0.6); transform: scale(1.01); }
+  80% { box-shadow: 0 22px 48px rgba(136,26,43,0.45), 0 0 26px 8px rgba(229,193,108,0.85); transform: scale(1.025); }
+  100% { box-shadow: 0 16px 36px rgba(136,26,43,0.35), 0 0 0 4px rgba(229,193,108,0.25); transform: scale(1); }
+}
+.royal-rsvp-highlight-pulse {
+  animation: royalRsvpGlowPulse 2.2s cubic-bezier(.22,1,.36,1) forwards !important;
+}
 
 /* Royal RSVP Modal Dialog */
 .t07-rsvp-modal {
@@ -1442,10 +1452,10 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
         <div class="t07-head">
           <div class="t07-eyebrow">Your Presence Is Our Present</div>
           <h2>Kindly RSVP</h2>
-          <p>Please let us know if you will be celebrating with us by filling in your response below.</p>
+          <p>Your presence is our present — Kindly RSVP to celebrate with us.</p>
         </div>
         <div style="display:flex;justify-content:center;margin:28px 0 10px">
-          <button type="button" class="t07-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" data-open-rsvp aria-label="Respond to Invitation RSVP">
+          <button type="button" class="t07-rsvp-launch-btn royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" data-open-rsvp aria-label="Respond to Invitation RSVP">
             <span style="font-size:28px">💌</span>
             <span style="display:flex;flex-direction:column;text-align:left">
               <span style="font-family:'Cinzel',serif;font-size:20px;font-weight:700">Respond to Invitation · RSVP</span>

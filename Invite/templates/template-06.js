@@ -760,6 +760,8 @@ section[data-sec="story"]{background:radial-gradient(ellipse 70% 30% at 50% 0%,r
 .t9-launch-hint{font:500 13px var(--f-body);color:#fcecd2;opacity:.9}
 .t9-launch-arrow{font-size:20px;color:var(--gold);margin-left:6px;transition:transform .3s var(--ease)}
 .t9-rsvp-launch-btn:hover .t9-launch-arrow{transform:translateX(5px)}
+@keyframes royalRsvpGlowPulse{0%{box-shadow:0 16px 36px rgba(var(--p-rgb),.4),0 0 0 0 rgba(201,162,74,.85);transform:scale(1)}30%{box-shadow:0 22px 50px rgba(var(--p-rgb),.55),0 0 32px 10px rgba(201,162,74,.95);transform:scale(1.035)}60%{box-shadow:0 16px 36px rgba(var(--p-rgb),.4),0 0 18px 4px rgba(201,162,74,.6);transform:scale(1.01)}80%{box-shadow:0 22px 48px rgba(var(--p-rgb),.5),0 0 26px 8px rgba(201,162,74,.85);transform:scale(1.025)}100%{box-shadow:0 16px 36px rgba(var(--p-rgb),.4),0 0 0 4px rgba(201,162,74,.25);transform:scale(1)}}
+.royal-rsvp-highlight-pulse{animation:royalRsvpGlowPulse 2.2s cubic-bezier(.22,1,.36,1) forwards!important}
 
 /* RSVP Modal Dialog */
 .t9-rsvp-modal{position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;margin:0;padding:20px 14px;border:0;background:rgba(20,1,5,.84);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;box-sizing:border-box}
@@ -1195,7 +1197,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
         </div>
 
         <!-- Ornate Wax Seal Button with Gold Filigree Ring (100% Vector SVG Circle - Non-Distorted) -->
-        <button class="t9-bindi" type="button" data-open aria-label="${t('open')}">
+        <button class="t9-bindi" type="button" data-open aria-label="Open wedding invitation">
           ${SEAL_SVG}
           <b class="t9-bindi-txt">${t('open')}</b>
         </button>
@@ -1372,7 +1374,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
           <p>${L('Your presence is our present — Kindly RSVP to celebrate with us.', 'আপনার শুভাগমন আমাদের পরম প্রাপ্তি — অনুগ্রহ করে উপস্থিতির সম্মতি জানান।')}</p>
         </div>
         <div class="t9-rsvp-action-wrap t9-rv">
-          <button type="button" class="t9-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="${t('rsvpBtn')}">
+          <button type="button" class="t9-rsvp-launch-btn royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
             <span class="t9-launch-icon">💌</span>
             <span class="t9-launch-content">
               <span class="t9-launch-title">${t('rsvpBtn')}</span>

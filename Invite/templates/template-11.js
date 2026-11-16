@@ -1367,18 +1367,25 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
       <div class="t11-frame-border" aria-hidden="true"></div>
       <div class="t11-framed-content">
         <div class="t11-sec-arch" aria-hidden="true"></div>
-        <div class="t11-sec-kicker">WARMEST WISHES &amp; RSVP</div>
-        <h2 class="t11-sec-title">WILL YOU JOIN US?</h2>
-        <p class="t11-sec-sub">Your gracious presence will make this celebration complete and truly unforgettable.</p>
+        <div class="t11-sec-kicker">YOUR PRESENCE IS OUR PRESENT</div>
+        <h2 class="t11-sec-title">Kindly RSVP</h2>
+        <p class="t11-sec-sub">Your presence is our present — Kindly RSVP to celebrate with us.</p>
 
         <div class="t11-rsvp-card">
           <div class="t11-rsvp-badge">${esc(guestBadge)}</div>
           <div class="t11-rsvp-guest">${esc(guestDisplayName)}</div>
           <div class="t11-rsvp-meta">Cordially invited to grace the celebrations</div>
 
-          <button type="button" class="t11-btn-primary" id="t11-rsvp-btn" data-trigger-rsvp style="margin-top:0.8cqw;width:100%;">
-            <span>✨</span> OPEN ROYAL RSVP MODAL
-          </button>
+          <div style="display:flex;justify-content:center;width:100%;margin:1.4cqw 0 0.8cqw">
+            <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+              <span class="royal-rsvp-icon">💌</span>
+              <span class="royal-rsvp-content">
+                <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                <span class="royal-rsvp-hint">${esc(guestDisplayName)} · Click to RSVP &amp; choose ceremonies</span>
+              </span>
+              <span class="royal-rsvp-arrow">➔</span>
+            </button>
+          </div>
 
           <div class="t11-footer-closing">
             <div class="t11-footer-blessing">With love, affection, and best wishes,</div>

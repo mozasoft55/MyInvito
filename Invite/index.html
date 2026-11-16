@@ -914,6 +914,137 @@
     .spotlight-ring {
       animation: sectionSpotlight 1.5s ease-out;
     }
+
+    /* Unified Royal RSVP Section & Launch Button across all templates */
+    .royal-unified-rsvp-sec {
+      padding: 48px 20px 60px;
+      text-align: center;
+      position: relative;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    .royal-unified-rsvp-wrap {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+    .royal-unified-rsvp-head {
+      margin-bottom: 24px;
+    }
+    .royal-unified-rsvp-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #AA8220;
+      margin-bottom: 6px;
+    }
+    .royal-unified-rsvp-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(26px, 5.5vw, 36px);
+      font-weight: 700;
+      color: #7B1828;
+      margin: 0 0 8px;
+    }
+    .royal-unified-rsvp-sub {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 16.5px;
+      font-style: italic;
+      color: #5D3A40;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .royal-unified-rsvp-action {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .royal-rsvp-launch-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      min-height: 66px;
+      padding: 12px 32px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #7B1828, #982034);
+      color: #ffffff;
+      border: 2px solid #D4AF37;
+      box-shadow: 0 16px 36px rgba(123, 24, 40, 0.4), 0 0 0 3px rgba(212, 175, 55, 0.25);
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      box-sizing: border-box;
+      max-width: 100%;
+      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .royal-rsvp-launch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 46px rgba(123, 24, 40, 0.52), 0 0 0 5px rgba(212, 175, 55, 0.35);
+    }
+    .royal-rsvp-launch-btn:active {
+      transform: scale(0.98);
+    }
+    .royal-rsvp-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .royal-rsvp-content {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.25;
+    }
+    .royal-rsvp-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #ffffff;
+    }
+    .royal-rsvp-hint {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 13px;
+      color: #F2DDA4;
+      opacity: 0.95;
+      margin-top: 3px;
+    }
+    .royal-rsvp-arrow {
+      font-size: 19px;
+      color: #E5C16C;
+      margin-left: 6px;
+      transition: transform 0.25s ease;
+    }
+    .royal-rsvp-launch-btn:hover .royal-rsvp-arrow {
+      transform: translateX(4px);
+    }
+
+    /* Highlight on scroll: soft gold glow & gentle pulse */
+    @keyframes royalRsvpGlowPulse {
+      0% {
+        box-shadow: 0 16px 36px rgba(123, 24, 40, 0.4), 0 0 0 0 rgba(212, 175, 55, 0.85);
+        transform: scale(1);
+      }
+      30% {
+        box-shadow: 0 22px 50px rgba(123, 24, 40, 0.55), 0 0 32px 10px rgba(212, 175, 55, 0.95);
+        transform: scale(1.035);
+      }
+      60% {
+        box-shadow: 0 16px 36px rgba(123, 24, 40, 0.4), 0 0 18px 4px rgba(212, 175, 55, 0.6);
+        transform: scale(1.01);
+      }
+      80% {
+        box-shadow: 0 22px 48px rgba(123, 24, 40, 0.5), 0 0 26px 8px rgba(212, 175, 55, 0.85);
+        transform: scale(1.025);
+      }
+      100% {
+        box-shadow: 0 16px 36px rgba(123, 24, 40, 0.4), 0 0 0 3px rgba(212, 175, 55, 0.25);
+        transform: scale(1);
+      }
+    }
+    .royal-rsvp-highlight-pulse {
+      animation: royalRsvpGlowPulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    }
   </style>
   <link rel="stylesheet" href="./token-engine/base-card.css">
   <link rel="stylesheet" href="./token-engine/editorial-story-venue.css">
@@ -1601,7 +1732,7 @@
       // Delegated click listener for inline template RSVP buttons
       document.addEventListener('click', e => {
         const trg = e.target.closest(
-          '#open-rsvp-modal-btn, .t9-rsvp-launch-btn, [data-trigger-rsvp], [data-open-rsvp], .t04-rsvp-wa, .t9-send, .btn-open-rsvp, .t11-ev-rsvp-link, .t12-ev-rsvp-link, .t13-event-rsvp, .t14-ev-badge, #t07-open-rsvp-modal-btn, .t07-rsvp-launch-btn, #t11-rsvp-btn, #t12-rsvp-btn, .t13-action-btn, #t14-open-rsvp-btn'
+          '#open-rsvp-modal-btn, .royal-rsvp-launch-btn, .t9-rsvp-launch-btn, [data-trigger-rsvp], [data-open-rsvp], .t04-rsvp-wa, .t9-send, .btn-open-rsvp, .t11-ev-rsvp-link, .t12-ev-rsvp-link, .t13-event-rsvp, .t14-ev-badge, #t07-open-rsvp-modal-btn, .t07-rsvp-launch-btn, #t11-rsvp-btn, #t12-rsvp-btn, .t13-action-btn, #t14-open-rsvp-btn'
         );
         if (trg && !trg.closest('#royalRsvpModal')) {
           e.preventDefault();
@@ -1739,6 +1870,34 @@
           }, 600);
         });
       }
+
+      // --- 8. Highlight on Scroll: Gentle shimmer / pulse when RSVP section enters viewport ---
+      function initRsvpScrollHighlight() {
+        if (typeof IntersectionObserver === 'undefined') return;
+        const rsvpTargets = document.querySelectorAll(
+          '.royal-unified-rsvp-sec, .t9-sec-rsvp, .t07-sec-rsvp, #rsvp-section, [data-sec="rsvp"], .royal-rsvp-launch-btn, #open-rsvp-modal-btn'
+        );
+        if (!rsvpTargets.length) return;
+
+        const observer = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const btn = entry.target.querySelector('.royal-rsvp-launch-btn, .t9-rsvp-launch-btn, .t07-rsvp-launch-btn, #open-rsvp-modal-btn') || entry.target;
+              if (btn && !btn.classList.contains('highlighted-once')) {
+                btn.classList.add('royal-rsvp-highlight-pulse', 'highlighted-once');
+                setTimeout(() => {
+                  btn.classList.remove('royal-rsvp-highlight-pulse');
+                }, 2400);
+              }
+              obs.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.25 });
+
+        rsvpTargets.forEach(t => observer.observe(t));
+      }
+
+      setTimeout(initRsvpScrollHighlight, 350);
     }
 
     async function bootstrap() {

@@ -1788,32 +1788,20 @@ export default function renderT04(data = {}) {
           </article>
         </div>
 
-        <div class="t04-rsvp-card">
-          <h3 style="font-family:'Playfair Display',serif;font-size:18px;color:var(--emerald-d);margin:0 0 12px;text-align:center">Kindly RSVP</h3>
-          <div class="t04-rsvp-row">
-            <label class="t04-rsvp-label">Your Name</label>
-            <input type="text" class="t04-rsvp-input" value="${esc(personalized)}" readonly disabled>
+        <div class="royal-unified-rsvp-sec" data-sec="rsvp" style="padding:24px 0 16px;text-align:center">
+          <div class="royal-unified-rsvp-eyebrow" style="color:var(--gold-d, #AA8220)">YOUR PRESENCE IS OUR PRESENT</div>
+          <h3 class="royal-unified-rsvp-title" style="font-family:'Playfair Display',serif;font-size:24px;color:var(--emerald-d);margin:4px 0 6px">Kindly RSVP</h3>
+          <p class="royal-unified-rsvp-sub" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:var(--text-muted);margin:0 0 18px">Your presence is our present — Kindly RSVP to celebrate with us.</p>
+          <div class="royal-unified-rsvp-action" style="display:flex;justify-content:center">
+            <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+              <span class="royal-rsvp-icon">💌</span>
+              <span class="royal-rsvp-content">
+                <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                <span class="royal-rsvp-hint">${esc(personalized)} · Click to RSVP &amp; choose ceremonies</span>
+              </span>
+              <span class="royal-rsvp-arrow">➔</span>
+            </button>
           </div>
-          <div class="t04-rsvp-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label class="t04-rsvp-label">Category</label>
-              <select class="t04-rsvp-select" id="t04-rsvp-cat">
-                <option value="Person">Person</option>
-                <option value="Family"${isFamily ? ' selected' : ''}>Family</option>
-              </select>
-            </div>
-            <div>
-              <label class="t04-rsvp-label">Guest Count</label>
-              <select class="t04-rsvp-select" id="t04-rsvp-count"${isFamily ? ' disabled' : ''}>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-              </select>
-            </div>
-          </div>
-          <a class="t04-act-btn t04-rsvp-wa" id="t04-rsvp-btn" href="#" target="_blank" rel="noopener noreferrer">${WHATSAPP} Send RSVP on WhatsApp</a>
         </div>
 
         ${JALI_DIVIDER()}
@@ -2084,28 +2072,20 @@ export function mount(root, data = {}) {
     host.addEventListener('click', clickHandler);
   }
 
-  // RSVP WhatsApp url sync
-  function updateRsvpUrl() {
-    const rsvpLink = host.querySelector('#t04-rsvp-btn');
-    if (!rsvpLink) return;
-    const cat = (host.querySelector('#t04-rsvp-cat') || {}).value || 'Person';
-    const count = (host.querySelector('#t04-rsvp-count') || {}).value || '1';
-    const phone = clean(w.phone || w.whatsapp || '').replace(/[^0-9]/g, '');
-    const msg = `Bismillah. RSVP for ${personalized}: ` + (cat === 'Family' ? 'Attending with Family' : `Attending (${count} person)`) + ` for the wedding of ${bride} & ${groom}. Mubarak!`;
-    rsvpLink.href = `https://wa.me/${phone || ''}?text=${encodeURIComponent(msg)}`;
-  }
-  const rsvpCatEl = host.querySelector('#t04-rsvp-cat');
-  const rsvpCountEl = host.querySelector('#t04-rsvp-count');
-  if (rsvpCatEl) {
-    rsvpCatEl.addEventListener('change', function() {
-      if (rsvpCountEl) rsvpCountEl.disabled = (this.value === 'Family');
-      updateRsvpUrl();
+  // RSVP Modal trigger
+  const openRsvpBtn = host.querySelector('#open-rsvp-modal-btn');
+  if (openRsvpBtn) {
+    openRsvpBtn.addEventListener('click', (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      if (typeof window.__openRoyalRsvpModal === 'function') {
+        window.__openRoyalRsvpModal();
+      } else {
+        const dockRsvp = document.getElementById('royalDockRsvp');
+        if (dockRsvp) dockRsvp.click();
+      }
     });
   }
-  if (rsvpCountEl) {
-    rsvpCountEl.addEventListener('change', updateRsvpUrl);
-  }
-  updateRsvpUrl();
 
   // Countdown Timer
   const countdownEl = host.querySelector('[data-countdown]');

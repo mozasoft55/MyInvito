@@ -620,11 +620,16 @@ export class TokenTemplateController {
               </button>
             </div>
 
-            <!-- WhatsApp RSVP Action -->
-            <footer class="token-card__footer reveal-up">
-              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="token-card__cta btn-royal-interactive btn-foil-sweep">
-                <span>Send RSVP via WhatsApp ↗</span>
-              </a>
+            <!-- Unified Royal RSVP Action -->
+            <footer class="token-card__footer reveal-up" style="margin-top:20px;display:flex;justify-content:center">
+              <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+                <span class="royal-rsvp-icon">💌</span>
+                <span class="royal-rsvp-content">
+                  <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                  <span class="royal-rsvp-hint">Click to RSVP &amp; choose ceremonies</span>
+                </span>
+                <span class="royal-rsvp-arrow">➔</span>
+              </button>
             </footer>
           </main>
         </div>
@@ -726,11 +731,16 @@ export class TokenTemplateController {
             <!-- Taqreeb Itinerary Events -->
             ${eventsHtml ? `<section class="token-card__events reveal-up reveal-stagger-parent" aria-label="Taqreeb Events">${eventsHtml}</section>` : ''}
 
-            <!-- WhatsApp RSVP Action -->
-            <footer class="token-card__footer reveal-up">
-              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="token-card__cta btn-royal-interactive btn-foil-sweep">
-                <span>Send RSVP via WhatsApp ↗</span>
-              </a>
+            <!-- Unified Royal RSVP Action -->
+            <footer class="token-card__footer reveal-up" style="margin-top:20px;display:flex;justify-content:center">
+              <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+                <span class="royal-rsvp-icon">💌</span>
+                <span class="royal-rsvp-content">
+                  <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                  <span class="royal-rsvp-hint">Click to RSVP &amp; choose ceremonies</span>
+                </span>
+                <span class="royal-rsvp-arrow">➔</span>
+              </button>
             </footer>
           </main>
         </div>
@@ -814,10 +824,16 @@ export class TokenTemplateController {
 
             ${eventsHtml ? `<section class="token-card__events reveal-up reveal-stagger-parent" aria-label="Wedding Itinerary">${eventsHtml}</section>` : ''}
 
-            <footer class="token-card__footer reveal-up">
-              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="token-card__cta btn-royal-interactive btn-foil-sweep">
-                <span>Send RSVP via WhatsApp ↗</span>
-              </a>
+            <!-- Unified Royal RSVP Action -->
+            <footer class="token-card__footer reveal-up" style="margin-top:20px;display:flex;justify-content:center">
+              <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+                <span class="royal-rsvp-icon">💌</span>
+                <span class="royal-rsvp-content">
+                  <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+                  <span class="royal-rsvp-hint">Click to RSVP &amp; choose ceremonies</span>
+                </span>
+                <span class="royal-rsvp-arrow">➔</span>
+              </button>
             </footer>
           </main>
         </div>

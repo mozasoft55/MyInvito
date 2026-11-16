@@ -1467,14 +1467,24 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
       <i class="t14-border-r" aria-hidden="true"></i>
       <div class="t14-framed-content">
         <div class="t14-guest-card">
-          <div class="t14-guest-kicker">${isFamily ? 'FAMILY INVITATION BOARD' : 'PERSONAL INVITATION BOARD'}</div>
+          <div class="t14-guest-kicker">YOUR PRESENCE IS OUR PRESENT</div>
+          <h2 style="font-family:'Cinzel',serif;font-size:3.8cqw;font-weight:700;color:#7B1828;margin:0.4cqw 0">Kindly RSVP</h2>
+          <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:2.8cqw;color:#5D3A40;margin:0 0 0.8cqw">Your presence is our present — Kindly RSVP to celebrate with us.</p>
+          <div style="font-family:'Cinzel',serif;font-size:1.8cqw;letter-spacing:0.18em;color:#801428;font-weight:700;margin-top:0.4cqw">${isFamily ? 'FAMILY INVITATION BOARD' : 'PERSONAL INVITATION BOARD'}</div>
           <div class="t14-guest-name">${esc(guestDisplayName)}</div>
           <div class="t14-guest-badge">Cordially inviting you ${isFamily ? 'and your family' : ''} (${esc(partyBadge)})</div>
         </div>
 
-        <button class="t14-btn-rsvp" id="t14-open-rsvp-btn" type="button">
-          <span>✉️</span><span>OPEN ROYAL RSVP MODAL</span>
-        </button>
+        <div style="display:flex;justify-content:center;width:100%;margin:1.4cqw 0 0.8cqw">
+          <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+            <span class="royal-rsvp-icon">💌</span>
+            <span class="royal-rsvp-content">
+              <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+              <span class="royal-rsvp-hint">${esc(guestDisplayName)} · Click to RSVP &amp; choose ceremonies</span>
+            </span>
+            <span class="royal-rsvp-arrow">➔</span>
+          </button>
+        </div>
 
         <div class="t14-closing-text">
           <div class="t14-closing-line1">With love, affection, and best wishes,</div>
@@ -1512,7 +1522,7 @@ export function initTemplate14(container) {
   const pagesEl = stage.querySelector('#t14-pages');
   const pCouple = stage.querySelector('#t14-screen-1');
   const bottomReplayBtn = stage.querySelector('#t14-replay-bottom-btn');
-  const openRsvpBtn = stage.querySelector('#t14-open-rsvp-btn');
+  const openRsvpBtn = stage.querySelector('#open-rsvp-modal-btn, #t14-open-rsvp-btn');
   const glows = Array.from(stage.querySelectorAll('.t14-glow') || []);
 
   /* 1. Geometry Setup (1024 x 1536 Artwork) */

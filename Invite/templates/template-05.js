@@ -1364,59 +1364,24 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
         </div>
       </div>
 
-      <!-- Interactive WhatsApp RSVP Module (Confirm Your Presence) -->
-      <article class="t05-card t05-rsvp-card">
+      <!-- Unified Royal RSVP Section -->
+      <section class="royal-unified-rsvp-sec" data-sec="rsvp" style="padding:24px 0 20px;text-align:center">
         <div class="t05-rsvp-head">
-          <span class="ic">${ICONS.envelope}</span>
-          <h3>Confirm Your Presence</h3>
-          <p>আপনার উপস্থিতি নিশ্চিত করুন (RSVP on WhatsApp)</p>
+          <div class="royal-unified-rsvp-eyebrow">YOUR PRESENCE IS OUR PRESENT</div>
+          <h3 class="royal-unified-rsvp-title" style="margin:4px 0 6px">Kindly RSVP</h3>
+          <p class="royal-unified-rsvp-sub">Your presence is our present — Kindly RSVP to celebrate with us.</p>
         </div>
-        <form class="t05-rsvp" data-rsvp novalidate data-wa="${esc(waNum)}" data-bride="${esc(bride)}" data-groom="${esc(groom)}" data-venue="${esc(venue || address)}">
-          <div class="t05-fld">
-            <label for="t05-rsvp-name">Your Full Name / আপনার নাম</label>
-            <input class="t05-input" id="t05-rsvp-name" name="name" type="text" autocomplete="name" value="${guestName ? esc(guestName) : ''}" placeholder="Enter guest name" required>
-          </div>
-
-          <div class="t05-fld">
-            <label>Attendance / উপস্থিতি</label>
-            <div class="t05-att-opts" role="group" aria-label="Attendance">
-              <button type="button" class="t05-att-opt selected" data-att="yes" aria-pressed="true">
-                <span><b class="t05-check">✓ </b>Attending</span>
-                <small style="font-size:2.4cqw;opacity:.85">আনন্দে উপস্থিত থাকব</small>
-              </button>
-              <button type="button" class="t05-att-opt" data-att="no" aria-pressed="false">
-                <span><b class="t05-check">✓ </b>Unable to Attend</span>
-                <small style="font-size:2.4cqw;opacity:.85">উপস্থিত হতে পারছি না</small>
-              </button>
-            </div>
-          </div>
-
-          <div class="t05-fld" data-guests>
-            <label>Number of Guests (1–20) / অতিথি সংখ্যা</label>
-            <div class="t05-counter">
-              <button type="button" class="t05-count-btn" data-step="-1" aria-label="Fewer guests">−</button>
-              <output data-count aria-live="polite">${guest?.with_family ? 2 : 1} <small>Guests</small></output>
-              <button type="button" class="t05-count-btn" data-step="1" aria-label="More guests">+</button>
-            </div>
-          </div>
-
-          <div class="t05-fld" data-fns>
-            <label>Ceremonies Attending / অনুষ্ঠান নির্বাচন</label>
-            <div class="t05-chips-wrap">${fchips}</div>
-          </div>
-
-          <div class="t05-fld">
-            <label for="t05-rsvp-note">Message / Note for Couple (ঐচ্ছিক)</label>
-            <textarea class="t05-input" id="t05-rsvp-note" name="note" rows="2" placeholder="Send your warm blessings or note..."></textarea>
-          </div>
-
-          <button class="t05-rsvp-submit" type="submit">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zM12.05 20.21c-1.5 0-2.96-.39-4.25-1.12l-.3-.18-3.15.83.84-3.07-.2-.31A8.204 8.204 0 013.84 11.91c0-4.52 3.68-8.2 8.2-8.2 2.19 0 4.25.85 5.8 2.4 1.55 1.55 2.41 3.61 2.41 5.8 0 4.53-3.68 8.2-8.2 8.2z"/></svg>
-            <span>Send RSVP on WhatsApp</span>
+        <div class="royal-unified-rsvp-action" style="display:flex;justify-content:center;margin-top:18px">
+          <button type="button" class="royal-rsvp-launch-btn" id="open-rsvp-modal-btn" data-trigger-rsvp="true" aria-label="Respond to Invitation RSVP">
+            <span class="royal-rsvp-icon">💌</span>
+            <span class="royal-rsvp-content">
+              <span class="royal-rsvp-title">Respond to Invitation · RSVP</span>
+              <span class="royal-rsvp-hint">${guestName ? `${esc(guestName)} · Click to RSVP &amp; choose ceremonies` : 'Click to RSVP &amp; choose ceremonies'}</span>
+            </span>
+            <span class="royal-rsvp-arrow">➔</span>
           </button>
-          <p class="t05-rsvp-status" role="status" aria-live="polite"></p>
-        </form>
-      </article>
+        </div>
+      </section>
 
       <footer class="t05-close"><span>With love, affection, and best wishes,</span><p>${esc(signature)}</p></footer>
     </section>`
@@ -1687,90 +1652,18 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     }
   }));
 
-  /* Interactive WhatsApp RSVP Module */
-  const rsvpForm = $('[data-rsvp]');
-  if (rsvpForm) {
-    let att = 'yes';
-    let guestCount = guest?.with_family ? 2 : 1;
-    const countOutput = $('[data-count]', rsvpForm);
-    const guestsField = $('[data-guests]', rsvpForm);
-    const fnsField = $('[data-fns]', rsvpForm);
-    const waPhone = rsvpForm.dataset.wa || '919477929927';
-
-    const updateCounter = () => {
-      if (countOutput) {
-        countOutput.innerHTML = `${guestCount} <small>Guest${guestCount > 1 ? 's' : ''}</small>`;
+  /* RSVP Modal Trigger */
+  const openRsvpBtn = host.querySelector('#open-rsvp-modal-btn');
+  if (openRsvpBtn) {
+    on(openRsvpBtn, 'click', (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      if (typeof window.__openRoyalRsvpModal === 'function') {
+        window.__openRoyalRsvpModal();
+      } else {
+        const dockRsvp = document.getElementById('royalDockRsvp');
+        if (dockRsvp) dockRsvp.click();
       }
-    };
-
-    // Attendance toggle
-    const attButtons = $$('[data-att]', rsvpForm);
-    attButtons.forEach(btn => on(btn, 'click', () => {
-      att = btn.dataset.att;
-      attButtons.forEach(b => {
-        const isSel = b === btn;
-        b.classList.toggle('selected', isSel);
-        b.setAttribute('aria-pressed', String(isSel));
-      });
-      const isAttending = att === 'yes';
-      if (guestsField) guestsField.classList.toggle('t05-hide', !isAttending);
-      if (fnsField) fnsField.classList.toggle('t05-hide', !isAttending);
-    }));
-
-    // Guest counter (+ / - with 1 to 20 clamp)
-    $$('[data-step]', rsvpForm).forEach(stepBtn => on(stepBtn, 'click', () => {
-      const delta = Number(stepBtn.dataset.step) || 0;
-      guestCount = clamp(guestCount + delta, 1, 20);
-      updateCounter();
-    }));
-
-    // Function/Ceremony chips toggle
-    $$('.t05-chip', rsvpForm).forEach(chip => on(chip, 'click', () => {
-      const active = chip.classList.toggle('selected');
-      chip.setAttribute('aria-pressed', String(active));
-    }));
-
-    // Submit and dispatch WhatsApp message
-    on(rsvpForm, 'submit', e => {
-      e.preventDefault();
-      const nameInput = $('[name="name"]', rsvpForm);
-      const guestVal = clean(nameInput?.value);
-      const statusEl = $('.t05-rsvp-status', rsvpForm);
-      if (!guestVal) {
-        if (statusEl) statusEl.textContent = 'Please enter your name / অনুগ্রহ করে আপনার নাম লিখুন।';
-        nameInput?.focus();
-        return;
-      }
-
-      const noteVal = clean($('[name="note"]', rsvpForm)?.value);
-      const isAttending = att === 'yes';
-      const selChips = isAttending
-        ? $$('.t05-chip.selected', rsvpForm).map(c => `${c.dataset.fn || c.textContent.trim()}`)
-        : [];
-
-      const brideName = rsvpForm.dataset.bride || 'Bride';
-      const groomName = rsvpForm.dataset.groom || 'Groom';
-      const venueName = rsvpForm.dataset.venue || '';
-
-      const lines = [
-        `🌸 *Wedding RSVP — ${brideName} & ${groomName}*`,
-        `👤 *Name:* ${guestVal}`,
-        `✨ *Response:* ${isAttending ? 'Joyfully Attending (উপস্থিত থাকব)' : 'Regretfully Unable to Attend (উপস্থিত হতে পারছি না)'}`,
-        isAttending ? `👥 *Guests:* ${guestCount}` : '',
-        isAttending && selChips.length ? `🎉 *Ceremonies:* ${selChips.join(', ')}` : '',
-        noteVal ? `💌 *Message:* ${noteVal}` : '',
-        venueName ? `📍 *Venue:* ${venueName}` : ''
-      ].filter(Boolean);
-
-      const textPayload = lines.join('\n');
-      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(textPayload)}`;
-      if (typeof window !== 'undefined') {
-        window.open(waUrl, '_blank', 'noopener,noreferrer');
-      }
-      if (statusEl) {
-        statusEl.textContent = 'Thank you! WhatsApp is opening to send your RSVP...';
-      }
-      notify('RSVP drafted! Opening WhatsApp...');
     });
   }
 
