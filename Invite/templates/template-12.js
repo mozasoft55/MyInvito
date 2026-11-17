@@ -111,7 +111,7 @@ function formatRibbonDate(dateStr, timeStr) {
 
 function formatAddress(addr) {
   const s = clean(addr);
-  if (!s) return 'Ancestral Heritage,<br>West Bengal';
+  if (!s) return '';
   if (s.includes(',')) {
     const parts = s.split(',').map(p => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
@@ -225,8 +225,9 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
     || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')) : '')
     || './assets/template-06-groom.webp';
 
-  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
+  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || '';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || '';
+  const isGroomFirst = (clean(wedding.name_order) || clean(wedding.couple_order)) === 'groom_first';
 
   const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
   const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
@@ -1287,6 +1288,40 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
         </div>
 
         <div class="t12-couple-row">
+          ${isGroomFirst ? `
+          <!-- Groom on Left -->
+          <div class="t12-couple-col">
+            <div class="t12-photo-ring">
+              <div class="t12-photo-inner">
+                ${groomPhoto ? `<img src="${esc(groomPhoto)}" alt="" class="t12-photo-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" />` : ''}
+                <span class="t12-photo-ltr" ${groomPhoto ? 'style="display:none;"' : ''}>${esc((groomName.charAt(0) || 'P').toUpperCase())}</span>
+              </div>
+            </div>
+            <div class="t12-role-badge">Groom</div>
+            <div class="t12-person-name" data-fit="1">${esc(groomName)}</div>
+            <div class="t12-rel-label">s/o</div>
+            <div class="t12-father-name" data-fit="1">${esc(groomFather)}</div>
+            ${groomAddr ? `<div class="t12-address">${formatAddress(groomAddr)}</div>` : ''}
+          </div>
+
+          <!-- Ampersand -->
+          <div class="t12-couple-amp">&amp;</div>
+
+          <!-- Bride on Right -->
+          <div class="t12-couple-col">
+            <div class="t12-photo-ring">
+              <div class="t12-photo-inner">
+                ${bridePhoto ? `<img src="${esc(bridePhoto)}" alt="" class="t12-photo-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" />` : ''}
+                <span class="t12-photo-ltr" ${bridePhoto ? 'style="display:none;"' : ''}>${esc((brideName.charAt(0) || 'P').toUpperCase())}</span>
+              </div>
+            </div>
+            <div class="t12-role-badge">Bride</div>
+            <div class="t12-person-name" data-fit="1">${esc(brideName)}</div>
+            <div class="t12-rel-label">d/o</div>
+            <div class="t12-father-name" data-fit="1">${esc(brideFather)}</div>
+            ${brideAddr ? `<div class="t12-address">${formatAddress(brideAddr)}</div>` : ''}
+          </div>
+          ` : `
           <!-- Bride on Left -->
           <div class="t12-couple-col">
             <div class="t12-photo-ring">
@@ -1299,7 +1334,7 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             <div class="t12-person-name" data-fit="1">${esc(brideName)}</div>
             <div class="t12-rel-label">d/o</div>
             <div class="t12-father-name" data-fit="1">${esc(brideFather)}</div>
-            <div class="t12-address">${formatAddress(brideAddr)}</div>
+            ${brideAddr ? `<div class="t12-address">${formatAddress(brideAddr)}</div>` : ''}
           </div>
 
           <!-- Ampersand -->
@@ -1317,8 +1352,9 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             <div class="t12-person-name" data-fit="1">${esc(groomName)}</div>
             <div class="t12-rel-label">s/o</div>
             <div class="t12-father-name" data-fit="1">${esc(groomFather)}</div>
-            <div class="t12-address">${formatAddress(groomAddr)}</div>
+            ${groomAddr ? `<div class="t12-address">${formatAddress(groomAddr)}</div>` : ''}
           </div>
+          `}
         </div>
 
         <div class="t12-p1-footer">

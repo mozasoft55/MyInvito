@@ -48,7 +48,7 @@ function normalizeTime(value) {
   return `${hour % 12 || 12}:${twentyFourHour[2]} ${hour < 12 ? 'AM' : 'PM'}`;
 }
 
-function normalizeWeddingRecord(record) {
+export function normalizeWeddingRecord(record) {
   const coupleName = cleanText(record.couple_name, 200);
   const names = coupleName.split(/\s*&\s*/, 2);
   const color = /^#[\da-f]{6}$/i.test(String(record.theme_color || '')) ? record.theme_color : '';
@@ -78,7 +78,10 @@ function normalizeWeddingRecord(record) {
     message: cleanText(record.message, 1200),
     share_message: cleanText(record.share_message, 1200),
     template_id: cleanText(record.template_style || record.template_id, 30) || 'template-02',
-    theme: cleanText(record.theme_name || record.theme, 40)
+    theme: cleanText(record.theme_name || record.theme, 40),
+    name_order: cleanText(record.name_order || record.couple_order, 30) || 'groom_first',
+    bride_address: cleanText(record.bride_address, 250),
+    groom_address: cleanText(record.groom_address, 250)
   };
 }
 
@@ -183,7 +186,7 @@ function normalizeWeddingPayload(data) {
   };
 }
 
-function normalizeInvitation(data, code = '') {
+export function normalizeInvitation(data, code = '') {
   if (!data || !data.guest || !data.wedding) {
     throw new Error('This invitation code was not found. Please check the link and try again.');
   }
@@ -191,7 +194,7 @@ function normalizeInvitation(data, code = '') {
   if (guest.is_deleted === true || guest.status === 'deleted' || guest.status === 'withdrawn' || guest.status === 'cancelled') {
     throw new Error('Sorry, your invitation card is cancelled or withdrawn. Please confirm.');
   }
-  const capacity = Number(guest.family_members);
+  const capacity = Number(guest.family_members !== undefined ? guest.family_members : guest.persons);
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > 20) {
     throw new Error('This invitation has an invalid guest limit.');
   }
@@ -199,9 +202,10 @@ function normalizeInvitation(data, code = '') {
     ...normalizeWeddingPayload(data),
     guest: {
       ...guest,
-      name: cleanText(guest.guest_name, 100),
+      name: cleanText(guest.guest_name || guest.name, 100),
       invite_code: cleanText(guest.invite_code, 120),
       persons: capacity,
+      family_members: capacity,
       person_display: String(capacity),
       with_family: guest.with_family === true || String(guest.category || '').toLowerCase() === 'family',
       family_display: guest.with_family === true || String(guest.category || '').toLowerCase() === 'family' ? '✓' : '✕'
@@ -406,6 +410,25 @@ export function fetchInvitationByCode(inviteCode, { signal } = {}) {
       if (!data || !data.guest || !data.wedding) {
         const localMatch = findLocalInvitation(code);
         if (localMatch) return localMatch;
+      }
+
+      // Check if local dashboard has an edited/updated record for this guest code
+      const localMatch = findLocalInvitation(code);
+      if (data && data.guest && localMatch && localMatch.guest) {
+        const localCount = Number(localMatch.guest.family_members !== undefined ? localMatch.guest.family_members : localMatch.guest.persons);
+        if (Number.isInteger(localCount) && localCount >= 1 && localCount <= 20) {
+          data.guest.family_members = localCount;
+          data.guest.persons = localCount;
+        }
+        if (localMatch.guest.with_family !== undefined) {
+          data.guest.with_family = localMatch.guest.with_family;
+        }
+        if (localMatch.guest.category) {
+          data.guest.category = localMatch.guest.category;
+        }
+        if (localMatch.guest.name || localMatch.guest.guest_name) {
+          data.guest.guest_name = localMatch.guest.name || localMatch.guest.guest_name;
+        }
       }
 
       return normalizeInvitation(data, code);

@@ -1805,8 +1805,12 @@
 
       // Delegated click listener for inline template RSVP buttons
       document.addEventListener('click', e => {
+        // Never intercept calendar, maps, whatsapp, or external communication links
+        if (e.target.closest('a[href*="calendar.google.com"], a[href*="maps.google.com"], a[href*="google.com/maps"], a[href*="wa.me"], a[href^="tel:"], a[href^="mailto:"]')) {
+          return;
+        }
         const trg = e.target.closest(
-          '#open-rsvp-modal-btn, .royal-rsvp-launch-btn, .t9-rsvp-launch-btn, [data-trigger-rsvp], [data-open-rsvp], .t04-rsvp-wa, .t9-send, .btn-open-rsvp, .t11-ev-rsvp-link, .t12-ev-rsvp-link, .t13-event-rsvp, .t14-ev-badge, #t07-open-rsvp-modal-btn, .t07-rsvp-launch-btn, #t11-rsvp-btn, #t12-rsvp-btn, .t13-action-btn, #t14-open-rsvp-btn'
+          '#open-rsvp-modal-btn, .royal-rsvp-launch-btn, .t9-rsvp-launch-btn, [data-trigger-rsvp], [data-open-rsvp], .t04-rsvp-wa, .t9-send, .btn-open-rsvp, .t11-ev-rsvp-link, .t12-ev-rsvp-link, .t13-event-rsvp, .t14-ev-badge, #t07-open-rsvp-modal-btn, .t07-rsvp-launch-btn, #t11-rsvp-btn, #t12-rsvp-btn, #t13-open-rsvp-btn, #t14-open-rsvp-btn'
         );
         if (trg && !trg.closest('#royalRsvpModal')) {
           e.preventDefault();

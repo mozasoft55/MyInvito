@@ -109,7 +109,8 @@ function formatRibbonDate(dateStr, timeStr) {
 }
 
 function formatAddress(addr) {
-  const cleaned = clean(addr) || 'Ancestral Heritage, West Bengal';
+  const cleaned = clean(addr);
+  if (!cleaned) return '';
   const parts = cleaned.split(/,\s*/);
   if (parts.length <= 1) return esc(cleaned);
   return parts.map(p => esc(p.trim())).filter(Boolean).join('<br>');
@@ -212,8 +213,9 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
     || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')) : '')
     || './assets/template-06-groom.webp';
 
-  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
+  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || '';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || '';
+  const isGroomFirst = (clean(wedding.name_order) || clean(wedding.couple_order)) === 'groom_first';
 
   const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
   const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
@@ -1287,19 +1289,53 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
         </div>
 
         <div class="t13-couple-row">
-          <!-- Left Column: Bride -->
+          ${isGroomFirst ? `
+          <!-- Left Column: Groom -->
+          <div class="t13-couple-col">
+            <div class="t13-photo-ring">
+              <div class="t13-photo-inner">
+                <img class="t13-photo-img" src="${groomPhoto}" alt="Groom ${esc(groomName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                <span class="t13-photo-ltr" style="display:none;">${esc(groomName.charAt(0) || 'G')}</span>
+              </div>
+            </div>
+            <div class="t13-role-badge">Groom</div>
+            <div class="t13-person-name" data-fit="1">${esc(groomName)}</div>
+            <div class="t13-rel-label">s/o</div>
+            <div class="t13-father-name" data-fit="1">${esc(groomFather)}</div>
+            ${groomAddr ? `<div class="t13-address">${formatAddress(groomAddr)}</div>` : ''}
+          </div>
+
+          <!-- Center: Calligraphic & -->
+          <div class="t13-couple-amp">&amp;</div>
+
+          <!-- Right Column: Bride -->
           <div class="t13-couple-col">
             <div class="t13-photo-ring">
               <div class="t13-photo-inner">
                 <img class="t13-photo-img" src="${bridePhoto}" alt="Bride ${esc(brideName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-                <span class="t13-photo-ltr" style="display:none;">${esc(brideName.charAt(0) || 'P')}</span>
+                <span class="t13-photo-ltr" style="display:none;">${esc(brideName.charAt(0) || 'B')}</span>
               </div>
             </div>
             <div class="t13-role-badge">Bride</div>
             <div class="t13-person-name" data-fit="1">${esc(brideName)}</div>
             <div class="t13-rel-label">d/o</div>
             <div class="t13-father-name" data-fit="1">${esc(brideFather)}</div>
-            <div class="t13-address">${formatAddress(brideAddr)}</div>
+            ${brideAddr ? `<div class="t13-address">${formatAddress(brideAddr)}</div>` : ''}
+          </div>
+          ` : `
+          <!-- Left Column: Bride -->
+          <div class="t13-couple-col">
+            <div class="t13-photo-ring">
+              <div class="t13-photo-inner">
+                <img class="t13-photo-img" src="${bridePhoto}" alt="Bride ${esc(brideName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                <span class="t13-photo-ltr" style="display:none;">${esc(brideName.charAt(0) || 'B')}</span>
+              </div>
+            </div>
+            <div class="t13-role-badge">Bride</div>
+            <div class="t13-person-name" data-fit="1">${esc(brideName)}</div>
+            <div class="t13-rel-label">d/o</div>
+            <div class="t13-father-name" data-fit="1">${esc(brideFather)}</div>
+            ${brideAddr ? `<div class="t13-address">${formatAddress(brideAddr)}</div>` : ''}
           </div>
 
           <!-- Center: Calligraphic & -->
@@ -1310,15 +1346,16 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
             <div class="t13-photo-ring">
               <div class="t13-photo-inner">
                 <img class="t13-photo-img" src="${groomPhoto}" alt="Groom ${esc(groomName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-                <span class="t13-photo-ltr" style="display:none;">${esc(groomName.charAt(0) || 'P')}</span>
+                <span class="t13-photo-ltr" style="display:none;">${esc(groomName.charAt(0) || 'G')}</span>
               </div>
             </div>
             <div class="t13-role-badge">Groom</div>
             <div class="t13-person-name" data-fit="1">${esc(groomName)}</div>
             <div class="t13-rel-label">s/o</div>
             <div class="t13-father-name" data-fit="1">${esc(groomFather)}</div>
-            <div class="t13-address">${formatAddress(groomAddr)}</div>
+            ${groomAddr ? `<div class="t13-address">${formatAddress(groomAddr)}</div>` : ''}
           </div>
+          `}
         </div>
 
         <div class="t13-p1-footer">

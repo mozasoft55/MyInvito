@@ -15,10 +15,10 @@ button,input,select{font:inherit}
 .welcome p:not(.eyebrow){margin:0;color:#e4d3c8}
 .eyebrow{margin:0 0 9px;color:#a18149;font:10px Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
 .welcome .eyebrow{color:#d9b970}
-.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0 10px}
-.metric{display:grid;gap:6px;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:#fffdf9;min-width:0}
-.metric small{color:var(--muted);font:10px Arial,sans-serif;text-transform:uppercase;letter-spacing:.12em}
-.metric strong{color:#4c2030;font:600 19px "Playfair Display",Georgia,serif;overflow-wrap:anywhere}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:14px 0 8px}
+.metric{display:grid;gap:2px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fffdf9;min-width:0}
+.metric small{color:var(--muted);font:700 9.5px Arial,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.metric strong{color:#4c2030;font:600 16px/1.2 "Playfair Display",Georgia,serif;overflow-wrap:anywhere}
 .metric.highlight{border-color:#c8a25e;background:#fbf1df}
 .financial-note,.helper{color:var(--muted);font:13px/1.5 Arial,sans-serif}
 .helper{margin:6px 0}
@@ -210,12 +210,12 @@ button,input,select{font:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 .table-actions{display:flex;gap:6px;align-items:center}
 .request-actions{display:flex;flex-wrap:wrap;gap:8px}
-.payment-card{padding:18px;margin:15px 0;border:1px solid var(--line);border-radius:10px;background:#fffefa}
-.payment-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.payment-card-head h2{font:600 19px "Playfair Display",Georgia,serif;color:#4e2030;margin:0}
-.payment-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 20px;margin:14px 0}
-.payment-facts p{margin:0;font-size:15px;overflow-wrap:anywhere}
-.payment-facts b{display:block;color:var(--muted);font:10px Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+.payment-card{padding:12px 14px;margin:10px 0;border:1px solid var(--line);border-radius:9px;background:#fffefa}
+.payment-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.payment-card-head h2{font:600 17px "Playfair Display",Georgia,serif;color:#4e2030;margin:0}
+.payment-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:4px 14px;margin:8px 0}
+.payment-facts p{margin:0;font-size:13.5px;overflow-wrap:anywhere}
+.payment-facts b{display:block;color:var(--muted);font:700 9px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
 .review-form{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;padding-top:14px;border-top:1px solid var(--line)}
 .review-form label{display:grid;gap:5px;font-size:14px;font-weight:600}
 .review-form input{height:38px;min-width:0;padding:7px 9px;border:1px solid #dacdbc;border-radius:6px;background:white}
@@ -270,7 +270,7 @@ button,input,select{font:inherit}
   .topbar{height:60px}.private-label{font-size:10px}
   .dashboard{padding:15px 12px 40px}
   .welcome{align-items:start;flex-direction:column;padding:22px}.welcome .button{width:100%}
-  .summary-grid{gap:8px}.metric{padding:13px 12px}.metric strong{font-size:16px}
+  .summary-grid{gap:8px}.metric{padding:8px 10px}.metric strong{font-size:15px}
   .panel-head{flex-direction:column}
   .menu-list{right:auto;left:0}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}

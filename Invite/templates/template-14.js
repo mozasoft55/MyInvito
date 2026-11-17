@@ -117,7 +117,8 @@ function formatRibbonDate(dateStr, timeStr) {
 }
 
 function formatAddress(addr) {
-  const cleaned = clean(addr) || 'Ancestral Heritage, West Bengal';
+  const cleaned = clean(addr);
+  if (!cleaned) return '';
   const parts = cleaned.split(/,\s*/);
   if (parts.length <= 1) return esc(cleaned);
   return parts.map(p => esc(p.trim())).filter(Boolean).join('<br>');
@@ -220,8 +221,9 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
     || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')) : '')
     || './assets/template-06-groom.webp';
 
-  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
+  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || '';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || '';
+  const isGroomFirst = (clean(wedding.name_order) || clean(wedding.couple_order)) === 'groom_first';
 
   const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
   const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
@@ -1327,6 +1329,37 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
         </div>
 
         <div class="t14-row t14-it">
+          ${isGroomFirst ? `
+          <!-- Left: Groom -->
+          <div class="t14-col">
+            <div class="t14-ph">
+              <div class="t14-pi">
+                ${groomPhoto ? `<img src="${groomPhoto}" alt="${esc(groomName)}" onerror="this.remove();">` : (groomName.charAt(0) || '♥')}
+              </div>
+            </div>
+            <div class="t14-role">GROOM</div>
+            <div class="t14-nm">${esc(groomName)}</div>
+            <div class="t14-lb">s/o</div>
+            <div class="t14-fa">${esc(groomFather)}</div>
+            ${groomAddr ? `<div class="t14-ad">${formatAddress(groomAddr)}</div>` : ''}
+          </div>
+
+          <div class="t14-amp">&amp;</div>
+
+          <!-- Right: Bride -->
+          <div class="t14-col">
+            <div class="t14-ph">
+              <div class="t14-pi">
+                ${bridePhoto ? `<img src="${bridePhoto}" alt="${esc(brideName)}" onerror="this.remove();">` : (brideName.charAt(0) || '♥')}
+              </div>
+            </div>
+            <div class="t14-role">BRIDE</div>
+            <div class="t14-nm">${esc(brideName)}</div>
+            <div class="t14-lb">d/o</div>
+            <div class="t14-fa">${esc(brideFather)}</div>
+            ${brideAddr ? `<div class="t14-ad">${formatAddress(brideAddr)}</div>` : ''}
+          </div>
+          ` : `
           <!-- Left: Bride -->
           <div class="t14-col">
             <div class="t14-ph">
@@ -1338,7 +1371,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
             <div class="t14-nm">${esc(brideName)}</div>
             <div class="t14-lb">d/o</div>
             <div class="t14-fa">${esc(brideFather)}</div>
-            <div class="t14-ad">${formatAddress(brideAddr)}</div>
+            ${brideAddr ? `<div class="t14-ad">${formatAddress(brideAddr)}</div>` : ''}
           </div>
 
           <div class="t14-amp">&amp;</div>
@@ -1354,8 +1387,9 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
             <div class="t14-nm">${esc(groomName)}</div>
             <div class="t14-lb">s/o</div>
             <div class="t14-fa">${esc(groomFather)}</div>
-            <div class="t14-ad">${formatAddress(groomAddr)}</div>
+            ${groomAddr ? `<div class="t14-ad">${formatAddress(groomAddr)}</div>` : ''}
           </div>
+          `}
         </div>
 
         <div class="t14-p1-footer t14-it">

@@ -92,7 +92,7 @@ function formatRibbonDate(dStr, tStr) {
 
 function formatAddress(addr) {
   const s = clean(addr);
-  if (!s) return 'Ancestral Heritage,<br>West Bengal';
+  if (!s) return '';
   if (s.includes(',')) {
     const parts = s.split(',').map(p => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
@@ -185,8 +185,9 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
   const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
 
-  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
-  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || clean(wedding.address) || clean(wedding.city) || 'Ancestral Heritage, West Bengal';
+  const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || '';
+  const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || '';
+  const isGroomFirst = (clean(wedding.name_order) || clean(wedding.couple_order)) === 'groom_first';
 
   const weddingDateStr = formatRoyalDate(wedding.date || wedding.event_date);
 
@@ -1196,6 +1197,30 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
           <h1 class="t11-hero-title">The Journey of Love &amp; Togetherness</h1>
         </div>
         <div class="t11-couple">
+          ${isGroomFirst ? `
+          <!-- Groom on Left -->
+          <div class="t11-side">
+            <div class="t11-photo" ${groomPhoto ? `style="background-image:url('${esc(groomPhoto)}')"` : ''}>
+              ${groomPhoto ? '' : esc(groomName.charAt(0) || 'G')}
+            </div>
+            <div class="t11-role-badge">Groom</div>
+            <div class="t11-name">${esc(groomName)}</div>
+            <div class="t11-rel">s/o</div>
+            <div class="t11-par">${esc(groomFather)}</div>
+            ${brideAddr || groomAddr ? (groomAddr ? `<div class="t11-addr">${formatAddress(groomAddr)}</div>` : '') : ''}
+          </div>
+          <!-- Bride on Right -->
+          <div class="t11-side">
+            <div class="t11-photo" ${bridePhoto ? `style="background-image:url('${esc(bridePhoto)}')"` : ''}>
+              ${bridePhoto ? '' : esc(brideName.charAt(0) || 'B')}
+            </div>
+            <div class="t11-role-badge">Bride</div>
+            <div class="t11-name">${esc(brideName)}</div>
+            <div class="t11-rel">d/o</div>
+            <div class="t11-par">${esc(brideFather)}</div>
+            ${brideAddr || groomAddr ? (brideAddr ? `<div class="t11-addr">${formatAddress(brideAddr)}</div>` : '') : ''}
+          </div>
+          ` : `
           <!-- Bride on Left -->
           <div class="t11-side">
             <div class="t11-photo" ${bridePhoto ? `style="background-image:url('${esc(bridePhoto)}')"` : ''}>
@@ -1205,7 +1230,7 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             <div class="t11-name">${esc(brideName)}</div>
             <div class="t11-rel">d/o</div>
             <div class="t11-par">${esc(brideFather)}</div>
-            <div class="t11-addr">${formatAddress(brideAddr)}</div>
+            ${brideAddr || groomAddr ? (brideAddr ? `<div class="t11-addr">${formatAddress(brideAddr)}</div>` : '') : ''}
           </div>
           <!-- Groom on Right -->
           <div class="t11-side">
@@ -1216,8 +1241,9 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             <div class="t11-name">${esc(groomName)}</div>
             <div class="t11-rel">s/o</div>
             <div class="t11-par">${esc(groomFather)}</div>
-            <div class="t11-addr">${formatAddress(groomAddr)}</div>
+            ${brideAddr || groomAddr ? (groomAddr ? `<div class="t11-addr">${formatAddress(groomAddr)}</div>` : '') : ''}
           </div>
+          `}
         </div>
         <div class="t11-hero-footer">
           <div class="t11-ornament" aria-hidden="true">

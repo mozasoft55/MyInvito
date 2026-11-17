@@ -845,6 +845,7 @@ guestForm.addEventListener('submit', async event => {
     toast(isFamilyMode ? 'Family invitation updated' : 'Personal invite updated');
     dashboardRequest('update_guest', {
       guest_id: guestId || dashboard.guests[index].id,
+      invite_code: inviteCode || dashboard.guests[index].invite_code,
       guest: guestPayload(dashboard.guests[index])
     }).catch(e => console.warn('Server update_guest notice:', e.message));
     return;
