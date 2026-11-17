@@ -65,7 +65,8 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
   }
 
   return list.map(guest => {
-    const invited = Math.max(1, toInt(guest.family_members, 1));
+    const invited = Math.max(1, toInt(guest.family_members || guest.persons, 1));
+    const isFamily = Boolean(guest.with_family === true || norm(guest.category) === 'family');
     const reply = latest.get(guest) || null;
     const guestCodeKey = norm(guest.invite_code);
     const open = normalizedOpens.get(guestCodeKey) || (guest.invite_code && opens[guest.invite_code]) || {};
@@ -99,6 +100,7 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
 
     return {
       guest,
+      isFamily,
       status,
       source,
       invitedPeople,
@@ -121,7 +123,45 @@ export function computeStats({ guests = [], rsvps = [], opens = {}, goal = 0 } =
   const invites = { attending: 0, maybe: 0, declined: 0, seen: 0, not_opened: 0 };
   let invitedPeople = 0;
 
+  let totalFamilies = 0;
+  let confirmedFamilies = 0;
+  let declinedFamilies = 0;
+  let tentativeFamilies = 0;
+  let familySeats = 0;
+  let familySeatsAttending = 0;
+
+  let totalPersonal = 0;
+  let confirmedPersonal = 0;
+  let declinedPersonal = 0;
+  let tentativePersonal = 0;
+  let personalSeats = 0;
+  let personalSeatsAttending = 0;
+
   for (const state of states) {
+    if (state.isFamily) {
+      totalFamilies += 1;
+      familySeats += state.invitedPeople;
+      if (state.status === 'attending') {
+        confirmedFamilies += 1;
+        familySeatsAttending += state.attendingPeople;
+      } else if (state.status === 'declined') {
+        declinedFamilies += 1;
+      } else if (state.status === 'maybe') {
+        tentativeFamilies += 1;
+      }
+    } else {
+      totalPersonal += 1;
+      personalSeats += state.invitedPeople;
+      if (state.status === 'attending') {
+        confirmedPersonal += 1;
+        personalSeatsAttending += state.attendingPeople;
+      } else if (state.status === 'declined') {
+        declinedPersonal += 1;
+      } else if (state.status === 'maybe') {
+        tentativePersonal += 1;
+      }
+    }
+
     invitedPeople += state.invitedPeople;
     invites[state.status] += 1;
     for (const key of STATUS_ORDER) people[key] += state.people[key];
@@ -154,6 +194,18 @@ export function computeStats({ guests = [], rsvps = [], opens = {}, goal = 0 } =
     replyRatePct: invitations ? Math.round((repliedInvites / invitations) * 100) : 0,
     confirmedPctOfGoal: target ? Math.round((people.attending / target) * 100) : null,
     seatsToPlan: people.attending + people.maybe,
+    totalFamilies,
+    confirmedFamilies,
+    declinedFamilies,
+    tentativeFamilies,
+    familySeats,
+    familySeatsAttending,
+    totalPersonal,
+    confirmedPersonal,
+    declinedPersonal,
+    tentativePersonal,
+    personalSeats,
+    personalSeatsAttending,
     segments
   };
 }

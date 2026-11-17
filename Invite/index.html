@@ -1204,6 +1204,10 @@
       let masterGain = null;
       let toastTimeout = null;
       let isMusicPlaying = false;
+      let isUserMuted = false;
+      try {
+        isUserMuted = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('guest_music_muted') === 'true');
+      } catch (_) {}
       const melodyNotes = [261.63, 329.63, 392.00, 493.88, 523.25, 493.88, 392.00, 329.63];
       let noteStep = 0;
       let bgAudio = null;
@@ -1286,7 +1290,15 @@
         }
       }
 
-      function startMusic() {
+      function startMusic(force = false) {
+        if (!force && isUserMuted) return;
+        try {
+          if (!force && typeof sessionStorage !== 'undefined' && sessionStorage.getItem('guest_music_muted') === 'true') {
+            isUserMuted = true;
+            return;
+          }
+        } catch (_) {}
+
         const currentWedding = window.__CURRENT_WEDDING || wedding || {};
         const isMuted = (currentWedding.music_url === 'none' || currentWedding.music_disabled);
         if (isMuted) return;
@@ -1323,7 +1335,7 @@
             }).catch(() => {
               // If browser autoplay policy temporarily holds playback, trigger on first user touch/click
               const onNextInteraction = () => {
-                if (isMusicPlaying && bgAudio && bgAudio.paused) {
+                if (!isUserMuted && isMusicPlaying && bgAudio && bgAudio.paused) {
                   bgAudio.play().then(() => stopSynthesizer()).catch(() => {});
                 }
                 document.removeEventListener('click', onNextInteraction);
@@ -1380,7 +1392,7 @@
         }
       }
       function handleAudioTabShow() {
-        if (wasMusicPlayingBeforeHide && (typeof document === 'undefined' || !document.hidden)) {
+        if (!isUserMuted && wasMusicPlayingBeforeHide && (typeof document === 'undefined' || !document.hidden)) {
           wasMusicPlayingBeforeHide = false;
           startMusic();
         }
@@ -1639,7 +1651,7 @@
         window._invitationUnveiled = true;
         document.body.classList.add('invitation-unveiled');
         updateDockVisibility();
-        if (!isMusicPlaying) {
+        if (!isMusicPlaying && !isUserMuted) {
           startMusic();
         }
       }
@@ -1754,8 +1766,15 @@
       if (btnDates) btnDates.addEventListener('click', scrollToDates);
       if (btnMusic) {
         btnMusic.addEventListener('click', () => {
-          if (isMusicPlaying) stopMusic();
-          else startMusic();
+          if (isMusicPlaying) {
+            isUserMuted = true;
+            try { sessionStorage.setItem('guest_music_muted', 'true'); } catch (_) {}
+            stopMusic();
+          } else {
+            isUserMuted = false;
+            try { sessionStorage.removeItem('guest_music_muted'); } catch (_) {}
+            startMusic(true);
+          }
         });
       }
 

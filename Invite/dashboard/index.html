@@ -91,7 +91,9 @@
           <div><p class="eyebrow">Guest list</p><h2 id="guests-title">People you’re inviting</h2><p class="helper" id="guest-summary-line"></p></div>
           <div class="head-actions">
             <button id="refresh-guests-btn" class="button button-outline button-small" type="button" title="Refresh Guest List">↻ Refresh</button>
-            <button id="open-add-guest" class="button button-primary button-small" type="button">＋ Add guest</button>
+            <button id="open-add-personal" class="button button-outline button-small" type="button" title="Add Single Person Invite">👤＋ Personal Invite</button>
+            <button id="open-add-family" class="button button-primary button-small" type="button" title="Add Family Invitation">👨‍👩‍👧‍👦＋ Family Invitation</button>
+            <button id="open-add-guest" type="button" style="display:none;" aria-hidden="true"></button>
             <details class="menu" id="more-menu">
               <summary class="button button-outline button-small">More ▾</summary>
               <div class="menu-list">
@@ -120,13 +122,27 @@
   <dialog id="guest-dialog" class="edit-dialog">
     <form id="guest-form" method="dialog" novalidate>
       <h2 id="guest-dialog-title">Add guest</h2>
-      <label>Guest name<input name="guest_name" required maxlength="120" autocomplete="off"></label>
-      <label>People in this invitation <span class="field-hint">including the guest</span><input name="family_members" type="number" min="1" max="20" value="1" required inputmode="numeric"></label>
-      <label>Phone / WhatsApp <span class="field-hint">optional</span><input name="phone" type="tel" maxlength="24" inputmode="tel"></label>
-      <label>Category <span class="field-hint">optional</span><input name="category" list="category-options" maxlength="60" value="Family" autocomplete="off"></label>
-      <datalist id="category-options"><option value="Family"><option value="Relatives"><option value="Friends"><option value="Colleagues"><option value="VIP"></datalist>
-      <label>City / address <span class="field-hint">optional</span><input name="city_address" maxlength="250"></label>
+      <div class="field-type-wrap" style="margin-bottom: 10px;">
+        <label style="font-size: 13px; font-weight: 600; color: #5a2835; margin-bottom: 6px; display: block;">Invitation Type</label>
+        <div class="type-pill-row" style="display: flex; gap: 8px;">
+          <label class="type-pill-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid #c7a35f; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: #fffdf9;">
+            <input type="radio" name="invite_type" value="personal" checked style="accent-color: var(--wine);">
+            <span>👤 Personal</span>
+          </label>
+          <label class="type-pill-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid #c7a35f; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: #fffdf9;">
+            <input type="radio" name="invite_type" value="family" style="accent-color: var(--wine);">
+            <span>👨‍👩‍👧‍👦 Family</span>
+          </label>
+        </div>
+      </div>
+      <label>Guest name<input name="guest_name" required maxlength="120" autocomplete="off" placeholder="e.g. Rahul Sharma or Sharma Family"></label>
+      <label id="people-field-label">People in this invitation <span class="field-hint" id="people-field-hint">including the guest</span><input name="family_members" id="input-family-members" type="number" min="1" max="20" value="1" required inputmode="numeric"></label>
+      <label>Phone / WhatsApp <span class="field-hint">optional</span><input name="phone" type="tel" maxlength="24" inputmode="tel" placeholder="e.g. 9876543210"></label>
+      <label>Category <span class="field-hint">optional</span><input name="category" list="category-options" maxlength="60" value="Person" autocomplete="off"></label>
+      <datalist id="category-options"><option value="Person"><option value="Family"><option value="Relatives"><option value="Friends"><option value="Colleagues"><option value="VIP"></datalist>
+      <label>City / address <span class="field-hint">optional</span><input name="city_address" maxlength="250" placeholder="e.g. Kolkata"></label>
       <input name="guest_id" type="hidden">
+      <input name="invite_code" type="hidden">
       <p id="guest-form-error" class="dialog-error" role="alert" hidden></p>
       <div class="dialog-actions">
         <button class="button button-outline" id="cancel-guest" type="button">Cancel</button>

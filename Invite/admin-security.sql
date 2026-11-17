@@ -152,6 +152,7 @@ declare
   v_action text := lower(btrim(coalesce(p_action, 'load')));
   v_result jsonb;
   v_guest_id uuid;
+  v_guest_id_text text;
 begin
   if v_ref = '' then
     raise exception using errcode = '22023', message = 'Order reference is required.';
@@ -247,18 +248,28 @@ begin
     return jsonb_build_object('success', true);
 
   elsif v_action = 'update_guest' then
-    v_guest_id := (p_extra ->> 'guest_id')::uuid;
-    if v_guest_id is null then
-      raise exception using errcode = '22023', message = 'Valid guest_id is required.';
+    v_guest_id_text := btrim(coalesce(p_extra ->> 'guest_id', ''));
+    if v_guest_id_text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+      v_guest_id := v_guest_id_text::uuid;
+    else
+      v_guest_id := null;
     end if;
 
     update public.guests
     set guest_name = coalesce(nullif(btrim(p_extra->'guest'->>'guest_name'), ''), guest_name),
         phone = coalesce(p_extra->'guest'->>'phone', phone),
-        family_members = coalesce((p_extra->'guest'->>'family_members')::integer, family_members),
+        family_members = coalesce(
+          (p_extra->'guest'->>'family_members')::integer,
+          (p_extra->'guest'->>'persons')::integer,
+          family_members
+        ),
         category = coalesce(nullif(btrim(p_extra->'guest'->>'category'), ''), category),
-        city_address = coalesce(p_extra->'guest'->>'city_address', city_address)
-    where id = v_guest_id and wedding_id = v_order.wedding_id;
+        city_address = coalesce(p_extra->'guest'->>'city_address', city_address),
+        with_family = coalesce((p_extra->'guest'->>'with_family')::boolean, with_family)
+    where (
+      (v_guest_id is not null and id = v_guest_id)
+      or (nullif(btrim(p_extra->'guest'->>'invite_code'), '') is not null and lower(btrim(invite_code)) = lower(btrim(p_extra->'guest'->>'invite_code')))
+    ) and wedding_id = v_order.wedding_id;
 
     return jsonb_build_object('success', true);
 

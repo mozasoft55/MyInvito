@@ -65,6 +65,13 @@
       <label class="field" for="guest-names"><span>Guest Names (one per line)</span></label>
       <textarea id="guest-names" maxlength="12000" placeholder="Kalimuddin&#10;Arif Hassan&#10;Shamshad Alam"></textarea>
       <div class="options">
+        <label class="field" for="guest-type">
+          <span>Invitation type</span>
+          <select id="guest-type">
+            <option value="family" selected>👨‍👩‍👧‍👦 Family Invitation (4 members)</option>
+            <option value="personal">👤 Personal Invite (1 guest)</option>
+          </select>
+        </label>
         <label class="field" for="guest-language">
           <span>Invitation language</span>
           <select id="guest-language">
@@ -136,16 +143,18 @@
       const bride = wedding?.bride_name || 'the couple';
       const groom = wedding?.groom_name || '';
       const language = document.getElementById('guest-language').value;
+      const isFam = document.getElementById('guest-type')?.value !== 'personal';
+      const salutation = isFam && !name.toLowerCase().includes('family') ? `${name} & Family` : name;
       if (language === 'bn') {
-        return `প্রিয় ${name},\n\n${bride} ও ${groom}-এর বিবাহ অনুষ্ঠানে আপনাকে সাদর আমন্ত্রণ জানাই।\n\nআপনার व्यक्तिगत निमंत्रणপত্র:\n${url}`;
+        return `প্রিয় ${salutation},\n\n${bride} ও ${groom}-এর বিবাহ অনুষ্ঠানে আপনাকে সাদর আমন্ত্রণ জানাই।\n\nআপনার व्यक्तिगत निमंत्रणপত্র:\n${url}`;
       }
       if (language === 'hi') {
-        return `प्रिय ${name},\n\n${bride} एवं ${groom} के विवाह समारोह में आपको सादर आमंत्रित करते हैं।\n\nआपका व्यक्तिगत निमंत्रण:\n${url}`;
+        return `प्रिय ${salutation},\n\n${bride} एवं ${groom} के विवाह समारोह में आपको सादर आमंत्रित करते हैं।\n\nआपका व्यक्तिगत निमंत्रण:\n${url}`;
       }
       if (language === 'ur') {
-        return `محترم ${name}،\n\n${bride} اور ${groom} کی شادی میں آپ کو شرکت کی دعوت ہے۔\n\nآپ کا خصوصی دعوت نامہ:\n${url}`;
+        return `محترم ${salutation}،\n\n${bride} اور ${groom} کی شادی میں آپ کو شرکت کی دعوت ہے۔\n\nآپ کا خصوصی دعوت نامہ:\n${url}`;
       }
-      return `Dear ${name}, you are invited to celebrate the wedding of ${bride} & ${groom}. We look forward to welcoming you.\n${url}`;
+      return `Dear ${salutation}, you are invited to celebrate the wedding of ${bride} & ${groom}. We look forward to welcoming you.\n${url}`;
     }
 
     function openQr(name, url) {
@@ -240,12 +249,15 @@
 
     async function saveNewGuestsToDB(newGuests) {
       if (!weddingId || !newGuests.length) return;
+      const isFam = document.getElementById('guest-type')?.value !== 'personal';
       const payload = newGuests.map(g => ({
         wedding_id: weddingId,
         guest_name: g.name,
         invite_code: g.code,
-        family_members: 1,
-        category: 'Family'
+        family_members: isFam ? 4 : 1,
+        persons: isFam ? 4 : 1,
+        with_family: isFam,
+        category: isFam ? 'Family' : 'Person'
       }));
 
       const res = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/guests`, {

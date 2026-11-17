@@ -343,12 +343,12 @@ function renderTracker() {
   html += '<div class="tracker-hero">' +
     '<div class="hero-main"><span class="hero-big">' + s.people.attending + '</span>' +
       '<span class="hero-label">' + (s.people.attending === 1 ? 'person' : 'people') + ' confirmed</span>' +
-      '<small>' + (s.goal ? s.confirmedPctOfGoal + '% of your ' + s.goal + ' guest goal' : 'Set a guest goal to track your progress') + '</small></div>' +
+      '<small>' + (s.confirmedFamilies ? s.confirmedFamilies + ' ' + (s.confirmedFamilies === 1 ? 'family' : 'families') + ' · ' + s.confirmedPersonal + ' personal' : (s.goal ? s.confirmedPctOfGoal + '% of your ' + s.goal + ' guest goal' : 'Set a guest goal to track your progress')) + '</small></div>' +
     '<dl class="hero-facts">' +
       '<div><dt>Guest goal</dt><dd>' + (s.goal || '—') + ' <button type="button" class="link-btn" data-edit-goal>' + (s.goal ? 'Edit' : 'Set') + '</button></dd></div>' +
-      '<div><dt>Invited so far</dt><dd>' + s.invitedPeople + '</dd><dd class="sub">' + plural(s.invitations, 'invitation', 'invitations') + '</dd></div>' +
-      '<div><dt>' + stillLabel + '</dt><dd>' + stillValue + '</dd></div>' +
-      '<div><dt>Replied</dt><dd>' + (hasGuests ? s.replyRatePct + '%' : '—') + '</dd><dd class="sub">' + s.repliedInvites + ' of ' + s.invitations + ' invitations</dd></div>' +
+      '<div><dt>Invited so far</dt><dd>' + s.invitedPeople + ' <small style="font-size:12px;color:var(--muted)">people</small></dd><dd class="sub">' + s.totalFamilies + ' ' + (s.totalFamilies === 1 ? 'family' : 'families') + ' · ' + s.totalPersonal + ' personal</dd></div>' +
+      '<div><dt>Family Invites</dt><dd>' + s.totalFamilies + ' <small style="font-size:12px;color:var(--muted)">(' + s.confirmedFamilies + ' confirmed)</small></dd><dd class="sub">' + s.familySeats + ' total family seats</dd></div>' +
+      '<div><dt>Personal Invites</dt><dd>' + s.totalPersonal + ' <small style="font-size:12px;color:var(--muted)">(' + s.confirmedPersonal + ' confirmed)</small></dd><dd class="sub">' + s.personalSeats + ' total personal seats</dd></div>' +
     '</dl></div>';
 
   // 2. Goal form (always when no goal yet, or while editing)
@@ -372,7 +372,7 @@ function renderTracker() {
       '<small>' + plural(s.invites[key], 'invitation', 'invitations') + '</small></button>').join('') +
     (s.goal ? '<div class="tile tile-static t-remaining"><span>Still to invite</span><strong>' + s.remaining + '</strong><small>of ' + s.goal + ' goal</small></div>' : '') +
     '</div>';
-  html += '<p class="tiles-note">Numbers count people, so a family of 4 counts as 4.' +
+  html += '<p class="tiles-note">Headcount counts all invited guests: ' + s.totalFamilies + ' families (' + s.familySeats + ' seats) and ' + s.totalPersonal + ' personal invites (' + s.personalSeats + ' seats).' +
     (s.seatsToPlan ? ' <b>Plan for ' + s.seatsToPlan + ' ' + (s.seatsToPlan === 1 ? 'seat' : 'seats') + '</b> (' + s.people.attending + ' confirmed + ' + s.people.maybe + ' not sure).' : '') + '</p>';
 
   // 5. Needs a nudge
@@ -408,6 +408,8 @@ function renderChips() {
   if (!el || !stats) return;
   const chips = [
     ['all', 'All', stats.invitations],
+    ['family', 'Families', stats.totalFamilies],
+    ['personal', 'Personal', stats.totalPersonal],
     ...STATUS_ORDER.map(k => [k, STATUS_META[k].tile, stats.invites[k]]),
     ['replies', 'Replies', stats.repliedInvites]
   ];
@@ -426,10 +428,13 @@ function statusSub(state) {
 
 function guestRow(state, index = 0) {
   const g = state.guest;
-  const id = escapeHtml(g.id);
-  const sub = [g.category, g.phone].filter(Boolean).join(' · ');
+  const id = escapeHtml(g.id || g.guest_id || g.invite_code);
+  const isFam = state.isFamily;
+  const typeTag = isFam ? 'Family' : 'Personal';
+  const sub = [typeTag, g.category && g.category !== typeTag ? g.category : null, g.phone].filter(Boolean).join(' · ');
   const peopleCell = (state.status === 'attending' && state.attendingPeople < state.invitedPeople)
-    ? state.attendingPeople + '<span> of ' + state.invitedPeople + '</span>' : String(state.invitedPeople);
+    ? state.attendingPeople + '<span> of ' + state.invitedPeople + '</span>'
+    : (isFam ? state.invitedPeople + '<small style="display:block;font-size:11px;color:var(--muted)">Family</small>' : state.invitedPeople + '<small style="display:block;font-size:11px;color:var(--muted)">Personal</small>');
 
   let wishHtml = '';
   if (state.reply && state.reply.wishes_message) {
@@ -461,7 +466,11 @@ function renderGuestList() {
   if (!guestWrap || !stats) return;
   const q = query.trim().toLowerCase();
   const rows = stats.states.filter(st => {
-    if (filter === 'replies') {
+    if (filter === 'family') {
+      if (!st.isFamily) return false;
+    } else if (filter === 'personal') {
+      if (st.isFamily) return false;
+    } else if (filter === 'replies') {
       const isReplied = Boolean(st.reply || ['attending', 'maybe', 'declined'].includes(st.status));
       if (!isReplied) return false;
     } else if (filter !== 'all' && st.status !== filter) {
@@ -487,7 +496,8 @@ function renderGuestList() {
 
   if (!stats.invitations) {
     guestWrap.innerHTML = '<div class="empty"><p>No guests yet. Add your first guest, or import a whole list from Excel.</p>' +
-      '<button type="button" class="button button-primary button-small" data-add-guest>＋ Add guest</button></div>';
+      '<button type="button" class="button button-outline button-small" data-add-personal style="margin-right:8px">👤＋ Personal Invite</button>' +
+      '<button type="button" class="button button-primary button-small" data-add-family>👨‍👩‍👧‍👦＋ Family Invitation</button></div>';
     return;
   }
   if (!rows.length) {
@@ -668,15 +678,23 @@ async function syncGoal(value, { silent = false } = {}) {
 /* ───────────── guest actions ───────────── */
 
 function guestPayload(guest) {
+  const isFam = Boolean(guest.with_family === true || String(guest.category || '').toLowerCase() === 'family');
+  const count = Math.max(1, Math.floor(Number(guest.family_members || guest.persons)) || 1);
   return {
-    guest_name: guest.guest_name, family_members: guest.family_members, phone: guest.phone || '',
-    category: guest.category || 'Family', city_address: guest.city_address || '',
-    with_family: guest.family_members > 1, invite_sent: Boolean(guest.invite_sent)
+    guest_name: guest.guest_name,
+    family_members: count,
+    persons: count,
+    phone: guest.phone || '',
+    category: guest.category || (isFam ? 'Family' : 'Person'),
+    city_address: guest.city_address || '',
+    with_family: isFam,
+    invite_sent: Boolean(guest.invite_sent),
+    invite_code: guest.invite_code || ''
   };
 }
 
 function markSent(guestId) {
-  const guest = (dashboard.guests || []).find(g => String(g.id) === String(guestId));
+  const guest = (dashboard.guests || []).find(g => String(g.id || g.guest_id || '') === String(guestId) || g.invite_code === guestId);
   if (!guest || guest.invite_sent) return;
   guest.invite_sent = true;
   saveLocalGuests(orderReference, dashboard.guests);
@@ -686,22 +704,74 @@ function markSent(guestId) {
     .catch(e => console.warn('Server update_guest notice:', e.message));
 }
 
-function openGuestForm(guest) {
+function updateInviteTypeFields(isFam) {
+  const hint = $('people-field-hint');
+  const label = $('people-field-label');
+  if (label && label.firstChild) {
+    label.firstChild.textContent = isFam ? 'Number of family members ' : 'People in this invitation ';
+  }
+  if (hint) {
+    hint.textContent = isFam ? '(Family capacity)' : '(including the guest)';
+  }
+}
+
+function openGuestForm(guest, defaultType = 'personal') {
   guestForm.reset();
   const editing = Boolean(guest);
-  $('guest-dialog-title').textContent = editing ? 'Edit guest' : 'Add guest';
+  const isFam = editing
+    ? Boolean(guest.with_family === true || String(guest.category || '').toLowerCase() === 'family')
+    : (defaultType === 'family');
+
+  $('guest-dialog-title').textContent = editing
+    ? (isFam ? 'Edit Family Invitation' : 'Edit Personal Invite')
+    : (isFam ? 'Add Family Invitation' : 'Add Personal Invite');
   $('save-another').hidden = editing;
-  $('save-guest').textContent = editing ? 'Save changes' : 'Save guest';
+  $('save-guest').textContent = editing ? 'Save changes' : (isFam ? 'Save Family Invitation' : 'Save Personal Invite');
   $('guest-form-error').hidden = true;
-  guestForm.elements.guest_id.value = editing ? guest.id : '';
+
+  const typeRadios = guestForm.elements.invite_type;
+  if (typeRadios) {
+    if (typeRadios.value !== undefined) {
+      typeRadios.value = isFam ? 'family' : 'personal';
+    } else {
+      for (const r of typeRadios) r.checked = (r.value === (isFam ? 'family' : 'personal'));
+    }
+  }
+
+  guestForm.elements.guest_id.value = editing ? (guest.id || guest.guest_id || '') : '';
+  if (guestForm.elements.invite_code) {
+    guestForm.elements.invite_code.value = editing ? (guest.invite_code || '') : '';
+  }
   guestForm.elements.guest_name.value = editing ? (guest.guest_name || '') : '';
-  guestForm.elements.family_members.value = editing ? (guest.family_members || 1) : 1;
+  const currentCount = editing ? (guest.family_members || guest.persons || 1) : (isFam ? 4 : 1);
+  guestForm.elements.family_members.value = currentCount;
   guestForm.elements.phone.value = editing ? (guest.phone || '') : '';
-  guestForm.elements.category.value = editing ? (guest.category || 'Family') : 'Family';
+  guestForm.elements.category.value = editing ? (guest.category || (isFam ? 'Family' : 'Person')) : (isFam ? 'Family' : 'Person');
   guestForm.elements.city_address.value = editing ? (guest.city_address || '') : '';
+
+  updateInviteTypeFields(isFam);
   openDialog(guestDialog);
   guestForm.elements.guest_name.focus();
 }
+
+// Handle switching between Personal and Family invite types inside the modal
+const typeRadioNodes = guestForm.querySelectorAll('input[name="invite_type"]');
+typeRadioNodes.forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isFam = radio.value === 'family';
+    updateInviteTypeFields(isFam);
+    if (isFam && Number(guestForm.elements.family_members.value) === 1) {
+      guestForm.elements.family_members.value = 4;
+    } else if (!isFam && Number(guestForm.elements.family_members.value) === 4) {
+      guestForm.elements.family_members.value = 1;
+    }
+    if (isFam && guestForm.elements.category.value === 'Person') {
+      guestForm.elements.category.value = 'Family';
+    } else if (!isFam && guestForm.elements.category.value === 'Family') {
+      guestForm.elements.category.value = 'Person';
+    }
+  });
+});
 
 guestForm.addEventListener('submit', async event => {
   event.preventDefault();
@@ -716,29 +786,54 @@ guestForm.addEventListener('submit', async event => {
     return;
   }
   errorEl.hidden = true;
+
+  const isFamilyMode = (values.invite_type === 'family' || (!values.invite_type && String(values.category || '').toLowerCase() === 'family'));
   const people = Math.min(20, Math.max(1, Math.floor(Number(values.family_members)) || 1));
+  const categoryVal = isFamilyMode
+    ? (values.category && values.category.toLowerCase() !== 'person' ? values.category : 'Family')
+    : (values.category && values.category.toLowerCase() !== 'family' ? values.category : 'Person');
+
   const fields = {
-    guest_name: name, family_members: people, phone: String(values.phone || '').trim(),
-    category: String(values.category || '').trim() || 'Family', city_address: String(values.city_address || '').trim()
+    guest_name: name,
+    family_members: people,
+    persons: people,
+    phone: String(values.phone || '').trim(),
+    category: categoryVal,
+    city_address: String(values.city_address || '').trim(),
+    with_family: isFamilyMode
   };
 
-  if (values.guest_id) {
-    const index = dashboard.guests.findIndex(g => String(g.id) === String(values.guest_id));
+  const guestId = values.guest_id;
+  const inviteCode = values.invite_code;
+
+  if (guestId || inviteCode) {
+    const index = (dashboard.guests || []).findIndex(g =>
+      (guestId && String(g.id || g.guest_id || '') === String(guestId)) ||
+      (inviteCode && g.invite_code === inviteCode)
+    );
     if (index === -1) return;
-    dashboard.guests[index] = { ...dashboard.guests[index], ...fields, with_family: people > 1, _userEdited: true };
+    dashboard.guests[index] = {
+      ...dashboard.guests[index],
+      ...fields,
+      _userEdited: true
+    };
     saveLocalGuests(orderReference, dashboard.guests);
     renderAll();
     closeDialog(guestDialog);
-    toast('Guest updated');
-    dashboardRequest('update_guest', { guest_id: values.guest_id, guest: guestPayload(dashboard.guests[index]) })
-      .catch(e => console.warn('Server update_guest notice:', e.message));
+    toast(isFamilyMode ? 'Family invitation updated' : 'Personal invite updated');
+    dashboardRequest('update_guest', {
+      guest_id: guestId || dashboard.guests[index].id,
+      guest: guestPayload(dashboard.guests[index])
+    }).catch(e => console.warn('Server update_guest notice:', e.message));
     return;
   }
 
   const newGuest = {
     id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('g-' + Date.now()),
-    ...fields, with_family: people > 1, invite_sent: false,
-    invite_code: Math.random().toString(36).substring(2, 10).toUpperCase(), _userEdited: true
+    ...fields,
+    invite_sent: false,
+    invite_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+    _userEdited: true
   };
   dashboard.guests = Array.isArray(dashboard.guests) ? dashboard.guests : [];
   dashboard.guests.push(newGuest);
@@ -748,15 +843,15 @@ guestForm.addEventListener('submit', async event => {
     .catch(e => console.warn('Server add_guests notice:', e.message));
 
   if (again) {
-    toast(name + ' added');
+    toast((isFamilyMode ? 'Family ' : 'Guest ') + name + ' added');
     guestForm.elements.guest_name.value = '';
     guestForm.elements.phone.value = '';
     guestForm.elements.city_address.value = '';
-    guestForm.elements.family_members.value = 1;
+    guestForm.elements.family_members.value = isFamilyMode ? 4 : 1;
     guestForm.elements.guest_name.focus();
   } else {
     closeDialog(guestDialog);
-    toast('Guest added');
+    toast(isFamilyMode ? 'Family invitation added' : 'Personal invite added');
   }
 });
 
@@ -827,7 +922,9 @@ importButton.addEventListener('click', async () => {
 
 /* ───────────── events ───────────── */
 
-$('open-add-guest').addEventListener('click', () => openGuestForm(null));
+$('open-add-personal')?.addEventListener('click', () => openGuestForm(null, 'personal'));
+$('open-add-family')?.addEventListener('click', () => openGuestForm(null, 'family'));
+$('open-add-guest')?.addEventListener('click', () => openGuestForm(null, 'personal'));
 $('cancel-guest').addEventListener('click', () => closeDialog(guestDialog));
 $('open-import').addEventListener('click', () => {
   $('more-menu').removeAttribute('open');
@@ -910,7 +1007,8 @@ $('dashboard-content').addEventListener('click', async event => {
     return;
   }
 
-  if (t.closest('[data-add-guest]')) { openGuestForm(null); return; }
+  if (t.closest('[data-add-family]')) { openGuestForm(null, 'family'); return; }
+  if (t.closest('[data-add-guest]') || t.closest('[data-add-personal]')) { openGuestForm(null, 'personal'); return; }
 
   if (filterBtn) {
     if (filterBtn.hasAttribute('data-clear-search')) { query = ''; $('guest-search').value = ''; }
@@ -932,10 +1030,21 @@ $('dashboard-content').addEventListener('click', async event => {
   }
   if (sent) markSent(sent.dataset.sent);
   if (edit) {
-    const guest = (dashboard.guests || []).find(g => String(g.id) === String(edit.dataset.edit));
+    const editKey = String(edit.dataset.edit || '');
+    const guest = (dashboard.guests || []).find(g =>
+      String(g.id || g.guest_id || '') === editKey ||
+      (g.invite_code && g.invite_code === editKey)
+    );
     if (guest) openGuestForm(guest);
   }
-  if (remove) deleteGuest(remove.dataset.delete);
+  if (remove) {
+    const delKey = String(remove.dataset.delete || '');
+    const guest = (dashboard.guests || []).find(g =>
+      String(g.id || g.guest_id || '') === delKey ||
+      (g.invite_code && g.invite_code === delKey)
+    );
+    if (guest) deleteGuest(guest.id || guest.guest_id || guest.invite_code);
+  }
 
   const menu = t.closest('details.menu');
   if (menu && t.closest('.menu-list')) menu.removeAttribute('open');

@@ -1535,6 +1535,11 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
 
   const toggleAudio = (forcePlay) => {
     if (!audioEl) return;
+    try {
+      if (forcePlay === true && typeof sessionStorage !== 'undefined' && sessionStorage.getItem('guest_music_muted') === 'true') {
+        return;
+      }
+    } catch (_) {}
     const shouldPlay = typeof forcePlay === 'boolean' ? forcePlay : audioEl.paused;
     if (shouldPlay) {
       audioEl.play().then(() => {
@@ -1551,6 +1556,11 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
   if (audioBtn) {
     on(audioBtn, 'click', (e) => {
       e.stopPropagation();
+      const willPause = !audioEl.paused;
+      try {
+        if (willPause) sessionStorage.setItem('guest_music_muted', 'true');
+        else sessionStorage.removeItem('guest_music_muted');
+      } catch (_) {}
       toggleAudio();
     });
   }

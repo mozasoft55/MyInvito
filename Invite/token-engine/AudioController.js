@@ -38,6 +38,12 @@ export class AudioController {
     this.isPlaying = false;
     this.hasUserInteracted = false;
     this._wasPlayingBeforeHide = false;
+    this.isUserMuted = false;
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('guest_music_muted') === 'true') {
+        this.isUserMuted = true;
+      }
+    } catch (_) {}
 
     this._handleVisibilityChange = () => {
       if (typeof document === 'undefined') return;
@@ -46,7 +52,7 @@ export class AudioController {
           this._wasPlayingBeforeHide = true;
           this.pause();
         }
-      } else if (this._wasPlayingBeforeHide) {
+      } else if (!this.isUserMuted && this._wasPlayingBeforeHide) {
         this._wasPlayingBeforeHide = false;
         this.play().catch(() => {});
       }
@@ -60,7 +66,7 @@ export class AudioController {
     };
 
     this._handleWindowFocus = () => {
-      if (this._wasPlayingBeforeHide && (typeof document === 'undefined' || !document.hidden)) {
+      if (!this.isUserMuted && this._wasPlayingBeforeHide && (typeof document === 'undefined' || !document.hidden)) {
         this._wasPlayingBeforeHide = false;
         this.play().catch(() => {});
       }
@@ -183,9 +189,11 @@ export class AudioController {
 
   /**
    * Play audio with graceful catch of browser autoplay policy restrictions
+   * @param {boolean} [force=false]
    * @returns {Promise<boolean>}
    */
-  async play() {
+  async play(force = false) {
+    if (!force && this.isUserMuted) return false;
     if (!this.audio) return false;
     try {
       await this.audio.play();
@@ -217,10 +225,14 @@ export class AudioController {
    */
   async toggle() {
     if (this.isPlaying) {
+      this.isUserMuted = true;
+      try { sessionStorage.setItem('guest_music_muted', 'true'); } catch (_) {}
       this.pause();
       return false;
     } else {
-      return await this.play();
+      this.isUserMuted = false;
+      try { sessionStorage.removeItem('guest_music_muted'); } catch (_) {}
+      return await this.play(true);
     }
   }
 
