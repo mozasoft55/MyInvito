@@ -172,6 +172,9 @@ button,input,select{font:inherit}
 .g-people span{font:12px Arial,sans-serif;color:var(--muted)}
 .g-status .badge{margin-bottom:2px}
 .row-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.g-card-num,.g-mobile-mid,.g-mobile-wish{display:none}
+.g-card-top-left{display:block}
+.g-desktop-sub,.g-desktop-people,.g-desktop-wish{display:block}
 .empty{padding:28px 16px;border:1px dashed #cbbba7;border-radius:10px;text-align:center;color:var(--muted)}
 .empty p{margin:0 0 12px;font-size:17px}
 
@@ -225,23 +228,50 @@ button,input,select{font:inherit}
   .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:700px){
-  #guest-table-wrap{max-height:520px}
-  .th-idx,.g-idx{display:none}
-  .guest-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .scroll-table-hint{display:none!important}
+  .chips{display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;padding:2px 2px 6px;gap:8px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;white-space:nowrap}
+  .panel-head{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+  .head-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+  .head-actions #open-add-family{grid-column:1;grid-row:1;width:100%;margin:0;justify-content:center;white-space:nowrap;padding:0 6px;font-size:12px}
+  .head-actions #open-add-personal{grid-column:2;grid-row:1;width:100%;margin:0;justify-content:center;white-space:nowrap;padding:0 6px;font-size:12px}
+  .head-actions #refresh-guests-btn{grid-column:1;grid-row:2;width:100%;margin:0;justify-content:center}
+  .head-actions #more-menu{grid-column:2;grid-row:2;width:100%}
+  .head-actions #more-menu summary{width:100%;justify-content:center}
+
+  #guest-table-wrap{max-height:540px;padding:2px}
+  .th-idx,.guest-table td.g-idx{display:none!important}
+  .g-desktop-sub,.g-desktop-people,.g-desktop-wish{display:none!important}
+  .guest-table thead{display:none}
   .guest-table,.guest-table tbody{display:block}
-  .guest-table tr{display:grid;grid-template-columns:1fr auto;gap:8px 10px;padding:12px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:#fffdf8}
+  .g-card-num{display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Arial,sans-serif;color:#7b5825;background:#fbf3e4;border:1px solid #ebd8b8;padding:3px 6px;border-radius:6px;flex-shrink:0}
+  .g-mobile-mid{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:#fcf8f2;border:1px solid #eedec8;border-radius:8px;font:500 12px/1.3 Arial,sans-serif;color:#553e34}
+  .g-mid-phone{display:inline-flex;align-items:center;gap:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .g-mid-type{font-weight:700;color:var(--wine)}
+  .g-mid-people{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:#3b2219;white-space:nowrap;flex-shrink:0}
+  .g-mobile-wish{display:block;margin-top:6px}
+  .g-mobile-wish .g-wish{max-width:100%;margin-top:4px;white-space:normal}
+
+  .guest-table tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"topleft topright" "middle middle" "actions actions";gap:10px;padding:13px 14px 11px;margin-bottom:12px;border:1px solid var(--line);border-radius:14px;background:#fffdf8;box-shadow:0 2px 5px rgba(48,17,27,.04)}
   .guest-table td{display:block;padding:0;border:0}
-  .g-people:before{content:attr(data-label) " ";font:11px Arial,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-  .g-people{text-align:right;align-self:start}
-  .g-status,.g-actions{grid-column:1/-1}
-  .row-actions{justify-content:space-between}
+  .guest-table td.g-name{grid-area:topleft;min-width:0}
+  .g-card-top-left{display:flex;align-items:center;gap:7px;min-width:0}
+  .g-name-text{display:block;font:600 18px/1.2 "Cormorant Garamond",Georgia,serif;color:#4a2030;overflow-wrap:anywhere}
+  .guest-table td.g-status{grid-area:topright;justify-self:end;text-align:right}
+  .g-status-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+  .g-status-wrap small{font-size:11px;color:var(--muted);white-space:nowrap}
+  .guest-table td.g-people{grid-area:middle;font:inherit;color:inherit;text-align:left}
+  .guest-table td.g-actions{grid-area:actions;padding-top:8px;border-top:1px dashed var(--line)}
+  .guest-table td.g-actions .row-actions{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .row-actions .menu-list{right:0!important;left:auto!important}
 }
 @media(max-width:560px){
   .topbar{height:60px}.private-label{font-size:10px}
   .dashboard{padding:15px 12px 40px}
   .welcome{align-items:start;flex-direction:column;padding:22px}.welcome .button{width:100%}
   .summary-grid{gap:8px}.metric{padding:13px 12px}.metric strong{font-size:16px}
-  .panel-head{flex-direction:column}.head-actions{justify-content:flex-start}
+  .panel-head{flex-direction:column}
   .menu-list{right:auto;left:0}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nudge-item{flex-direction:column;align-items:stretch}.nudge-item .act{align-self:flex-start}

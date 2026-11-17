@@ -436,6 +436,17 @@ function guestRow(state, index = 0) {
     ? state.attendingPeople + '<span> of ' + state.invitedPeople + '</span>'
     : (isFam ? state.invitedPeople + '<small style="display:block;font-size:11px;color:var(--muted)">Family</small>' : state.invitedPeople + '<small style="display:block;font-size:11px;color:var(--muted)">Personal</small>');
 
+  let peopleMobileBadge = '';
+  if (state.status === 'attending' && state.attendingPeople < state.invitedPeople) {
+    peopleMobileBadge = state.attendingPeople + ' of ' + state.invitedPeople;
+  } else if (state.status === 'attending') {
+    peopleMobileBadge = state.attendingPeople + ' ' + (state.attendingPeople === 1 ? 'person' : 'people');
+  } else {
+    peopleMobileBadge = state.invitedPeople + ' ' + (state.invitedPeople === 1 ? 'person' : 'people');
+  }
+
+  const phoneDetail = [g.category && g.category !== typeTag ? g.category : null, g.phone || 'No phone'].filter(Boolean).join(' · ');
+
   let wishHtml = '';
   if (state.reply && state.reply.wishes_message) {
     wishHtml = '<div class="g-wish" data-view-reply="' + id + '" title="Click to view message">“' + escapeHtml(state.reply.wishes_message) + '”</div>';
@@ -449,9 +460,20 @@ function guestRow(state, index = 0) {
 
   return '<tr>' +
     '<td class="g-idx">' + (index + 1) + '</td>' +
-    '<td class="g-name"><strong>' + escapeHtml(g.guest_name) + '</strong><small>' + escapeHtml(sub || 'No phone added') + '</small>' + wishHtml + '</td>' +
-    '<td class="g-people" data-label="People">' + peopleCell + '</td>' +
-    '<td class="g-status">' + badge(state.status) + '<small>' + escapeHtml(statusSub(state)) + '</small></td>' +
+    '<td class="g-name">' +
+      '<div class="g-card-top-left"><span class="g-card-num">#' + (index + 1) + '</span><strong class="g-name-text">' + escapeHtml(g.guest_name) + '</strong></div>' +
+      '<small class="g-desktop-sub">' + escapeHtml(sub || 'No phone added') + '</small>' +
+      (wishHtml ? '<div class="g-desktop-wish">' + wishHtml + '</div>' : '') +
+    '</td>' +
+    '<td class="g-people" data-label="People">' +
+      '<div class="g-desktop-people">' + peopleCell + '</div>' +
+      '<div class="g-mobile-mid">' +
+        '<span class="g-mid-phone"><span class="g-mid-type">' + typeTag + '</span> · ' + escapeHtml(phoneDetail) + '</span>' +
+        '<span class="g-mid-people">👥 ' + escapeHtml(peopleMobileBadge) + '</span>' +
+      '</div>' +
+      (wishHtml ? '<div class="g-mobile-wish">' + wishHtml + '</div>' : '') +
+    '</td>' +
+    '<td class="g-status"><div class="g-status-wrap">' + badge(state.status) + '<small>' + escapeHtml(statusSub(state)) + '</small></div></td>' +
     '<td class="g-actions"><div class="row-actions">' + shareAction(state) +
       '<details class="menu"><summary class="icon-btn" aria-label="More actions for ' + escapeHtml(g.guest_name) + '">⋯</summary>' +
       '<div class="menu-list">' +
@@ -483,11 +505,11 @@ function renderGuestList() {
 
   const line = $('guest-summary-line');
   if (line) {
-    const scrollHint = rows.length > 5 ? ' · Scroll table to view all' : '';
+    const scrollHint = rows.length > 5 ? '<span class="scroll-table-hint"> · Scroll table to view all</span>' : '';
     if (filter === 'replies') {
-      line.textContent = plural(rows.length, 'reply', 'replies') + ' received · Click messages to view full details' + scrollHint;
+      line.innerHTML = plural(rows.length, 'reply', 'replies') + ' received · Click messages to view full details' + scrollHint;
     } else {
-      line.textContent = stats.invitations
+      line.innerHTML = stats.invitations
         ? plural(stats.invitations, 'invitation', 'invitations') + ' · ' + plural(stats.invitedPeople, 'person', 'people') +
           (rows.length !== stats.invitations ? ' · showing ' + rows.length : '') + scrollHint
         : 'Nobody added yet';

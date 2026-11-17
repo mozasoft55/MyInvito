@@ -229,3 +229,36 @@ test('guest-list.html supports Family vs Personal invitation selection with appr
   assert.ok(guestListHtml.includes('value="personal"'), 'guest-list.html must have personal option');
   assert.ok(!guestListHtml.includes('family_members: 1,\n        category: \'Family\''), 'Must not hardcode family_members to 1 for families');
 });
+
+test('Mobile Dashboard Optimization: Filter pills single-line horizontal scroll, side-by-side top buttons, and compact guest cards', () => {
+  const css = fs.readFileSync('dashboard/style.css', 'utf8');
+  const appJs = fs.readFileSync('dashboard/app.js', 'utf8');
+
+  // 1. Filter pills: single-line horizontal scrollable bar
+  assert.ok(css.includes('.chips{display:flex;flex-wrap:nowrap;overflow-x:auto'), 'Chips must be flex nowrap and overflow-x: auto on mobile');
+  assert.ok(css.includes('.chips::-webkit-scrollbar{display:none}'), 'Scrollbar must be hidden on mobile chips');
+  assert.ok(css.includes('.chip{flex-shrink:0;white-space:nowrap}'), 'Chips must not shrink or wrap on mobile');
+
+  // 2. Top buttons & copy: side-by-side buttons and hidden scroll table hint
+  assert.ok(css.includes('.scroll-table-hint{display:none!important}'), 'Scroll table hint must be hidden on mobile');
+  assert.ok(appJs.includes('<span class="scroll-table-hint"> · Scroll table to view all</span>'), 'app.js must wrap scroll hint in class');
+  assert.ok(css.includes('.head-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}'), 'Head actions must be 2-column grid on mobile');
+  assert.ok(css.includes('.head-actions #open-add-family{grid-column:1;grid-row:1'), '+ Family Invitation must be on row 1 col 1');
+  assert.ok(css.includes('.head-actions #open-add-personal{grid-column:2;grid-row:1'), '+ Personal Invite must be on row 1 col 2 side-by-side');
+
+  // 3. Guest cards: Name & Number top-left, Status top-right, Phone + People count middle, WhatsApp + ... menu bottom
+  assert.ok(css.includes('grid-template-areas:"topleft topright" "middle middle" "actions actions"'), 'Guest cards must use grid layout with designated zones');
+  assert.ok(css.includes('.guest-table td.g-name{grid-area:topleft'), 'g-name must map to topleft');
+  assert.ok(css.includes('.guest-table td.g-status{grid-area:topright'), 'g-status must map to topright');
+  assert.ok(css.includes('.guest-table td.g-people{grid-area:middle'), 'g-people must map to middle');
+  assert.ok(css.includes('.guest-table td.g-actions{grid-area:actions'), 'g-actions must map to bottom actions');
+  assert.ok(css.includes('.guest-table td.g-idx{display:none!important}'), 'Desktop index column must be hidden on mobile');
+
+  // 4. Verify app.js markup structure for guestRow
+  assert.ok(appJs.includes('g-card-top-left'), 'app.js must include g-card-top-left');
+  assert.ok(appJs.includes('g-card-num'), 'app.js must include g-card-num');
+  assert.ok(appJs.includes('g-status-wrap'), 'app.js must include g-status-wrap');
+  assert.ok(appJs.includes('g-mobile-mid'), 'app.js must include g-mobile-mid');
+  assert.ok(appJs.includes('g-mid-phone'), 'app.js must include g-mid-phone');
+  assert.ok(appJs.includes('g-mid-people'), 'app.js must include g-mid-people');
+});
