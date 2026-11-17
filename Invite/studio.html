@@ -552,14 +552,23 @@ function buildWeddingState(tpl) {
   const city = F.address.value.trim() || 'Kolkata, India';
   const phone = F.rsvp_phone.value.replace(/\D/g, '') || '9477929927';
 
-  // Studio strictly displays standard default/placeholder assets (or in-studio test upload) to prevent customer photo leakage
+  // Studio displays in-studio test upload or user's uploaded photos for their selected template instance, preserving zero leakage across other templates
   const studioTestCouple = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('studio_test_couple_photo') : '') || '';
   const studioTestVenue = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('studio_test_venue_photo') : '') || '';
 
-  const bridePhoto = './assets/default-bride.webp';
-  const groomPhoto = './assets/default-groom.webp';
-  const couplePhoto = studioTestCouple || '';
-  const venuePhoto = studioTestVenue || '';
+  const activeTplId = tpl?.legacyId || tpl?.id || '';
+  const selectedTplId = lsGet('selected_invitation_template');
+  const isSelectedTemplate = Boolean(selectedTplId && (selectedTplId === activeTplId || selectedTplId === tpl?.id || selectedTplId === tpl?.legacyId));
+
+  const tplGroom = isSelectedTemplate ? (sessionStorage.getItem(`template_photo_${activeTplId}_groom`) || sessionStorage.getItem('onboard_session_groom_photo')) : '';
+  const tplBride = isSelectedTemplate ? (sessionStorage.getItem(`template_photo_${activeTplId}_bride`) || sessionStorage.getItem('onboard_session_bride_photo')) : '';
+  const tplCouple = isSelectedTemplate ? (sessionStorage.getItem(`template_photo_${activeTplId}_couple`) || sessionStorage.getItem('onboard_session_couple_photo')) : '';
+  const tplVenue = isSelectedTemplate ? (sessionStorage.getItem(`template_photo_${activeTplId}_venue`) || sessionStorage.getItem('onboard_session_venue_photo')) : '';
+
+  const bridePhoto = tplBride || './assets/default-bride.webp';
+  const groomPhoto = tplGroom || './assets/default-groom.webp';
+  const couplePhoto = studioTestCouple || tplCouple || '';
+  const venuePhoto = studioTestVenue || tplVenue || '';
 
   return {
     template_id: tpl?.id || '',

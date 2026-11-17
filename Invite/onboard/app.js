@@ -46,25 +46,60 @@ function persistUploadedPhoto(slot, result) {
   const dataUrl = result.dataUrl || result.previewUrl || '';
   if (!dataUrl) return;
 
+  const selectedTpl = form?.elements?.template_style?.value
+    || (typeof localStorage !== 'undefined' && localStorage.getItem('selected_invitation_template'))
+    || 'template-02';
+
   try {
     sessionStorage.setItem(`onboard_session_${slot}_photo`, dataUrl);
+    // Bind to template-scoped storage so it binds to the selected template instance
+    if (selectedTpl) {
+      localStorage.setItem(`template_photo_${selectedTpl}_${slot}`, dataUrl);
+      sessionStorage.setItem(`template_photo_${selectedTpl}_${slot}`, dataUrl);
+    }
+    // Immediately update primeecard_onboard_draft in localStorage
+    try {
+      const draft = JSON.parse(localStorage.getItem('primeecard_onboard_draft') || '{}');
+      draft[`${slot}_photo`] = dataUrl;
+      if (slot === 'couple') draft.hero_image = dataUrl;
+      if (slot === 'venue') draft.venue_image = dataUrl;
+      if (selectedTpl) draft.template_style = selectedTpl;
+      localStorage.setItem('primeecard_onboard_draft', JSON.stringify(draft));
+    } catch (_) {}
+
     // Purge any legacy un-scoped keys so customer photos never leak to other templates or Studio
     localStorage.removeItem(`wedding-${slot}-photo`);
     localStorage.removeItem(`wedding_${slot}_photo`);
     sessionStorage.removeItem(`wedding-${slot}-photo`);
     sessionStorage.removeItem(`onboard-${slot}-photo`);
   } catch (err) {
-    console.warn(`[Onboard] Could not persist ${slot} photo to sessionStorage:`, err);
+    console.warn(`[Onboard] Could not persist ${slot} photo to storage:`, err);
   }
 
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('wedding-photo-updated', { detail: { slot, dataUrl } }));
+    window.dispatchEvent(new CustomEvent('wedding-photo-updated', { detail: { slot, dataUrl, templateId: selectedTpl } }));
   }
 }
 
 function clearUploadedPhoto(slot) {
+  const selectedTpl = form?.elements?.template_style?.value
+    || (typeof localStorage !== 'undefined' && localStorage.getItem('selected_invitation_template'))
+    || 'template-02';
+
   try {
     sessionStorage.removeItem(`onboard_session_${slot}_photo`);
+    if (selectedTpl) {
+      localStorage.removeItem(`template_photo_${selectedTpl}_${slot}`);
+      sessionStorage.removeItem(`template_photo_${selectedTpl}_${slot}`);
+    }
+    try {
+      const draft = JSON.parse(localStorage.getItem('primeecard_onboard_draft') || '{}');
+      delete draft[`${slot}_photo`];
+      if (slot === 'couple') delete draft.hero_image;
+      if (slot === 'venue') delete draft.venue_image;
+      localStorage.setItem('primeecard_onboard_draft', JSON.stringify(draft));
+    } catch (_) {}
+
     localStorage.removeItem(`wedding-${slot}-photo`);
     localStorage.removeItem(`wedding_${slot}_photo`);
     sessionStorage.removeItem(`wedding-${slot}-photo`);
@@ -72,7 +107,7 @@ function clearUploadedPhoto(slot) {
   } catch (_) {}
 
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('wedding-photo-removed', { detail: { slot } }));
+    window.dispatchEvent(new CustomEvent('wedding-photo-removed', { detail: { slot, templateId: selectedTpl } }));
   }
 }
 
@@ -101,14 +136,19 @@ if (uploaderContainer) {
         sessionStorage.removeItem(`onboard-${s}-photo`);
       });
 
-      const savedGroom = sessionStorage.getItem('onboard_session_groom_photo');
-      const savedBride = sessionStorage.getItem('onboard_session_bride_photo');
-      const savedCouple = sessionStorage.getItem('onboard_session_couple_photo');
-      const savedVenue = sessionStorage.getItem('onboard_session_venue_photo');
-      if (savedGroom) photoUploader.loadExisting('groom', savedGroom, 'Saved');
-      if (savedBride) photoUploader.loadExisting('bride', savedBride, 'Saved');
-      if (savedCouple) photoUploader.loadExisting('couple', savedCouple, 'Saved');
-      if (savedVenue) photoUploader.loadExisting('venue', savedVenue, 'Saved');
+      let draftPhotos = null;
+      try {
+        draftPhotos = JSON.parse(localStorage.getItem('primeecard_onboard_draft') || '{}');
+      } catch (_) {}
+
+      const savedGroom = sessionStorage.getItem('onboard_session_groom_photo') || draftPhotos?.groom_photo;
+      const savedBride = sessionStorage.getItem('onboard_session_bride_photo') || draftPhotos?.bride_photo;
+      const savedCouple = sessionStorage.getItem('onboard_session_couple_photo') || draftPhotos?.couple_photo;
+      const savedVenue = sessionStorage.getItem('onboard_session_venue_photo') || draftPhotos?.venue_photo;
+      if (savedGroom) { sessionStorage.setItem('onboard_session_groom_photo', savedGroom); photoUploader.loadExisting('groom', savedGroom, 'Saved'); }
+      if (savedBride) { sessionStorage.setItem('onboard_session_bride_photo', savedBride); photoUploader.loadExisting('bride', savedBride, 'Saved'); }
+      if (savedCouple) { sessionStorage.setItem('onboard_session_couple_photo', savedCouple); photoUploader.loadExisting('couple', savedCouple, 'Saved'); }
+      if (savedVenue) { sessionStorage.setItem('onboard_session_venue_photo', savedVenue); photoUploader.loadExisting('venue', savedVenue, 'Saved'); }
     } catch (_) {}
   } catch (err) {
     console.warn('[Onboard] PhotoUploadComponent initialization deferred:', err);
@@ -1230,7 +1270,25 @@ eventList.addEventListener('click', event => {
 form.addEventListener('change', event => {
   if (event.target.name === 'payment_mode' || event.target.name === 'package_code') updatePaymentPanel();
   if (event.target.name === 'theme_name') renderThemePreview();
-  if (event.target.name === 'template_style') updateTemplatePreview();
+  if (event.target.name === 'template_style') {
+    const newTpl = event.target.value;
+    if (newTpl) {
+      try {
+        localStorage.setItem('selected_invitation_template', newTpl);
+        ['groom', 'bride', 'couple', 'venue'].forEach(slot => {
+          const p = sessionStorage.getItem(`onboard_session_${slot}_photo`) || photoUploader?.getResult(slot)?.dataUrl;
+          if (p) {
+            localStorage.setItem(`template_photo_${newTpl}_${slot}`, p);
+            sessionStorage.setItem(`template_photo_${newTpl}_${slot}`, p);
+          }
+        });
+        const draft = JSON.parse(localStorage.getItem('primeecard_onboard_draft') || '{}');
+        draft.template_style = newTpl;
+        localStorage.setItem('primeecard_onboard_draft', JSON.stringify(draft));
+      } catch (_) {}
+    }
+    updateTemplatePreview();
+  }
   if (event.target.name === 'consent') syncSubmitAvailability();
   if (event.target.name === 'invocation_preset') {
     const val = event.target.value;
@@ -1326,6 +1384,12 @@ form.addEventListener('submit', async event => {
       }
     }
 
+    // Reliable fallback: use compressed WebP data URL if direct upload returned empty or was skipped
+    groomPhoto = groomPhoto || photoUploader?.getResult('groom')?.dataUrl || sessionStorage.getItem('onboard_session_groom_photo') || '';
+    bridePhoto = bridePhoto || photoUploader?.getResult('bride')?.dataUrl || sessionStorage.getItem('onboard_session_bride_photo') || '';
+    couplePhoto = couplePhoto || photoUploader?.getResult('couple')?.dataUrl || sessionStorage.getItem('onboard_session_couple_photo') || '';
+    venuePhoto = venuePhoto || photoUploader?.getResult('venue')?.dataUrl || sessionStorage.getItem('onboard_session_venue_photo') || '';
+
     const rawFormData = Object.fromEntries(new FormData(form).entries());
     if (groomPhoto) rawFormData.groom_photo = groomPhoto;
     if (bridePhoto) rawFormData.bride_photo = bridePhoto;
@@ -1409,6 +1473,8 @@ form.addEventListener('submit', async event => {
       couple_photo: couplePhoto || rawFormData.couple_photo || '',
       venue_photo: venuePhoto || rawFormData.venue_photo || '',
       banquet_photo: venuePhoto || rawFormData.venue_photo || '',
+      hero_image: couplePhoto || rawFormData.couple_photo || '',
+      venue_image: venuePhoto || rawFormData.venue_photo || '',
       events: eventRows || [],
       payment_status: result.payment_status || 'Pending Verification',
       order_status: result.order_status || 'draft',
@@ -1462,6 +1528,33 @@ form.addEventListener('submit', async event => {
     if (venuePhoto) {
       try {
         localStorage.setItem('wedding_venue_photo_' + currentOrderReference, venuePhoto);
+      } catch (e) {}
+    }
+
+    // Persist template-scoped photos for this customer's selected template
+    const tplStyle = rawFormData.template_style || 'template-02';
+    if (groomPhoto) {
+      try {
+        localStorage.setItem(`template_photo_${tplStyle}_groom`, groomPhoto);
+        sessionStorage.setItem(`template_photo_${tplStyle}_groom`, groomPhoto);
+      } catch (e) {}
+    }
+    if (bridePhoto) {
+      try {
+        localStorage.setItem(`template_photo_${tplStyle}_bride`, bridePhoto);
+        sessionStorage.setItem(`template_photo_${tplStyle}_bride`, bridePhoto);
+      } catch (e) {}
+    }
+    if (couplePhoto) {
+      try {
+        localStorage.setItem(`template_photo_${tplStyle}_couple`, couplePhoto);
+        sessionStorage.setItem(`template_photo_${tplStyle}_couple`, couplePhoto);
+      } catch (e) {}
+    }
+    if (venuePhoto) {
+      try {
+        localStorage.setItem(`template_photo_${tplStyle}_venue`, venuePhoto);
+        sessionStorage.setItem(`template_photo_${tplStyle}_venue`, venuePhoto);
       } catch (e) {}
     }
 
@@ -1925,6 +2018,18 @@ function initFormDraftPersistence() {
           };
           updateSelectedMusicUi();
         }
+        const tpl = draft.template_style || form?.elements?.template_style?.value || 'template-02';
+        ['groom', 'bride', 'couple', 'venue'].forEach(slot => {
+          const photoUrl = draft[`${slot}_photo`];
+          if (photoUrl) {
+            sessionStorage.setItem(`onboard_session_${slot}_photo`, photoUrl);
+            localStorage.setItem(`template_photo_${tpl}_${slot}`, photoUrl);
+            sessionStorage.setItem(`template_photo_${tpl}_${slot}`, photoUrl);
+            if (photoUploader) {
+              photoUploader.loadExisting(slot, photoUrl, 'Draft Photo');
+            }
+          }
+        });
         if (draftBanner) draftBanner.hidden = true;
       } catch (e) {
         console.warn('[Onboard] Failed restoring draft:', e);
@@ -1955,7 +2060,18 @@ function initFormDraftPersistence() {
           formData.music_sub = selectedMusic.sub;
           formData.music_url = selectedMusic.src;
         }
-        if (formData.customer_name || formData.bride_name || formData.groom_name || formData.phone) {
+        const tpl = formData.template_style || form?.elements?.template_style?.value || 'template-02';
+        ['groom', 'bride', 'couple', 'venue'].forEach(slot => {
+          const p = sessionStorage.getItem(`onboard_session_${slot}_photo`)
+            || photoUploader?.getResult(slot)?.dataUrl
+            || sessionStorage.getItem(`template_photo_${tpl}_${slot}`)
+            || '';
+          if (p) formData[`${slot}_photo`] = p;
+        });
+        if (formData.couple_photo) formData.hero_image = formData.couple_photo;
+        if (formData.venue_photo) formData.venue_image = formData.venue_photo;
+
+        if (formData.customer_name || formData.bride_name || formData.groom_name || formData.phone || formData.groom_photo || formData.bride_photo || formData.couple_photo || formData.venue_photo) {
           localStorage.setItem('primeecard_onboard_draft', JSON.stringify(formData));
         }
       } catch (_) {}

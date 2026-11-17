@@ -454,15 +454,34 @@
     // 2. FETCH WEDDING DATA FROM SUPABASE
     async function initWeddingData() {
       try {
-        if (!rawSlug) {
-          const inviteCode = (currentParams.get('code') || '').trim();
-          if (!inviteCode) throw new Error('Open this page from a saved wedding or invitation link to load its Supabase data.');
-          const invite = await fetchInvitationByCode(inviteCode);
-          weddingRecord = invite.wedding;
-        } else {
-          const data = await fetchWeddingById(rawSlug);
-          weddingRecord = data.wedding;
-          localStorage.setItem(STORAGE_KEY, rawSlug);
+        const orderParam = (currentParams.get('order') || '').trim();
+        if (orderParam) {
+          try {
+            weddingRecord = JSON.parse(
+              localStorage.getItem('primeecard_order_' + orderParam)
+              || localStorage.getItem('primeecard_last_order')
+              || 'null'
+            );
+          } catch (_) {}
+        }
+        if (!weddingRecord) {
+          if (!rawSlug) {
+            const inviteCode = (currentParams.get('code') || '').trim();
+            if (!inviteCode) {
+              try {
+                weddingRecord = JSON.parse(localStorage.getItem('primeecard_last_order') || 'null');
+              } catch (_) {}
+            }
+            if (!weddingRecord) {
+              if (!inviteCode) throw new Error('Open this page from a saved wedding or invitation link to load its Supabase data.');
+              const invite = await fetchInvitationByCode(inviteCode);
+              weddingRecord = invite.wedding;
+            }
+          } else {
+            const data = await fetchWeddingById(rawSlug);
+            weddingRecord = data.wedding;
+            localStorage.setItem(STORAGE_KEY, rawSlug);
+          }
         }
 
         if (!weddingRecord) throw new Error('Supabase did not return wedding data for this link.');
@@ -487,7 +506,14 @@
       const guestName = guestInput.value.trim() || 'Guest';
       const destUrl = new URL(cardBaseRoot);
       const inviteCode = inviteCodeInput.value.trim();
+      const orderParam = (currentParams.get('order') || '').trim();
       if (inviteCode) destUrl.searchParams.set('code', inviteCode);
+      else if (orderParam) {
+        destUrl.searchParams.set('order', orderParam);
+        destUrl.searchParams.set('preview', 'true');
+      }
+      const tpl = weddingRecord?.template_style || weddingRecord?.template_id;
+      if (tpl) destUrl.searchParams.set('template', tpl);
       destUrl.searchParams.set('lang', languageInput.value);
       return {
         url: destUrl.toString().replace(/%20/g, '+'),
@@ -531,7 +557,8 @@
       guestListUrl.searchParams.set('lang', languageInput.value);
       btnGuestList.href = guestListUrl.toString();
 
-      if (!inviteCodeInput.value.trim()) {
+      const orderParam = (currentParams.get('order') || '').trim();
+      if (!inviteCodeInput.value.trim() && !orderParam) {
         previewDisplay.textContent = 'Enter the invite code saved in Supabase.';
         btnViewCard.href = '#';
         btnWhatsApp.href = '#';
@@ -550,10 +577,12 @@
     inviteCodeInput.addEventListener('input', refreshState);
     languageInput.addEventListener('change', refreshState);
     btnWhatsApp.addEventListener('click', event => {
-      if (!weddingRecord || !inviteCodeInput.value.trim()) event.preventDefault();
+      const orderParam = (currentParams.get('order') || '').trim();
+      if (!weddingRecord || (!inviteCodeInput.value.trim() && !orderParam)) event.preventDefault();
     });
     btnViewCard.addEventListener('click', event => {
-      if (!weddingRecord || !inviteCodeInput.value.trim()) event.preventDefault();
+      const orderParam = (currentParams.get('order') || '').trim();
+      if (!weddingRecord || (!inviteCodeInput.value.trim() && !orderParam)) event.preventDefault();
     });
 
     btnCopy.addEventListener('click', async () => {

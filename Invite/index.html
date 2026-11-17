@@ -2005,7 +2005,13 @@
           console.warn('Backend lookup fallback to local order / preview:', fetchErr?.message || fetchErr);
           let localOrder = null;
           try {
-            localOrder = JSON.parse(localStorage.getItem('primeecard_last_order') || localStorage.getItem('primeecard_onboard_draft') || 'null');
+            const ordRef = p.get('order');
+            localOrder = JSON.parse(
+              (ordRef ? localStorage.getItem('primeecard_order_' + ordRef) : null)
+              || localStorage.getItem('primeecard_last_order')
+              || localStorage.getItem('primeecard_onboard_draft')
+              || 'null'
+            );
           } catch (_) {}
 
           const bride = localOrder?.bride_name || 'Sanjukta';
@@ -2043,7 +2049,10 @@
               phone: phone,
               bride_photo: localOrder?.bride_photo || '',
               groom_photo: localOrder?.groom_photo || '',
-              venue_photo: localOrder?.venue_photo || '',
+              couple_photo: localOrder?.couple_photo || localOrder?.hero_image || '',
+              venue_photo: localOrder?.venue_photo || localOrder?.venue_image || '',
+              hero_image: localOrder?.couple_photo || localOrder?.hero_image || '',
+              venue_image: localOrder?.venue_photo || localOrder?.venue_image || '',
               music_url: chosenMusicUrl,
               music_title: chosenMusicTitle,
               music_id: chosenMusicId,
@@ -2070,28 +2079,39 @@
           } catch { return ''; }
         };
 
-        const orderRef = wedding.order_reference || '';
+        const orderRef = wedding.order_reference || p.get('order') || '';
+        const currentTpl = templateId || wedding.template_id || 'template-02';
+        const selectedTpl = getStored('selected_invitation_template') || localOrder?.template_style || '';
+        const isSelectedTemplate = !selectedTpl || selectedTpl === currentTpl;
 
         const couplePhoto = wedding.couple_photo
           || wedding.hero_image
           || (orderRef ? getStored('wedding_couple_photo_' + orderRef) : '')
+          || getStored(`template_photo_${currentTpl}_couple`)
+          || (isSelectedTemplate ? getStored('onboard_session_couple_photo') : '')
           || '';
 
         const venuePhoto = wedding.venue_photo
           || wedding.venue_image
           || (orderRef ? getStored('wedding_venue_photo_' + orderRef) : '')
+          || getStored(`template_photo_${currentTpl}_venue`)
+          || (isSelectedTemplate ? getStored('onboard_session_venue_photo') : '')
           || '';
 
         const bridePhoto = wedding.bride_photo
           || wedding.bride_image
           || wedding.photo_bride
           || (orderRef ? getStored('wedding_bride_photo_' + orderRef) : '')
+          || getStored(`template_photo_${currentTpl}_bride`)
+          || (isSelectedTemplate ? getStored('onboard_session_bride_photo') : '')
           || '';
 
         const groomPhoto = wedding.groom_photo
           || wedding.groom_image
           || wedding.photo_groom
           || (orderRef ? getStored('wedding_groom_photo_' + orderRef) : '')
+          || getStored(`template_photo_${currentTpl}_groom`)
+          || (isSelectedTemplate ? getStored('onboard_session_groom_photo') : '')
           || '';
 
         wedding.bride_photo = bridePhoto || wedding.bride_photo;
