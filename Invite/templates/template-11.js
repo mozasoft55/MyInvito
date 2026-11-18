@@ -175,15 +175,14 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   const guestDisplayName = isFamily && !hasFamilyInName ? `${rawGuestName} & Family` : rawGuestName;
 
   const guestBadge = isFamily
-    ? (partySize > 1 ? `Family Invitation · ${partySize} Persons` : 'Family Invitation')
+    ? 'Family'
     : (partySize > 1 ? `Personal Invitation · ${partySize} Persons` : 'Personal Invitation · 1 Person');
 
   const brideName = clean(wedding.bride_name) || 'Pari';
   const groomName = clean(wedding.groom_name) || 'Param';
 
-  // Father only - Mother name removed per request
-  const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
-  const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
+  const brideParents = clean(wedding.bride_parents) || clean(wedding.bride_father) || '';
+  const groomParents = clean(wedding.groom_parents) || clean(wedding.groom_father) || '';
 
   const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || '';
   const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || '';
@@ -205,39 +204,46 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
     || clean(wedding.location)
     || clean(wedding.city_address)
     || clean(wedding.city)
-    || 'Grand Heritage Avenue, Kolkata';
+    || '';
 
-  const mapLink = safeUrl(wedding.map_url) || `https://maps.google.com/?q=${encodeURIComponent(venueName + ' ' + venueAddr)}`;
+  const mapLink = safeUrl(wedding.map_url)
+    || (venueName || venueAddr ? `https://maps.google.com/?q=${encodeURIComponent([venueName, venueAddr].filter(Boolean).join(', '))}` : '');
   const calLink = buildGoogleCalendarUrl({ wedding, guest });
 
   const orderRef = clean(wedding.order_reference) || clean(wedding.ref) || '';
   const isT11Match = !wedding.template_id || wedding.template_id === 'template-11' || wedding.template_id === '11';
 
   // Photos
-  const bridePhoto = (isT11Match ? (safeImg(wedding.bride_photo)
+  const bridePhoto = safeImg(wedding.bride_photo)
+    || safeImg(wedding.bride_photo_url)
     || safeImg(wedding.bride_image)
     || safeImg(wedding.bridePhoto)
     || safeImg(wedding.photo_bride)
     || safeImg(wedding.bride_img)
+    || safeImg(wedding.image2)
     || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '')
-    || safeImg(wedding.couple_photo)) : '')
+    || safeImg(wedding.couple_photo)
     || './assets/template-06-bride.webp';
 
-  const groomPhoto = (isT11Match ? (safeImg(wedding.groom_photo)
+  const groomPhoto = safeImg(wedding.groom_photo)
+    || safeImg(wedding.groom_photo_url)
     || safeImg(wedding.groom_image)
     || safeImg(wedding.groomPhoto)
     || safeImg(wedding.photo_groom)
     || safeImg(wedding.groom_img)
+    || safeImg(wedding.image1)
     || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')
-    || safeImg(wedding.couple_photo)) : '')
+    || safeImg(wedding.couple_photo)
     || './assets/template-06-groom.webp';
 
-  const banquetPhoto = (isT11Match ? (safeImg(wedding.venue_photo)
+  const banquetPhoto = safeImg(wedding.venue_photo)
+    || safeImg(wedding.venue_photo_url)
     || safeImg(wedding.banquet_photo)
     || safeImg(wedding.venue_image)
     || safeImg(wedding.banquet_image)
     || safeImg(wedding.photo_venue)
-    || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')) : '')
+    || safeImg(wedding.image4)
+    || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')
     || './assets/template-06-shubho-bibaho.webp';
 
   // Normalized Events
@@ -1205,9 +1211,11 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             </div>
             <div class="t11-role-badge">Groom</div>
             <div class="t11-name">${esc(groomName)}</div>
-            <div class="t11-rel">s/o</div>
-            <div class="t11-par">${esc(groomFather)}</div>
-            ${brideAddr || groomAddr ? (groomAddr ? `<div class="t11-addr">${formatAddress(groomAddr)}</div>` : '') : ''}
+            ${groomParents ? `
+              <div class="t11-rel">s/o</div>
+              <div class="t11-par">${esc(groomParents)}</div>
+            ` : ''}
+            ${groomAddr ? `<div class="t11-addr">${formatAddress(groomAddr)}</div>` : ''}
           </div>
           <!-- Bride on Right -->
           <div class="t11-side">
@@ -1216,9 +1224,11 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             </div>
             <div class="t11-role-badge">Bride</div>
             <div class="t11-name">${esc(brideName)}</div>
-            <div class="t11-rel">d/o</div>
-            <div class="t11-par">${esc(brideFather)}</div>
-            ${brideAddr || groomAddr ? (brideAddr ? `<div class="t11-addr">${formatAddress(brideAddr)}</div>` : '') : ''}
+            ${brideParents ? `
+              <div class="t11-rel">d/o</div>
+              <div class="t11-par">${esc(brideParents)}</div>
+            ` : ''}
+            ${brideAddr ? `<div class="t11-addr">${formatAddress(brideAddr)}</div>` : ''}
           </div>
           ` : `
           <!-- Bride on Left -->
@@ -1228,9 +1238,11 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             </div>
             <div class="t11-role-badge">Bride</div>
             <div class="t11-name">${esc(brideName)}</div>
-            <div class="t11-rel">d/o</div>
-            <div class="t11-par">${esc(brideFather)}</div>
-            ${brideAddr || groomAddr ? (brideAddr ? `<div class="t11-addr">${formatAddress(brideAddr)}</div>` : '') : ''}
+            ${brideParents ? `
+              <div class="t11-rel">d/o</div>
+              <div class="t11-par">${esc(brideParents)}</div>
+            ` : ''}
+            ${brideAddr ? `<div class="t11-addr">${formatAddress(brideAddr)}</div>` : ''}
           </div>
           <!-- Groom on Right -->
           <div class="t11-side">
@@ -1239,9 +1251,11 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
             </div>
             <div class="t11-role-badge">Groom</div>
             <div class="t11-name">${esc(groomName)}</div>
-            <div class="t11-rel">s/o</div>
-            <div class="t11-par">${esc(groomFather)}</div>
-            ${brideAddr || groomAddr ? (groomAddr ? `<div class="t11-addr">${formatAddress(groomAddr)}</div>` : '') : ''}
+            ${groomParents ? `
+              <div class="t11-rel">s/o</div>
+              <div class="t11-par">${esc(groomParents)}</div>
+            ` : ''}
+            ${groomAddr ? `<div class="t11-addr">${formatAddress(groomAddr)}</div>` : ''}
           </div>
           `}
         </div>

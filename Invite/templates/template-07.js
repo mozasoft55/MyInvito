@@ -929,7 +929,7 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
   const guestName = hasFamily && !hasFamilyInName ? `${rawGuestName} & Family` : rawGuestName;
 
   const guestBadgeText = hasFamily
-    ? (guestPersons > 1 ? `Family Invitation · ${guestPersons} Persons` : 'Family Invitation')
+    ? 'Family'
     : (guestPersons > 1 ? `Personal Invitation · ${guestPersons} Persons` : 'Personal Invitation · 1 Person');
 
   // Invocation
@@ -939,9 +939,9 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
 
   // Palace Venue
   const venueTitleText = clean(w.venue) || clean(w.venue_title) || clean(w.hall) || clean(w.banquet) || 'The Royal Heritage Banquet Palace';
-  const venueAddress = clean(w.address) || clean(w.city) || '14 Palace Courtyard Road, Alipore, Kolkata — 700027';
-  const venueComment = clean(w.comment && w.comment !== clean(w.venue) ? w.comment : (clean(w.venue_comment) || clean(w.note) || 'Gate No. 2 • Complimentary Royal Valet Parking Available for All Guests'));
-  const mapUrl = safeUrl(w.map_url) || (venueTitleText ? esc(`https://maps.google.com/?q=${encodeURIComponent(venueTitleText + ', ' + venueAddress)}`) : '');
+  const venueAddress = clean(w.address) || clean(w.venue_address) || clean(w.city) || '';
+  const venueComment = clean(w.comment && w.comment !== clean(w.venue) ? w.comment : (clean(w.venue_comment) || clean(w.note) || ''));
+  const mapUrl = safeUrl(w.map_url) || (venueTitleText ? esc(`https://maps.google.com/?q=${encodeURIComponent(venueTitleText + (venueAddress ? ', ' + venueAddress : ''))}`) : '');
 
   // Wedding Date & Time
   const day = dparts(w.date);
@@ -962,17 +962,19 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
   })}`);
 
   // Parents & Copy
-  const brideParents = clean(w.bride_parents);
-  const groomParents = clean(w.groom_parents);
+  const brideParents = clean(w.bride_parents) || clean(w.bride_father);
+  const groomParents = clean(w.groom_parents) || clean(w.groom_father);
+  const brideAddr = clean(w.bride_address) || clean(w.bride_city) || '';
+  const groomAddr = clean(w.groom_address) || clean(w.groom_city) || '';
   const inviteText = clean(w.invite_text) || 'Request the pleasure of your company as they begin their sacred journey together.';
   const poem = clean(w.poem) || 'Two souls united by destiny, blessed with eternal love, walking seven sacred steps toward a lifetime of happiness.';
   const families = clean(w.families) || `The ${rawBride.split(/\s+/).pop() || 'Bride'} & ${rawGroom.split(/\s+/).pop() || 'Groom'} Families`;
 
   // Photos & Assets
-  const heroCoupleImg = safeImg(w.couple_photo) || safeImg(w.hero_image) || safeImg(storedCouple) || `${assetBase}template-06-couple.webp`;
-  const brideImg = safeImg(w.bride_photo) || safeImg(storedBride) || `${assetBase}template-06-bride.webp`;
-  const groomImg = safeImg(w.groom_photo) || safeImg(storedGroom) || `${assetBase}template-06-groom.webp`;
-  const venueImg = safeImg(w.venue_photo) || safeImg(storedVenue) || `${assetBase}template-06-palace.jpg`;
+  const heroCoupleImg = safeImg(w.couple_photo) || safeImg(w.couple_photo_url) || safeImg(w.hero_image) || safeImg(w.image3) || safeImg(storedCouple) || `${assetBase}template-06-couple.webp`;
+  const brideImg = safeImg(w.bride_photo) || safeImg(w.bride_photo_url) || safeImg(w.bride_image) || safeImg(w.image2) || safeImg(storedBride) || `${assetBase}template-06-bride.webp`;
+  const groomImg = safeImg(w.groom_photo) || safeImg(w.groom_photo_url) || safeImg(w.groom_image) || safeImg(w.image1) || safeImg(storedGroom) || `${assetBase}template-06-groom.webp`;
+  const venueImg = safeImg(w.venue_photo) || safeImg(w.venue_photo_url) || safeImg(w.banquet_photo) || safeImg(w.image4) || safeImg(storedVenue) || `${assetBase}template-06-palace.jpg`;
   const archImg = './assets/template-07-arch.webp';
   const doorClosedImg = './assets/template-07-gate-closed.webp';
 
@@ -1251,7 +1253,7 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
         </h1>
         ${(brideParents || groomParents) ? `
           <p class="t07-hero-parents">
-            ${brideParents ? `Daughter of ${esc(brideParents)}` : ''} ${(brideParents && groomParents) ? '•' : ''} ${groomParents ? `Son of ${esc(groomParents)}` : ''}
+            ${brideParents ? `Daughter of ${esc(brideParents)}${brideAddr ? `, ${esc(brideAddr)}` : ''}` : ''} ${(brideParents && groomParents) ? '•' : ''} ${groomParents ? `Son of ${esc(groomParents)}${groomAddr ? `, ${esc(groomAddr)}` : ''}` : ''}
           </p>
         ` : ''}
         <p class="t07-hero-copy">

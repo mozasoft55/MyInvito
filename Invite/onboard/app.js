@@ -41,6 +41,35 @@ let designConfigurationLoaded = false;
 let cashRequestMode = false;
 let busy = false;
 
+// ── Safe Storage Wrapper with Quota Protection ────────────────────────
+export function safeStorageSet(storage, key, value) {
+  try {
+    storage.setItem(key, value);
+    return true;
+  } catch (err) {
+    if (err && (err.name === 'QuotaExceededError' || err.code === 22 || err.code === 1014)) {
+      console.warn(`[Storage] Storage quota reached writing "${key}". Evicting stale caches...`);
+      try {
+        const activeTpl = typeof localStorage !== 'undefined' ? localStorage.getItem('selected_invitation_template') : '';
+        for (let i = (storage.length - 1); i >= 0; i--) {
+          const k = storage.key(i);
+          if (k && k.startsWith('template_photo_') && (!activeTpl || !k.includes(`_${activeTpl}_`))) {
+            storage.removeItem(k);
+          }
+          if (k && (k.startsWith('wedding-') || k.startsWith('onboard-'))) {
+            storage.removeItem(k);
+          }
+        }
+        storage.setItem(key, value);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+    return false;
+  }
+}
+
 // ── Photo Upload & Compression Pipeline ──────────────────────────────
 function persistUploadedPhoto(slot, result) {
   const dataUrl = result.dataUrl || result.previewUrl || '';
@@ -54,7 +83,7 @@ function persistUploadedPhoto(slot, result) {
     sessionStorage.setItem(`onboard_session_${slot}_photo`, dataUrl);
     // Bind to template-scoped storage so it binds to the selected template instance
     if (selectedTpl) {
-      localStorage.setItem(`template_photo_${selectedTpl}_${slot}`, dataUrl);
+      safeStorageSet(localStorage, `template_photo_${selectedTpl}_${slot}`, dataUrl);
       sessionStorage.setItem(`template_photo_${selectedTpl}_${slot}`, dataUrl);
     }
     // Immediately update primeecard_onboard_draft in localStorage
@@ -64,7 +93,7 @@ function persistUploadedPhoto(slot, result) {
       if (slot === 'couple') draft.hero_image = dataUrl;
       if (slot === 'venue') draft.venue_image = dataUrl;
       if (selectedTpl) draft.template_style = selectedTpl;
-      localStorage.setItem('primeecard_onboard_draft', JSON.stringify(draft));
+      safeStorageSet(localStorage, 'primeecard_onboard_draft', JSON.stringify(draft));
     } catch (_) {}
 
     // Purge any legacy un-scoped keys so customer photos never leak to other templates or Studio
@@ -97,7 +126,7 @@ function clearUploadedPhoto(slot) {
       delete draft[`${slot}_photo`];
       if (slot === 'couple') delete draft.hero_image;
       if (slot === 'venue') delete draft.venue_image;
-      localStorage.setItem('primeecard_onboard_draft', JSON.stringify(draft));
+      safeStorageSet(localStorage, 'primeecard_onboard_draft', JSON.stringify(draft));
     } catch (_) {}
 
     localStorage.removeItem(`wedding-${slot}-photo`);
@@ -157,10 +186,21 @@ if (uploaderContainer) {
 
 async function uploadPhotoToSupabase(file, prefix = 'photo') {
   if (!file) return '';
+
+  // 1. If already a remote URL, return immediately (stops duplicate storage creation)
+  if (typeof file === 'string' && /^https?:\/\//i.test(file)) {
+    return file;
+  }
+
+  // 2. Check if component already cached uploaded URL
+  if (photoUploader?.state?.[prefix]?.uploadedUrl) {
+    return photoUploader.state[prefix].uploadedUrl;
+  }
+
   const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
     || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
   const bucket = 'wedding-photos';
-  const cleanName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
+  const cleanName = `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.webp`;
   const uploadUrl = `${supabaseBase}/storage/v1/object/${bucket}/${cleanName}`;
 
   try {
@@ -169,18 +209,24 @@ async function uploadPhotoToSupabase(file, prefix = 'photo') {
       headers: {
         'apikey': ONBOARDING_CONFIG.publishableKey,
         'Authorization': `Bearer ${ONBOARDING_CONFIG.publishableKey}`,
-        'Content-Type': 'image/webp'
+        'Content-Type': 'image/webp',
+        'x-upsert': 'true'
       },
       body: file
     });
     if (res.ok) {
-      return `${supabaseBase}/storage/v1/object/public/${bucket}/${cleanName}`;
+      const publicUrl = `${supabaseBase}/storage/v1/object/public/${bucket}/${cleanName}`;
+      if (photoUploader?.state?.[prefix]) {
+        photoUploader.state[prefix].uploadedUrl = publicUrl;
+      }
+      return publicUrl;
     }
   } catch (err) {
     console.warn('[Onboard] Supabase direct storage upload failed, using persistent data URL:', err);
   }
 
   // Fallback: Convert compressed WebP blob to Base64 data URL (<250KB)
+  if (typeof file === 'string') return file;
   return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result || '');
@@ -1267,24 +1313,39 @@ eventList.addEventListener('click', event => {
   }
 });
 
+function updateCoupleCardsOrder(order) {
+  const grid = document.getElementById('couple-cards-grid') || document.querySelector('.couple-cards-grid');
+  if (grid) {
+    grid.setAttribute('data-order', order || 'groom_first');
+  }
+}
+
 form.addEventListener('change', event => {
+  if (event.target.name === 'name_order') updateCoupleCardsOrder(event.target.value);
   if (event.target.name === 'payment_mode' || event.target.name === 'package_code') updatePaymentPanel();
   if (event.target.name === 'theme_name') renderThemePreview();
   if (event.target.name === 'template_style') {
     const newTpl = event.target.value;
+    const oldTpl = typeof localStorage !== 'undefined' ? localStorage.getItem('selected_invitation_template') : '';
     if (newTpl) {
       try {
         localStorage.setItem('selected_invitation_template', newTpl);
+        sessionStorage.setItem('selected_invitation_template', newTpl);
         ['groom', 'bride', 'couple', 'venue'].forEach(slot => {
           const p = sessionStorage.getItem(`onboard_session_${slot}_photo`) || photoUploader?.getResult(slot)?.dataUrl;
           if (p) {
-            localStorage.setItem(`template_photo_${newTpl}_${slot}`, p);
+            safeStorageSet(localStorage, `template_photo_${newTpl}_${slot}`, p);
             sessionStorage.setItem(`template_photo_${newTpl}_${slot}`, p);
+            // Evict old template-scoped photo to prevent cross-template leakage & storage bloat
+            if (oldTpl && oldTpl !== newTpl) {
+              localStorage.removeItem(`template_photo_${oldTpl}_${slot}`);
+              sessionStorage.removeItem(`template_photo_${oldTpl}_${slot}`);
+            }
           }
         });
         const draft = JSON.parse(localStorage.getItem('primeecard_onboard_draft') || '{}');
         draft.template_style = newTpl;
-        localStorage.setItem('primeecard_onboard_draft', JSON.stringify(draft));
+        safeStorageSet(localStorage, 'primeecard_onboard_draft', JSON.stringify(draft));
       } catch (_) {}
     }
     updateTemplatePreview();
@@ -1450,15 +1511,19 @@ form.addEventListener('submit', async event => {
       customer_name: rawFormData.customer_name || '',
       bride_name: rawFormData.bride_name || '',
       groom_name: rawFormData.groom_name || '',
-      bride_father: rawFormData.bride_father || '',
-      groom_father: rawFormData.groom_father || '',
-      bride_address: rawFormData.bride_address || rawFormData.city || '',
-      groom_address: rawFormData.groom_address || rawFormData.city || '',
+      bride_parents: rawFormData.bride_parents || rawFormData.bride_father || '',
+      groom_parents: rawFormData.groom_parents || rawFormData.groom_father || '',
+      bride_father: rawFormData.bride_parents || rawFormData.bride_father || '',
+      groom_father: rawFormData.groom_parents || rawFormData.groom_father || '',
+      bride_address: rawFormData.bride_address || '',
+      groom_address: rawFormData.groom_address || '',
+      name_order: rawFormData.name_order || 'groom_first',
       venue: rawFormData.venue || rawFormData.venue_name || rawFormData.venue_title || '',
       venue_name: rawFormData.venue || rawFormData.venue_name || '',
       venue_title: rawFormData.venue_title || '',
       banquet_name: rawFormData.venue || rawFormData.banquet_name || '',
       address: rawFormData.address || rawFormData.location || '',
+      venue_address: rawFormData.address || rawFormData.location || '',
       city: rawFormData.city || '',
       map_url: rawFormData.map_url || '',
       event_date: rawFormData.event_date || '',
@@ -1511,51 +1576,35 @@ form.addEventListener('submit', async event => {
 
     // Persist photo URLs strictly scoped to currentOrderReference (never in global un-scoped keys)
     if (groomPhoto) {
-      try {
-        localStorage.setItem('wedding_groom_photo_' + currentOrderReference, groomPhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, 'wedding_groom_photo_' + currentOrderReference, groomPhoto);
     }
     if (bridePhoto) {
-      try {
-        localStorage.setItem('wedding_bride_photo_' + currentOrderReference, bridePhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, 'wedding_bride_photo_' + currentOrderReference, bridePhoto);
     }
     if (couplePhoto) {
-      try {
-        localStorage.setItem('wedding_couple_photo_' + currentOrderReference, couplePhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, 'wedding_couple_photo_' + currentOrderReference, couplePhoto);
     }
     if (venuePhoto) {
-      try {
-        localStorage.setItem('wedding_venue_photo_' + currentOrderReference, venuePhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, 'wedding_venue_photo_' + currentOrderReference, venuePhoto);
     }
 
     // Persist template-scoped photos for this customer's selected template
     const tplStyle = rawFormData.template_style || 'template-02';
     if (groomPhoto) {
-      try {
-        localStorage.setItem(`template_photo_${tplStyle}_groom`, groomPhoto);
-        sessionStorage.setItem(`template_photo_${tplStyle}_groom`, groomPhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, `template_photo_${tplStyle}_groom`, groomPhoto);
+      sessionStorage.setItem(`template_photo_${tplStyle}_groom`, groomPhoto);
     }
     if (bridePhoto) {
-      try {
-        localStorage.setItem(`template_photo_${tplStyle}_bride`, bridePhoto);
-        sessionStorage.setItem(`template_photo_${tplStyle}_bride`, bridePhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, `template_photo_${tplStyle}_bride`, bridePhoto);
+      sessionStorage.setItem(`template_photo_${tplStyle}_bride`, bridePhoto);
     }
     if (couplePhoto) {
-      try {
-        localStorage.setItem(`template_photo_${tplStyle}_couple`, couplePhoto);
-        sessionStorage.setItem(`template_photo_${tplStyle}_couple`, couplePhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, `template_photo_${tplStyle}_couple`, couplePhoto);
+      sessionStorage.setItem(`template_photo_${tplStyle}_couple`, couplePhoto);
     }
     if (venuePhoto) {
-      try {
-        localStorage.setItem(`template_photo_${tplStyle}_venue`, venuePhoto);
-        sessionStorage.setItem(`template_photo_${tplStyle}_venue`, venuePhoto);
-      } catch (e) {}
+      safeStorageSet(localStorage, `template_photo_${tplStyle}_venue`, venuePhoto);
+      sessionStorage.setItem(`template_photo_${tplStyle}_venue`, venuePhoto);
     }
 
     // Clean up temporary session upload keys and purge any legacy un-scoped keys
@@ -2002,8 +2051,14 @@ function initFormDraftPersistence() {
         for (const [key, val] of Object.entries(draft)) {
           if (form.elements[key] && val !== undefined && val !== null) {
             form.elements[key].value = val;
+            if (typeof RadioNodeList !== 'undefined' && form.elements[key] instanceof RadioNodeList) {
+              for (const radio of form.elements[key]) {
+                if (radio.value === val) radio.checked = true;
+              }
+            }
           }
         }
+        if (draft.name_order) updateCoupleCardsOrder(draft.name_order);
         if (draft.events && Array.isArray(draft.events) && draft.events.length) {
           eventRows = draft.events;
           renderEvents();
@@ -2088,3 +2143,4 @@ initActiveOrderDetection();
 initTrackOrderModal();
 initFormDraftPersistence();
 initMusicPicker();
+updateCoupleCardsOrder(form.elements.name_order?.value || 'groom_first');

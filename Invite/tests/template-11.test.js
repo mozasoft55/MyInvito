@@ -37,7 +37,8 @@ test('template-11 renders palace gate opening with lights-off, couple names, and
   assert.match(html, /Purushottam/);
   assert.match(html, /Sanjukta/);
   assert.match(html, /Roy Family/);
-  assert.match(html, /Family Invitation · 4 Persons/);
+  assert.match(html, /Family/);
+  assert.doesNotMatch(html, /4 Persons/);
   assert.match(html, /Gaye Holud/);
   assert.match(html, /Shubho Bibaho/);
   assert.match(html, /dates-section/);

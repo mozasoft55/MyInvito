@@ -9,6 +9,16 @@ function cleanText(value, maxLength) {
   return String(value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim().slice(0, maxLength);
 }
 
+function cleanPhoto(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('data:image/') || trimmed.startsWith('https://') || trimmed.startsWith('http://') || trimmed.startsWith('./') || trimmed.startsWith('/') || trimmed.startsWith('blob:')) {
+    return trimmed.slice(0, 2097152);
+  }
+  return trimmed.slice(0, 4000);
+}
+
 function isValidIsoDate(value) {
   const parts = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!parts) return false;
@@ -60,6 +70,11 @@ export function normalizeWeddingRecord(record) {
     .filter(([, value]) => /^#[\da-f]{6}$/i.test(String(value || ''))));
   if (color) themeColors.primary = color;
 
+  const groomPhoto = cleanPhoto(record.groom_photo || record.groom_photo_url || record.groom_image || record.image1 || record.photo_groom);
+  const bridePhoto = cleanPhoto(record.bride_photo || record.bride_photo_url || record.bride_image || record.image2 || record.photo_bride);
+  const couplePhoto = cleanPhoto(record.couple_photo || record.couple_photo_url || record.hero_image || record.image3 || record.couple_image);
+  const venuePhoto = cleanPhoto(record.venue_photo || record.venue_photo_url || record.venue_image || record.banquet_photo || record.image4 || record.banquet_image);
+
   return {
     ...record,
     bride_name: cleanText(record.bride_name || names[0], 100),
@@ -69,7 +84,10 @@ export function normalizeWeddingRecord(record) {
     date: normalizeDate(record.event_date || record.date),
     time: normalizeTime(record.time),
     venue: cleanText(record.venue, 180),
+    venue_name: cleanText(record.venue_name || record.venue || record.banquet_name, 180),
+    venue_title: cleanText(record.venue_title, 120),
     address: cleanText(record.address, 500),
+    venue_address: cleanText(record.venue_address || record.address, 500),
     map_url: cleanText(record.map_url, 2000),
     rsvp_contacts: cleanText(record.rsvp_contacts, 1200),
     rsvp_number: cleanText(record.rsvp_number, 40).replace(/[^\d+]/g, ''),
@@ -80,8 +98,27 @@ export function normalizeWeddingRecord(record) {
     template_id: cleanText(record.template_style || record.template_id, 30) || 'template-02',
     theme: cleanText(record.theme_name || record.theme, 40),
     name_order: cleanText(record.name_order || record.couple_order, 30) || 'groom_first',
+    bride_parents: cleanText(record.bride_parents || record.bride_father, 240),
+    groom_parents: cleanText(record.groom_parents || record.groom_father, 240),
+    bride_father: cleanText(record.bride_parents || record.bride_father, 240),
+    groom_father: cleanText(record.groom_parents || record.groom_father, 240),
     bride_address: cleanText(record.bride_address, 250),
-    groom_address: cleanText(record.groom_address, 250)
+    groom_address: cleanText(record.groom_address, 250),
+    groom_photo: groomPhoto,
+    groom_photo_url: groomPhoto,
+    bride_photo: bridePhoto,
+    bride_photo_url: bridePhoto,
+    couple_photo: couplePhoto,
+    couple_photo_url: couplePhoto,
+    venue_photo: venuePhoto,
+    venue_photo_url: venuePhoto,
+    hero_image: couplePhoto,
+    venue_image: venuePhoto,
+    banquet_photo: venuePhoto,
+    image1: groomPhoto,
+    image2: bridePhoto,
+    image3: couplePhoto,
+    image4: venuePhoto
   };
 }
 
@@ -232,27 +269,45 @@ function findLocalInvitation(code) {
             ceremony_title: 'Shubho Bibaho',
             venue: 'Wedding Celebration Venue'
           };
+          wedding.order_reference = ref;
+          wedding.ref = ref;
           const capacity = Number(guest.family_members || guest.persons || (guest.with_family ? 4 : 1));
           const isExplicitPerson = guest.with_family === false || String(guest.category || '').toLowerCase() === 'person';
           const isFamily = !isExplicitPerson && (guest.with_family === true || String(guest.category || '').toLowerCase() === 'family' || (capacity > 1 && guest.with_family !== false));
 
-          const bridePhoto = wedding.bride_photo
+          const bridePhoto = cleanPhoto(wedding.bride_photo
+            || wedding.bride_photo_url
+            || order.bride_photo
+            || order.bride_photo_url
             || wedding.bride_image
+            || wedding.image2
             || (ref ? localStorage.getItem('wedding_bride_photo_' + ref) : '')
-            || '';
-          const groomPhoto = wedding.groom_photo
+            || '');
+          const groomPhoto = cleanPhoto(wedding.groom_photo
+            || wedding.groom_photo_url
+            || order.groom_photo
+            || order.groom_photo_url
             || wedding.groom_image
+            || wedding.image1
             || (ref ? localStorage.getItem('wedding_groom_photo_' + ref) : '')
-            || '';
-          const couplePhoto = wedding.couple_photo
+            || '');
+          const couplePhoto = cleanPhoto(wedding.couple_photo
+            || wedding.couple_photo_url
+            || order.couple_photo
+            || order.couple_photo_url
             || wedding.hero_image
+            || wedding.image3
             || (ref ? localStorage.getItem('wedding_couple_photo_' + ref) : '')
-            || '';
-          const venuePhoto = wedding.venue_photo
+            || '');
+          const venuePhoto = cleanPhoto(wedding.venue_photo
+            || wedding.venue_photo_url
+            || order.venue_photo
+            || order.venue_photo_url
             || wedding.venue_image
             || wedding.banquet_photo
+            || wedding.image4
             || (ref ? localStorage.getItem('wedding_venue_photo_' + ref) : '')
-            || '';
+            || '');
 
           wedding.bride_photo = bridePhoto || wedding.bride_photo;
           wedding.groom_photo = groomPhoto || wedding.groom_photo;
@@ -278,6 +333,19 @@ function findLocalInvitation(code) {
           if (musicUrl) wedding.music_url = musicUrl;
           if (musicTitle) wedding.music_title = musicTitle;
           if (musicId) wedding.music_id = musicId;
+
+          if (!wedding.bride_parents && (order.bride_parents || order.bride_father)) wedding.bride_parents = order.bride_parents || order.bride_father;
+          if (!wedding.groom_parents && (order.groom_parents || order.groom_father)) wedding.groom_parents = order.groom_parents || order.groom_father;
+          if (!wedding.bride_father && (order.bride_parents || order.bride_father)) wedding.bride_father = order.bride_parents || order.bride_father;
+          if (!wedding.groom_father && (order.groom_parents || order.groom_father)) wedding.groom_father = order.groom_parents || order.groom_father;
+          if (!wedding.bride_address && order.bride_address) wedding.bride_address = order.bride_address;
+          if (!wedding.groom_address && order.groom_address) wedding.groom_address = order.groom_address;
+          if (!wedding.map_url && order.map_url) wedding.map_url = order.map_url;
+          if (!wedding.venue && (order.venue || order.venue_name || order.banquet_name)) wedding.venue = order.venue || order.venue_name || order.banquet_name;
+          if (!wedding.venue_name && (order.venue || order.venue_name || order.banquet_name)) wedding.venue_name = order.venue || order.venue_name || order.banquet_name;
+          if (!wedding.venue_title && order.venue_title) wedding.venue_title = order.venue_title;
+          if (!wedding.address && (order.address || order.venue_address || order.location)) wedding.address = order.address || order.venue_address || order.location;
+          if (!wedding.venue_address && (order.address || order.venue_address || order.location)) wedding.venue_address = order.address || order.venue_address || order.location;
 
           return {
             guest: {

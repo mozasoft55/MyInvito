@@ -50,7 +50,8 @@ test('Template 11, 12, 13, 14 properly distinguish 1 Person Personal Invitation 
   const familyGuest = { name: 'Aarav Gupta', persons: 3, with_family: true, category: 'Family' };
   for (const t of templates) {
     const html = t.fn({ guest: familyGuest, wedding: customWedding });
-    assert.match(html, /Family Invitation · 3 Persons/, `Template ${t.id} must show Family Invitation · 3 Persons`);
+    assert.match(html, /Family/, `Template ${t.id} must show Family`);
+    assert.doesNotMatch(html, /3 Persons/, `Template ${t.id} must not show person count for family invitation`);
     assert.match(html, /Aarav Gupta &amp; Family/, `Template ${t.id} must append Family for family invitation`);
   }
 });

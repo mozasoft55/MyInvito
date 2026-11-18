@@ -41,7 +41,8 @@ test('template-14 renders 3D royal palace door with welcome board, couple detail
   assert.match(html, /Param/);
   assert.match(html, /Pari/);
   assert.match(html, /Roy Family/);
-  assert.match(html, /Family Invitation · 4 Persons/);
+  assert.match(html, /Family/);
+  assert.doesNotMatch(html, /4 Persons/);
   assert.match(html, /Two Hearts · One Destiny/);
   assert.match(html, /Together with their Families/);
   assert.match(html, /The Journey of Love &amp; Togetherness/);

@@ -472,7 +472,7 @@ begin
   insert into public.wedding_details (
     wedding_id, status, host_name, bride_full, groom_full, bride_parents,
     groom_parents, ceremony_title, invocation, ceremony_time, venue_title,
-    venue, address, map_url, slug
+    venue, address, map_url, slug, image1, image2, image3, image4
   )
   values (
     v_wedding_id,
@@ -489,7 +489,11 @@ begin
     nullif(btrim(coalesce(p_input->>'venue', '')), ''),
     nullif(btrim(coalesce(p_input->>'address', '')), ''),
     nullif(btrim(coalesce(p_input->>'map_url', '')), ''),
-    v_slug
+    v_slug,
+    nullif(btrim(coalesce(p_input->>'groom_photo', p_input->>'image1', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_photo', p_input->>'image2', '')), ''),
+    nullif(btrim(coalesce(p_input->>'couple_photo', p_input->>'hero_image', p_input->>'image3', '')), ''),
+    nullif(btrim(coalesce(p_input->>'venue_photo', p_input->>'banquet_photo', p_input->>'image4', '')), '')
   );
 
   insert into public.guests (

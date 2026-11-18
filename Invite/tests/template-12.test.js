@@ -39,7 +39,8 @@ test('template-12 renders 3D royal gate opening with welcome board, couple detai
   assert.match(html, /Param/);
   assert.match(html, /Pari/);
   assert.match(html, /Roy Family/);
-  assert.match(html, /Family Invitation · 4 Persons/);
+  assert.match(html, /Family/);
+  assert.doesNotMatch(html, /4 Persons/);
   assert.match(html, /Two Hearts · One Destiny/);
   assert.match(html, /Together with their Families/);
   assert.match(html, /The Journey of Love &amp; Togetherness/);

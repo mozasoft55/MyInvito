@@ -2009,6 +2009,7 @@
 
       try {
         let weddingPayload;
+        let localOrder = null;
         try {
           weddingPayload = await fetchInvitationByCode(inviteCode);
         } catch (fetchErr) {
@@ -2026,7 +2027,6 @@
           }
 
           console.warn('Backend lookup fallback to local order / preview:', fetchErr?.message || fetchErr);
-          let localOrder = null;
           try {
             const ordRef = p.get('order');
             localOrder = JSON.parse(
@@ -2039,7 +2039,7 @@
 
           const bride = localOrder?.bride_name || 'Sanjukta';
           const groom = localOrder?.groom_name || 'Purushottam';
-          const venueName = localOrder?.venue || localOrder?.venue_name || localOrder?.banquet_name || 'Grand Heritage Palace Grounds';
+          const venueName = localOrder?.venue || localOrder?.venue_name || localOrder?.banquet_name || (localOrder ? '' : 'Grand Heritage Palace Grounds');
           const eventDate = localOrder?.event_date || localOrder?.date || '2026-12-05';
           const ceremonyTime = localOrder?.ceremony_time || localOrder?.time || '7:00 PM';
           const phone = localOrder?.phone || '9477929927';
@@ -2058,6 +2058,13 @@
               bride_name: bride,
               groom_name: groom,
               couple_name: `${bride} & ${groom}`,
+              bride_parents: localOrder?.bride_parents || localOrder?.bride_father || '',
+              groom_parents: localOrder?.groom_parents || localOrder?.groom_father || '',
+              bride_father: localOrder?.bride_parents || localOrder?.bride_father || '',
+              groom_father: localOrder?.groom_parents || localOrder?.groom_father || '',
+              bride_address: localOrder?.bride_address || '',
+              groom_address: localOrder?.groom_address || '',
+              name_order: localOrder?.name_order || 'groom_first',
               event_date: eventDate,
               date: eventDate,
               ceremony_time: ceremonyTime,
@@ -2065,9 +2072,12 @@
               invocation: localOrder?.invocation || '॥ শ্রী শ্রী প্রজাপতয়ে নমঃ ॥',
               venue: venueName,
               venue_name: venueName,
-              venue_title: localOrder?.venue_title || 'The Royal Mandap & Banquet Courtyard',
-              address: localOrder?.address || localOrder?.location || 'Riverfront Promenade, Heritage Boulevard',
-              city: localOrder?.city || 'Kolkata, West Bengal',
+              venue_title: localOrder?.venue_title || '',
+              banquet_name: localOrder?.banquet_name || venueName,
+              address: localOrder?.address || localOrder?.venue_address || localOrder?.location || '',
+              venue_address: localOrder?.address || localOrder?.venue_address || localOrder?.location || '',
+              city: localOrder?.city || '',
+              map_url: localOrder?.map_url || '',
               rsvp_phone: phone,
               phone: phone,
               bride_photo: localOrder?.bride_photo || '',
@@ -2092,6 +2102,7 @@
         const guest = weddingPayload.guest;
         const wedding = weddingPayload.wedding || {};
         const templateId = String(urlTemplate || wedding.template_id || 'template-02').trim();
+        wedding.template_id = templateId;
         const isLegacyTemplate = LEGACY_TEMPLATES.has(templateId);
 
         const getStored = (k) => {
@@ -2102,45 +2113,117 @@
           } catch { return ''; }
         };
 
-        const orderRef = wedding.order_reference || p.get('order') || '';
+        let orderRef = wedding.order_reference || wedding.ref || p.get('order') || '';
+        if (!orderRef && typeof localStorage !== 'undefined') {
+          if (inviteCode) {
+            try {
+              const upperCode = inviteCode.toUpperCase();
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('customer-dashboard-guests-')) {
+                  const guests = JSON.parse(localStorage.getItem(k) || '[]');
+                  if (guests.some(g => g.invite_code && (g.invite_code === inviteCode || g.invite_code.toUpperCase() === upperCode))) {
+                    orderRef = k.replace('customer-dashboard-guests-', '');
+                    break;
+                  }
+                }
+              }
+            } catch (_) {}
+          }
+          if (!orderRef) {
+            orderRef = localStorage.getItem('customer-dashboard-order') || '';
+          }
+          if (!orderRef) {
+            try {
+              const lastOrd = JSON.parse(localStorage.getItem('primeecard_last_order') || '{}');
+              if (lastOrd.reference) orderRef = lastOrd.reference;
+            } catch (_) {}
+          }
+        }
+        if (orderRef) {
+          wedding.order_reference = orderRef;
+          wedding.ref = orderRef;
+        }
+
         const currentTpl = templateId || wedding.template_id || 'template-02';
         const selectedTpl = getStored('selected_invitation_template') || localOrder?.template_style || '';
         const isSelectedTemplate = !selectedTpl || selectedTpl === currentTpl;
 
+        let orderMetadata = null;
+        if (orderRef && typeof localStorage !== 'undefined') {
+          try {
+            orderMetadata = JSON.parse(localStorage.getItem('primeecard_order_' + orderRef) || '{}');
+          } catch (_) {}
+        }
+        if (!orderMetadata && typeof localStorage !== 'undefined') {
+          try {
+            orderMetadata = JSON.parse(localStorage.getItem('primeecard_last_order') || '{}');
+          } catch (_) {}
+        }
+
+        // Photo Resolution: Live DB fields -> Order metadata -> Order-scoped local keys -> (Preview Mode only: Selected Template Draft)
+        // CRITICAL DATA ISOLATION & PRIVACY:
+        // 1. Live published invitations (!isPreviewMode) must NEVER read un-scoped template_photo_* or onboard_session_* from localStorage
+        // 2. Unselected templates during preview must NEVER show customer photos from a different template
         const couplePhoto = wedding.couple_photo
+          || wedding.couple_photo_url
           || wedding.hero_image
+          || wedding.image3
+          || wedding.couple_image
+          || orderMetadata?.couple_photo
+          || orderMetadata?.couple_photo_url
+          || orderMetadata?.hero_image
           || (orderRef ? getStored('wedding_couple_photo_' + orderRef) : '')
-          || getStored(`template_photo_${currentTpl}_couple`)
-          || (isSelectedTemplate ? getStored('onboard_session_couple_photo') : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored(`template_photo_${currentTpl}_couple`) : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored('onboard_session_couple_photo') : '')
           || '';
 
         const venuePhoto = wedding.venue_photo
+          || wedding.venue_photo_url
           || wedding.venue_image
+          || wedding.banquet_photo
+          || wedding.image4
+          || wedding.banquet_image
+          || orderMetadata?.venue_photo
+          || orderMetadata?.venue_photo_url
+          || orderMetadata?.banquet_photo
           || (orderRef ? getStored('wedding_venue_photo_' + orderRef) : '')
-          || getStored(`template_photo_${currentTpl}_venue`)
-          || (isSelectedTemplate ? getStored('onboard_session_venue_photo') : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored(`template_photo_${currentTpl}_venue`) : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored('onboard_session_venue_photo') : '')
           || '';
 
         const bridePhoto = wedding.bride_photo
+          || wedding.bride_photo_url
           || wedding.bride_image
           || wedding.photo_bride
+          || wedding.image2
+          || orderMetadata?.bride_photo
+          || orderMetadata?.bride_photo_url
           || (orderRef ? getStored('wedding_bride_photo_' + orderRef) : '')
-          || getStored(`template_photo_${currentTpl}_bride`)
-          || (isSelectedTemplate ? getStored('onboard_session_bride_photo') : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored(`template_photo_${currentTpl}_bride`) : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored('onboard_session_bride_photo') : '')
           || '';
 
         const groomPhoto = wedding.groom_photo
+          || wedding.groom_photo_url
           || wedding.groom_image
           || wedding.photo_groom
+          || wedding.image1
+          || orderMetadata?.groom_photo
+          || orderMetadata?.groom_photo_url
           || (orderRef ? getStored('wedding_groom_photo_' + orderRef) : '')
-          || getStored(`template_photo_${currentTpl}_groom`)
-          || (isSelectedTemplate ? getStored('onboard_session_groom_photo') : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored(`template_photo_${currentTpl}_groom`) : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored('onboard_session_groom_photo') : '')
           || '';
 
         wedding.bride_photo = bridePhoto || wedding.bride_photo;
+        wedding.bride_photo_url = bridePhoto || wedding.bride_photo_url;
         wedding.groom_photo = groomPhoto || wedding.groom_photo;
+        wedding.groom_photo_url = groomPhoto || wedding.groom_photo_url;
         wedding.couple_photo = couplePhoto;
+        wedding.couple_photo_url = couplePhoto;
         wedding.venue_photo = venuePhoto;
+        wedding.venue_photo_url = venuePhoto;
         wedding.banquet_photo = venuePhoto || wedding.banquet_photo;
         wedding.hero_image = couplePhoto || wedding.hero_image;
         wedding.venue_image = venuePhoto || wedding.venue_image;

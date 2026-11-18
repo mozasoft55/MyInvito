@@ -188,7 +188,7 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
   const guestDisplayName = isFamily && !hasFamilyInName ? `${rawGuestName} & Family` : rawGuestName;
 
   const partyBadge = isFamily
-    ? (partySize > 1 ? `Family Invitation · ${partySize} Persons` : 'Family Invitation')
+    ? 'Family'
     : (partySize > 1 ? `Personal Invitation · ${partySize} Persons` : 'Personal Invitation · 1 Person');
 
   const brideName = clean(wedding.bride_name) || 'Pari';
@@ -197,28 +197,34 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
   const orderRef = clean(wedding.order_reference) || clean(wedding.ref) || '';
   const isT13Match = !wedding.template_id || wedding.template_id === 'template-13' || wedding.template_id === '13';
 
-  const bridePhoto = (isT13Match ? (safeImg(wedding.bride_photo)
+  const bridePhoto = safeImg(wedding.bride_photo)
+    || safeImg(wedding.bride_photo_url)
     || safeImg(wedding.bride_image)
     || safeImg(wedding.bridePhoto)
     || safeImg(wedding.photo_bride)
     || safeImg(wedding.bride_img)
-    || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '')) : '')
+    || safeImg(wedding.image2)
+    || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '')
+    || safeImg(wedding.couple_photo)
     || './assets/template-06-bride.webp';
 
-  const groomPhoto = (isT13Match ? (safeImg(wedding.groom_photo)
+  const groomPhoto = safeImg(wedding.groom_photo)
+    || safeImg(wedding.groom_photo_url)
     || safeImg(wedding.groom_image)
     || safeImg(wedding.groomPhoto)
     || safeImg(wedding.photo_groom)
     || safeImg(wedding.groom_img)
-    || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')) : '')
+    || safeImg(wedding.image1)
+    || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')
+    || safeImg(wedding.couple_photo)
     || './assets/template-06-groom.webp';
 
   const brideAddr = clean(wedding.bride_address) || clean(wedding.bride_city) || '';
   const groomAddr = clean(wedding.groom_address) || clean(wedding.groom_city) || '';
   const isGroomFirst = (clean(wedding.name_order) || clean(wedding.couple_order)) === 'groom_first';
 
-  const brideFather = clean(wedding.bride_father) || getFatherOnly(wedding.bride_parents, 'Kalam');
-  const groomFather = clean(wedding.groom_father) || getFatherOnly(wedding.groom_parents, 'Abdul');
+  const brideParents = clean(wedding.bride_parents) || clean(wedding.bride_father) || '';
+  const groomParents = clean(wedding.groom_parents) || clean(wedding.groom_father) || '';
 
   const weddingDateStr = formatWeddingDate(wedding.date || wedding.event_date);
   const venueName = clean(wedding.venue)
@@ -235,17 +241,20 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
     || clean(wedding.location)
     || clean(wedding.city_address)
     || clean(wedding.city)
-    || 'Riverfront Promenade, Heritage Boulevard';
+    || '';
 
-  const banquetPhoto = (isT13Match ? (safeImg(wedding.venue_photo)
+  const banquetPhoto = safeImg(wedding.venue_photo)
+    || safeImg(wedding.venue_photo_url)
     || safeImg(wedding.banquet_photo)
     || safeImg(wedding.venue_image)
     || safeImg(wedding.banquet_image)
     || safeImg(wedding.photo_venue)
-    || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')) : '')
+    || safeImg(wedding.image4)
+    || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')
     || './assets/template-13-page.webp';
 
-  const mapLink = safeUrl(wedding.map_url) || `https://maps.google.com/?q=${encodeURIComponent(`${venueName}, ${venueAddr}`)}`;
+  const mapLink = safeUrl(wedding.map_url)
+    || (venueName || venueAddr ? `https://maps.google.com/?q=${encodeURIComponent([venueName, venueAddr].filter(Boolean).join(', '))}` : '');
   const calLink = makeCalendarLink({
     title: `Wedding of ${groomName} & ${brideName}`,
     description: `You are cordially invited to celebrate the auspicious wedding of ${groomName} and ${brideName}.`,
@@ -1300,8 +1309,10 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
             </div>
             <div class="t13-role-badge">Groom</div>
             <div class="t13-person-name" data-fit="1">${esc(groomName)}</div>
-            <div class="t13-rel-label">s/o</div>
-            <div class="t13-father-name" data-fit="1">${esc(groomFather)}</div>
+            ${groomParents ? `
+              <div class="t13-rel-label">s/o</div>
+              <div class="t13-father-name" data-fit="1">${esc(groomParents)}</div>
+            ` : ''}
             ${groomAddr ? `<div class="t13-address">${formatAddress(groomAddr)}</div>` : ''}
           </div>
 
@@ -1318,8 +1329,10 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
             </div>
             <div class="t13-role-badge">Bride</div>
             <div class="t13-person-name" data-fit="1">${esc(brideName)}</div>
-            <div class="t13-rel-label">d/o</div>
-            <div class="t13-father-name" data-fit="1">${esc(brideFather)}</div>
+            ${brideParents ? `
+              <div class="t13-rel-label">d/o</div>
+              <div class="t13-father-name" data-fit="1">${esc(brideParents)}</div>
+            ` : ''}
             ${brideAddr ? `<div class="t13-address">${formatAddress(brideAddr)}</div>` : ''}
           </div>
           ` : `
@@ -1333,8 +1346,10 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
             </div>
             <div class="t13-role-badge">Bride</div>
             <div class="t13-person-name" data-fit="1">${esc(brideName)}</div>
-            <div class="t13-rel-label">d/o</div>
-            <div class="t13-father-name" data-fit="1">${esc(brideFather)}</div>
+            ${brideParents ? `
+              <div class="t13-rel-label">d/o</div>
+              <div class="t13-father-name" data-fit="1">${esc(brideParents)}</div>
+            ` : ''}
             ${brideAddr ? `<div class="t13-address">${formatAddress(brideAddr)}</div>` : ''}
           </div>
 
@@ -1351,8 +1366,10 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
             </div>
             <div class="t13-role-badge">Groom</div>
             <div class="t13-person-name" data-fit="1">${esc(groomName)}</div>
-            <div class="t13-rel-label">s/o</div>
-            <div class="t13-father-name" data-fit="1">${esc(groomFather)}</div>
+            ${groomParents ? `
+              <div class="t13-rel-label">s/o</div>
+              <div class="t13-father-name" data-fit="1">${esc(groomParents)}</div>
+            ` : ''}
             ${groomAddr ? `<div class="t13-address">${formatAddress(groomAddr)}</div>` : ''}
           </div>
           `}

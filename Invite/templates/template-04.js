@@ -1501,9 +1501,9 @@ export default function renderT04(data = {}) {
 
   const storedVenue = (isT04Match && orderRef) ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '';
   const venuePhoto = safeImg(w.venue_photo || w.hall_photo || storedVenue) || 'assets/template-06-palace.jpg';
-  const venueRawName = clean(w.comment || w.venue || w.venue_name || w.hall_name || '');
+  const venueRawName = clean(w.venue || w.venue_name || w.venue_title || w.hall_name || w.banquet_name || w.comment || '');
   const venueName = venueRawName || 'Venue To Follow';
-  const venueAddress = clean(w.address || w.city || w.location || '');
+  const venueAddress = clean(w.address || w.venue_address || w.city || w.location || '');
   const venueComment = clean(w.comment && w.comment !== venueRawName ? w.comment : '');
 
   const mapUrl = safeUrl(w.map_url || (venueRawName ? `https://maps.google.com/?q=${encodeURIComponent(venueRawName + (venueAddress ? ', ' + venueAddress : ''))}` : ''));
@@ -1511,13 +1511,18 @@ export default function renderT04(data = {}) {
   const weddingTarget = weddingWhen(w, evs);
 
   const storedCouple = (isT04Match && orderRef) ? getStoredPhoto(`wedding_couple_photo_${orderRef}`) : '';
-  const couplePhoto = safeUrl(w.couple_photo || w.couple_photo_url || storedCouple);
-  const bridePhoto = safeUrl(w.bride_photo || w.bride_photo_url || w.bride_image || (!w.groom_photo && couplePhoto ? couplePhoto : ''));
-  const groomPhoto = safeUrl(w.groom_photo || w.groom_photo_url || w.groom_image);
+  const couplePhoto = safeImg(w.couple_photo || w.couple_photo_url || w.hero_image || w.image3 || storedCouple);
+  const bridePhoto = safeImg(w.bride_photo || w.bride_photo_url || w.bride_image || w.image2 || (!w.groom_photo && couplePhoto ? couplePhoto : ''));
+  const groomPhoto = safeImg(w.groom_photo || w.groom_photo_url || w.groom_image || w.image1);
+
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || w.bride_city || '');
+  const groomAddr = clean(w.groom_address || w.groom_city || '');
 
   const defaultSig = isFamily 
-    ? (w.groom_parents ? `${w.groom_parents} & Family` : `${groomFull} & Family`)
-    : (w.groom_parents || groomFull);
+    ? (groomParents ? `${groomParents} & Family` : `${groomFull} & Family`)
+    : (groomParents || groomFull);
   const signature = clean(w.footer_text || w.signature || defaultSig);
 
   const copySingle = 'Together with our families, we request the honour of your gracious presence to celebrate the auspicious marriage ceremony of our beloved children.';
@@ -1599,7 +1604,7 @@ export default function renderT04(data = {}) {
           <h2 class="t04-vip-guest">${esc(personalized)}</h2>
 
           <div class="t04-badge-pill">
-            ${isFamily ? `Family Invitation · ${guest.persons || 4} Persons` : `Individual Invitation · 1 Person`}
+            ${isFamily ? 'Family' : `Individual Invitation · ${guest.persons || 1} Person`}
           </div>
 
           <div class="t04-opts" role="group" aria-label="Invitation category">
@@ -1674,7 +1679,8 @@ export default function renderT04(data = {}) {
             </div>
             <span class="t04-role-badge">Dulhan / Bride</span>
             <h3 class="t04-person-name">${esc(brideFull)}</h3>
-            ${w.bride_parents ? `<p class="t04-parents-desc">D/o ${esc(w.bride_parents)}</p>` : ''}
+            ${brideParents ? `<p class="t04-parents-desc">D/o ${esc(brideParents)}</p>` : ''}
+            ${brideAddr ? `<p class="t04-parents-desc t04-parents-addr">${esc(brideAddr)}</p>` : ''}
           </div>
 
           <div class="t04-person-box">
@@ -1685,7 +1691,8 @@ export default function renderT04(data = {}) {
             </div>
             <span class="t04-role-badge">Dulha / Groom</span>
             <h3 class="t04-person-name">${esc(groomFull)}</h3>
-            ${w.groom_parents ? `<p class="t04-parents-desc">S/o ${esc(w.groom_parents)}</p>` : ''}
+            ${groomParents ? `<p class="t04-parents-desc">S/o ${esc(groomParents)}</p>` : ''}
+            ${groomAddr ? `<p class="t04-parents-desc t04-parents-addr">${esc(groomAddr)}</p>` : ''}
           </div>
         </div>
 
@@ -2039,8 +2046,8 @@ export function mount(root, data = {}) {
       const badgePill = host.querySelector('.t04-badge-pill');
       if (badgePill) {
         badgePill.textContent = type === 'family' 
-          ? `Family Invitation · ${guest?.persons || 4} Persons` 
-          : 'Individual Invitation · 1 Person';
+          ? 'Family' 
+          : `Individual Invitation · ${guest?.persons || 1} Person`;
       }
       const rsvpCat = host.querySelector('#t04-rsvp-cat');
       const rsvpCount = host.querySelector('#t04-rsvp-count');

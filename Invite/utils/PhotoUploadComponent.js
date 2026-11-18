@@ -14,6 +14,8 @@ export const PHOTO_SLOTS = [
     title: "Groom's Photograph",
     badge: 'Face Focus (1:1)',
     aspect: 'portrait',
+    maxDimension: 1000,
+    quality: 0.8,
     prompt: 'Upload Groom photograph',
     subtext: 'Central face focus portrait. Shows default royal groom if unuploaded.',
     defaultImg: '../assets/default-groom.webp'
@@ -24,6 +26,8 @@ export const PHOTO_SLOTS = [
     title: "Bride's Photograph",
     badge: 'Face Focus (1:1)',
     aspect: 'portrait',
+    maxDimension: 1000,
+    quality: 0.8,
     prompt: 'Upload Bride photograph',
     subtext: 'Central face focus portrait. Shows default royal bride if unuploaded.',
     defaultImg: '../assets/default-bride.webp'
@@ -34,6 +38,8 @@ export const PHOTO_SLOTS = [
     title: 'Couple / Story Photo',
     badge: 'Portrait (3:4)',
     aspect: 'portrait',
+    maxDimension: 1200,
+    quality: 0.78,
     prompt: 'Upload Couple photograph',
     subtext: 'High-res couple portrait. Auto-compressed to crisp WebP.',
     defaultImg: '../assets/template-06-couple.webp'
@@ -44,6 +50,8 @@ export const PHOTO_SLOTS = [
     title: 'Venue / Banquet Photo',
     badge: 'Landscape (16:9)',
     aspect: 'landscape',
+    maxDimension: 1200,
+    quality: 0.78,
     prompt: 'Upload Venue photograph',
     subtext: 'Palace, Mandap, or Hall landscape photo.',
     defaultImg: '../assets/template-06-palace.jpg'
@@ -224,6 +232,18 @@ export class PhotoUploadComponent {
       }
     });
 
+    this.container.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const dropzone = e.target.closest('.photo-dropzone');
+        if (dropzone) {
+          e.preventDefault();
+          const slot = dropzone.getAttribute('data-slot');
+          const input = this.container.querySelector(`.photo-dropzone__input[data-slot="${slot}"]`);
+          input?.click();
+        }
+      }
+    });
+
     this.container.addEventListener('click', (e) => {
       const actionBtn = e.target.closest('[data-action]');
       if (!actionBtn) return;
@@ -275,8 +295,12 @@ export class PhotoUploadComponent {
       tag.innerHTML = '<span>⚡</span> Compressing...';
     }
 
+    const slotConf = this.slots.find(s => s.slot === slot);
+    const targetMaxWidth = slotConf?.maxDimension || this.maxWidth;
+    const targetQuality = slotConf?.quality || this.quality;
+
     try {
-      const result = await compressImage(rawFile, this.maxWidth, this.quality);
+      const result = await compressImage(rawFile, targetMaxWidth, targetQuality, { slot });
       URL.revokeObjectURL(instantLocalUrl);
 
       this.state[slot] = result;
@@ -371,6 +395,7 @@ export class PhotoUploadComponent {
     this.state[slot] = {
       previewUrl: url,
       dataUrl: url,
+      uploadedUrl: (/^https?:\/\//i.test(url) ? url : ''),
       fileName: `${slot}-uploaded.webp`
     };
   }

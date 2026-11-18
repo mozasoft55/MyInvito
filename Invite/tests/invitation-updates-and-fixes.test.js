@@ -37,10 +37,16 @@ test('Stale Guest Count Fix: Updated Family count reflects on invitation badge',
   const t13Html = renderTemplate13(normalized);
   const t14Html = renderTemplate14(normalized);
 
-  assert.ok(t11Html.includes('Family Invitation · 5 Persons'), 'Template 11 must display Family Invitation · 5 Persons');
-  assert.ok(t12Html.includes('Family Invitation · 5 Persons'), 'Template 12 must display Family Invitation · 5 Persons');
-  assert.ok(t13Html.includes('Family Invitation · 5 Persons'), 'Template 13 must display Family Invitation · 5 Persons');
-  assert.ok(t14Html.includes('Family Invitation · 5 Persons'), 'Template 14 must display Family Invitation · 5 Persons');
+  assert.ok(t11Html.includes('Family'), 'Template 11 must display Family');
+  assert.ok(t12Html.includes('Family'), 'Template 12 must display Family');
+  assert.ok(t13Html.includes('Family'), 'Template 13 must display Family');
+  assert.ok(t14Html.includes('Family'), 'Template 14 must display Family');
+
+  // Ensure person count is NOT rendered for Family invitations
+  assert.ok(!t11Html.includes('5 Persons'), 'Template 11 must not display 5 Persons for family invitation');
+  assert.ok(!t12Html.includes('5 Persons'), 'Template 12 must not display 5 Persons for family invitation');
+  assert.ok(!t13Html.includes('5 Persons'), 'Template 13 must not display 5 Persons for family invitation');
+  assert.ok(!t14Html.includes('5 Persons'), 'Template 14 must not display 5 Persons for family invitation');
 
   // Ensure stale count of 10 is NOT rendered
   assert.ok(!t11Html.includes('10 Persons'));

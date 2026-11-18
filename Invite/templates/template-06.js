@@ -946,7 +946,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
   const guestDisplayNameBn = hasFamily && !isBnFamilyAlreadyInName ? `${gBn} ও পরিবার` : gBn;
   const guestLine = L(guestDisplayNameEn, guestDisplayNameBn);
   const guestBadgeText = hasFamily
-    ? L(guest?.persons && guest.persons > 1 ? `Family Invitation · ${guest.persons} Persons` : 'Family Invitation', guest?.persons && guest.persons > 1 ? `পরিবার সহ · ${toBn(guest.persons)} জন` : 'পরিবার সহ সাদর আমন্ত্রণ')
+    ? L('Family', 'পরিবার')
     : (guest?.persons && guest.persons > 1 ? L(`${guest.persons} Persons`, `${toBn(guest.persons)} জন অতিথি`) : L('Personal Invitation', 'সাদর নিমন্ত্রণ'));
 
   const fld = (k, defEn, defBn) => {
@@ -1035,13 +1035,15 @@ export default function render({ guest, wedding, events = [] } = {}) {
   const digits = phoneRaw.replace(/\D/g, '') || '9477929927';
   const wa = digits.length === 10 ? `91${digits}` : digits;
   const canRsvp = true;
-  const brideImg = safeImg(w.bride_photo) || safeImg(w.bride_photo_url) || safeImg(w.bride_image) || safeImg(storedBride) || `${assetBase}default-bride.webp`;
-  const groomImg = safeImg(w.groom_photo) || safeImg(w.groom_photo_url) || safeImg(w.groom_image) || safeImg(storedGroom) || `${assetBase}default-groom.webp`;
-  const heroImg = safeImg(w.couple_photo) || safeImg(w.hero_image) || safeImg(w.couple_image) || safeImg(storedCouple) || `${assetBase}template-06-couple.webp`;
+  const brideImg = safeImg(w.bride_photo) || safeImg(w.bride_photo_url) || safeImg(w.bride_image) || safeImg(w.image2) || safeImg(storedBride) || `${assetBase}default-bride.webp`;
+  const groomImg = safeImg(w.groom_photo) || safeImg(w.groom_photo_url) || safeImg(w.groom_image) || safeImg(w.image1) || safeImg(storedGroom) || `${assetBase}default-groom.webp`;
+  const heroImg = safeImg(w.couple_photo) || safeImg(w.couple_photo_url) || safeImg(w.hero_image) || safeImg(w.couple_image) || safeImg(w.image3) || safeImg(storedCouple) || `${assetBase}template-06-couple.webp`;
   const venueImg = safeImg(w.venue_photo)
+    || safeImg(w.venue_photo_url)
     || safeImg(w.venue_image)
     || safeImg(w.banquet_image)
     || safeImg(w.banquet_photo)
+    || safeImg(w.image4)
     || safeImg(w.banquet)
     || safeImg(storedVenue)
     || `${assetBase}template-06-palace.jpg`;

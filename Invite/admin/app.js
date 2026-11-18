@@ -457,56 +457,122 @@ function renderPayments() {
 
     const publicUrl = new URL('?code=' + encodeURIComponent(payment.preview_guest_code || ''), new URL('../', location.href)).href;
 
+    const hasCity = Boolean(payment.city && payment.city !== '—' && payment.city.trim() !== '');
+    const coupleText = [payment.couple_name, payment.event_date].filter(Boolean).join(' · ');
+    const customerText = [payment.customer_name, payment.customer_phone].filter(Boolean).join(' · ');
+
     return `
       <article class="payment-card" data-payment="${escapeHtml(payment.payment_id)}">
+        <!-- Top Header: Order ID (Left) + Status Badge (Right) on same line -->
         <div class="payment-card-head">
-          <div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
-              <p class="eyebrow" style="margin:0;">${escapeHtml(payment.payment_status)} · ${escapeHtml(payment.payment_mode)}</p>
-              <button type="button" 
-                      class="toggle-url-btn ${isCardSuspended ? 'suspended-state' : 'active-state'}" 
-                      data-toggle-card="${escapeHtml(payment.order_reference)}" 
-                      data-next-state="${isCardSuspended ? 'Active' : 'Suspended'}">
-                ${isCardSuspended ? '🔴 URL Disabled (Suspended)' : '🟢 URL Live & Active'}
-              </button>
-            </div>
-            <h3>${escapeHtml(payment.order_reference)}</h3>
+          <div class="head-left">
+            <h3 class="order-id">${escapeHtml(payment.order_reference)}</h3>
+            <p class="order-subtext">${escapeHtml(payment.payment_status)} · ${escapeHtml(payment.payment_mode || 'UPI')}</p>
           </div>
-          <div class="amount-pair">
-            <span>Claimed</span>
-            <strong class="${mismatch && isPending ? 'bad' : ''}">${formatINR(payment.claimed_amount_paise)}</strong>
-          </div>
+          <button type="button" 
+                  class="status-badge ${isCardSuspended ? 'is-suspended' : 'is-active'}" 
+                  data-toggle-card="${escapeHtml(payment.order_reference)}" 
+                  data-next-state="${isCardSuspended ? 'Active' : 'Suspended'}"
+                  title="Click to toggle URL status">
+            <span class="status-dot"></span>
+            ${isCardSuspended ? 'Suspended' : 'Live &amp; Active'}
+          </button>
         </div>
 
-        ${mismatch && isPending ? `<p class="flag">Claimed amount differs from expected advance of ${formatINR(payment.expected_amount_paise)}. Check received amount.</p>` : ''}
+        ${mismatch && isPending ? `
+          <div class="mismatch-banner">
+            Claimed amount differs from expected advance of ${formatINR(payment.expected_amount_paise)}.
+          </div>
+        ` : ''}
 
-        <div class="facts">
-          <p><b>Customer</b>${escapeHtml(payment.customer_name)} · ${escapeHtml(payment.customer_phone)}</p>
-          <p><b>Email / City</b>${escapeHtml(payment.customer_email || '—')} · ${escapeHtml(payment.city || '—')}</p>
-          <p><b>Couple / Date</b>${escapeHtml(payment.couple_name)} · ${escapeHtml(payment.event_date)}</p>
-          <p><b>Package</b>${escapeHtml(payment.package)}</p>
-          <p><b>Expected advance</b>${formatINR(payment.expected_amount_paise)}</p>
-          <p><b>Card Link</b><a href="${escapeHtml(publicUrl)}" target="_blank" style="color:var(--wine); font-size:13px;">Open Guest Preview ↗</a></p>
+        <!-- Middle Section: Compact 2-Column Metadata Grid -->
+        <div class="card-grid">
+          <div class="grid-cell">
+            <span class="cell-label">Couple &amp; Date</span>
+            <span class="cell-value">${escapeHtml(coupleText || '—')}</span>
+          </div>
+
+          <div class="grid-cell">
+            <span class="cell-label">Package</span>
+            <span class="cell-value capitalize">${escapeHtml(payment.package || 'Standard')}</span>
+          </div>
+
+          <div class="grid-cell">
+            <span class="cell-label">Customer</span>
+            <span class="cell-value">${escapeHtml(customerText || '—')}</span>
+          </div>
+
+          ${hasCity ? `
+            <div class="grid-cell">
+              <span class="cell-label">City</span>
+              <span class="cell-value">${escapeHtml(payment.city)}</span>
+            </div>
+          ` : ''}
+
+          <div class="grid-cell col-left">
+            <span class="cell-label">Claimed / Expected</span>
+            <span class="cell-value amount-combo">
+              <strong class="${mismatch && isPending ? 'text-warn' : 'text-ok'}">${formatINR(payment.claimed_amount_paise)}</strong>
+              <span class="text-expected"> / ${formatINR(payment.expected_amount_paise)}</span>
+            </span>
+          </div>
+
+          <div class="grid-cell col-right preview-cell">
+            <span class="cell-label">Invitation</span>
+            <a href="${escapeHtml(publicUrl)}" target="_blank" rel="noopener noreferrer" class="preview-pill-btn">
+              Preview Card ↗
+            </a>
+          </div>
         </div>
 
         ${auditHtml}
 
         ${isPending ? `
-          <form class="review-form" data-review="${escapeHtml(payment.payment_id)}">
-            <label>Verified amount (INR)
-              <input name="verified_rupees" type="number" min="0" step="0.01" value="${(Number(payment.expected_amount_paise) / 100).toFixed(2)}" required>
-            </label>
-            <button class="button button-primary" name="decision" value="verify" type="submit">Verify &amp; activate card</button>
-            <button class="button button-outline" name="decision" value="reject" type="submit" formnovalidate>Reject</button>
-            <label class="reject-reason">Rejection reason
-              <input name="rejection_reason" maxlength="500" placeholder="Required if rejecting">
-            </label>
+          <!-- Bottom Action Area -->
+          <form class="card-action-form" data-review="${escapeHtml(payment.payment_id)}">
+            <div class="verified-amount-wrap">
+              <label class="amount-label" for="rupees-${escapeHtml(payment.payment_id)}">Verified amount (INR)</label>
+              <div class="rupee-input-box">
+                <span class="rupee-affix">₹</span>
+                <input id="rupees-${escapeHtml(payment.payment_id)}" 
+                       name="verified_rupees" 
+                       type="number" 
+                       min="0" 
+                       step="0.01" 
+                       value="${(Number(payment.expected_amount_paise) / 100).toFixed(2)}" 
+                       required 
+                       class="rupee-input">
+              </div>
+            </div>
+
+            <!-- Side-by-side Primary & Secondary Actions -->
+            <div class="action-btn-row">
+              <button class="btn-verify" name="decision" value="verify" type="submit">
+                <span class="btn-icon">✓</span> Verify &amp; Activate
+              </button>
+              <button class="btn-reject-toggle" type="button" data-toggle-reject>
+                <span class="btn-icon">✕</span> Reject
+              </button>
+            </div>
+
+            <!-- Progressive Disclosure: Expands only when Reject is clicked -->
+            <div class="reject-drawer" hidden>
+              <div class="reject-drawer-flex">
+                <input name="rejection_reason" 
+                       class="reject-reason-input" 
+                       maxlength="500" 
+                       placeholder="Enter rejection reason...">
+                <button class="btn-reject-confirm" name="decision" value="reject" type="submit" formnovalidate>
+                  Confirm ➔
+                </button>
+              </div>
+            </div>
           </form>
         ` : `
-          <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <span style="font-size:12px; color:var(--muted)">Processed &amp; locked in ledger.</span>
-            ${isVerified ? '<span style="color:var(--ok); font-weight:700; font-size:13px;">✓ Settlement Completed</span>' : ''}
-            ${isRejected ? '<span style="color:var(--bad); font-weight:700; font-size:13px;">✕ Claim Rejected</span>' : ''}
+          <div class="settled-status-bar">
+            <span class="settled-label">Processed &amp; locked in ledger.</span>
+            ${isVerified ? '<span class="settled-tag tag-verified">✓ Settlement Completed</span>' : ''}
+            ${isRejected ? '<span class="settled-tag tag-rejected">✕ Claim Rejected</span>' : ''}
           </div>
         `}
       </article>
@@ -523,21 +589,45 @@ function renderCashRequests() {
   host.innerHTML = cashRequests.map(request => {
     const details = request.request_details || {};
     const id = escapeHtml(request.request_id);
+    const hasCity = Boolean(request.city && request.city !== '—' && request.city.trim() !== '');
+    const coupleText = [request.bride_name, request.groom_name].filter(Boolean).join(' & ');
     return `
       <article class="payment-card">
         <div class="payment-card-head">
-          <div>
-            <p class="eyebrow">${escapeHtml(request.status)} · Manual quote request</p>
-            <h3>${escapeHtml(request.request_reference)}</h3>
+          <div class="head-left">
+            <h3 class="order-id">${escapeHtml(request.request_reference)}</h3>
+            <p class="order-subtext">${escapeHtml(request.status)} · Manual quote request</p>
           </div>
         </div>
-        <div class="facts">
-          <p><b>Customer</b>${escapeHtml(request.customer_name)}</p>
-          <p><b>Phone / Email</b>${escapeHtml(request.phone || '—')} · ${escapeHtml(request.email || '—')}</p>
-          <p><b>City</b>${escapeHtml(request.city || '—')}</p>
-          <p><b>Couple / Date</b>${escapeHtml([request.bride_name, request.groom_name].filter(Boolean).join(' & ') || '—')} · ${escapeHtml(request.event_date || '—')}</p>
-          <p><b>Venue</b>${escapeHtml(details.venue || '—')}</p>
-          <p><b>Received</b>${escapeHtml(new Date(request.created_at).toLocaleString())}</p>
+        <div class="card-grid">
+          <div class="grid-cell">
+            <span class="cell-label">Customer</span>
+            <span class="cell-value">${escapeHtml(request.customer_name || '—')}</span>
+          </div>
+          <div class="grid-cell">
+            <span class="cell-label">Phone</span>
+            <span class="cell-value">${escapeHtml(request.phone || '—')}</span>
+          </div>
+          <div class="grid-cell">
+            <span class="cell-label">Couple &amp; Date</span>
+            <span class="cell-value">${escapeHtml(coupleText || '—')}${request.event_date ? ' · ' + escapeHtml(request.event_date) : ''}</span>
+          </div>
+          ${hasCity ? `
+            <div class="grid-cell">
+              <span class="cell-label">City</span>
+              <span class="cell-value">${escapeHtml(request.city)}</span>
+            </div>
+          ` : ''}
+          ${details.venue && details.venue !== '—' ? `
+            <div class="grid-cell">
+              <span class="cell-label">Venue</span>
+              <span class="cell-value">${escapeHtml(details.venue)}</span>
+            </div>
+          ` : ''}
+          <div class="grid-cell">
+            <span class="cell-label">Received</span>
+            <span class="cell-value">${escapeHtml(new Date(request.created_at).toLocaleDateString())}</span>
+          </div>
         </div>
         <div class="request-actions">
           ${request.status === 'New' ? `<button class="button button-outline button-small" type="button" data-cash-status="Contacted" data-cash-request="${id}">Mark contacted</button>` : ''}
@@ -566,6 +656,20 @@ $('admin-search-input')?.addEventListener('input', event => {
 });
 
 $('payment-queue').addEventListener('click', async event => {
+  const rejectToggle = event.target.closest('[data-toggle-reject]');
+  if (rejectToggle) {
+    const card = rejectToggle.closest('.payment-card');
+    const drawer = card ? card.querySelector('.reject-drawer') : null;
+    if (drawer) {
+      drawer.hidden = !drawer.hidden;
+      if (!drawer.hidden) {
+        const input = drawer.querySelector('input[name="rejection_reason"]');
+        if (input) input.focus();
+      }
+    }
+    return;
+  }
+
   const toggleBtn = event.target.closest('[data-toggle-card]');
   if (!toggleBtn) return;
 
