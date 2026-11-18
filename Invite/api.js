@@ -122,6 +122,45 @@ export function normalizeWeddingRecord(record) {
   };
 }
 
+export function buildMapEmbedUrl(customMapUrl, venueName = '', venueAddress = '') {
+  const urlStr = String(customMapUrl || '').trim();
+  if (urlStr && (urlStr.includes('/embed') || urlStr.includes('output=embed'))) {
+    return urlStr;
+  }
+  if (urlStr) {
+    try {
+      const parsed = new URL(urlStr);
+      const q = parsed.searchParams.get('q') || parsed.searchParams.get('query');
+      if (q) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      }
+    } catch (_) {}
+  }
+  const cleanVenue = String(venueName || '').trim();
+  const cleanAddr = String(venueAddress || '').trim();
+  const queryParts = [cleanVenue && cleanVenue !== 'Wedding Celebration Venue' ? cleanVenue : '', cleanAddr].filter(Boolean);
+  const query = queryParts.join(', ').trim() || cleanAddr || cleanVenue;
+  if (query) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+  return '';
+}
+
+export function buildNavigateUrl(customMapUrl, venueName = '', venueAddress = '') {
+  const urlStr = String(customMapUrl || '').trim();
+  if (urlStr) {
+    return urlStr;
+  }
+  const cleanVenue = String(venueName || '').trim();
+  const cleanAddr = String(venueAddress || '').trim();
+  const queryParts = [cleanVenue && cleanVenue !== 'Wedding Celebration Venue' ? cleanVenue : '', cleanAddr].filter(Boolean);
+  const query = queryParts.join(', ').trim() || cleanAddr || cleanVenue;
+  if (query) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  }
+  return 'https://maps.google.com';
+}
+
 function normalizeEvents(events) {
   if (!Array.isArray(events)) return [];
   return events

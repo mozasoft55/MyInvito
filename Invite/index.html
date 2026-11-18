@@ -1089,7 +1089,7 @@
   <main id="app-mount"></main>
 
   <script type="module">
-    import { fetchInvitationByCode, submitRsvp } from './api.js';
+    import { fetchInvitationByCode, submitRsvp, buildMapEmbedUrl, buildNavigateUrl } from './api.js';
 
     // Performance Instrumentation: Real User Monitoring (FCP, LCP, CLS, TTFB, Frame Render)
     window.__PERF_METRICS = { fcp: null, lcp: null, cls: 0, ttfb: null, dom_mounted: null, first_frame: null };
@@ -1164,10 +1164,15 @@
       const { guest = {}, wedding = {}, events = [] } = invitation;
       const isFamily = Boolean(guest.with_family || (guest.persons && guest.persons > 1));
       const guestName = String(guest.name || (isFamily ? 'Respected Family' : 'Respected Guest')).trim();
-      const venueName = String(wedding.comment || wedding.venue || wedding.venue_name || wedding.hall_name || 'The Royal Heritage Banquet & Lawn').trim();
-      const venueAddress = String(wedding.address || wedding.city || '148 Grand Trunk Road, Shibpur, Howrah, Kolkata — 711102').trim();
-      const venueComment = String(wedding.comment && wedding.comment !== venueName ? wedding.comment : 'Opposite Botanical Garden Gate No. 2 • Valet Parking Available').trim();
-      const mapUrl = String(wedding.map_url || (venueName ? `https://maps.google.com/?q=${encodeURIComponent(venueName + (venueAddress ? ', ' + venueAddress : ''))}` : '')).trim();
+      const rawVenueName = String(wedding.venue || wedding.venue_name || wedding.venue_title || wedding.banquet_name || wedding.hall_name || '').trim();
+      const venueName = rawVenueName || 'Wedding Celebration Venue';
+      const venueTitle = String(wedding.venue_title || '').trim();
+      const venueAddress = String(wedding.venue_address || wedding.address || wedding.city || '').trim();
+      const venueComment = String(wedding.comment || wedding.venue_comment || wedding.venue_note || wedding.note || '').trim();
+      const mapUrl = String(wedding.map_url || '').trim();
+
+      const embedMapUrl = buildMapEmbedUrl(mapUrl, venueName, venueAddress);
+      const navUrl = buildNavigateUrl(mapUrl, venueName, venueAddress);
 
       // Normalize ceremonies from events array
       const ceremonies = (Array.isArray(events) && events.length > 0 ? events : [
@@ -1452,19 +1457,29 @@
               <button type="button" class="royal-modal-close" id="closeMapBtn" aria-label="Close Map">✕</button>
               <div class="royal-scroll-body">
                 <div class="royal-rsvp-header">
-                  <span class="royal-sub-kicker">Banquet &amp; Hall Directions</span>
+                  <span class="royal-sub-kicker">${escapeHtml(venueTitle || 'Banquet & Hall Directions')}</span>
                   <h3 id="royalMapTitle" class="royal-venue-heading">${escapeHtml(venueName)}</h3>
                 </div>
                 <div class="royal-map-frame">
-                  <iframe title="Banquet Hall Map" src="https://www.openstreetmap.org/export/embed.html?bbox=88.3320%2C22.5780%2C88.3520%2C22.5920&amp;layer=mapnik&amp;marker=22.5850%2C88.3420" class="royal-map-iframe" loading="lazy"></iframe>
+                  ${embedMapUrl ? `
+                    <iframe title="${escapeHtml(venueName || 'Banquet Hall Map')}" src="${escapeHtml(embedMapUrl)}" class="royal-map-iframe" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+                  ` : `
+                    <div class="royal-map-placeholder" style="display:flex;align-items:center;justify-content:center;height:100%;min-height:220px;color:#7B1828;text-align:center;padding:20px;font-family:Georgia,serif;background:#fff8ee;border-radius:12px;">
+                      <div>
+                        <div style="font-size:2rem;margin-bottom:8px;">📍</div>
+                        <p style="margin:0 0 6px;font-weight:700;font-size:16px;">${escapeHtml(venueName)}</p>
+                        ${venueAddress ? `<p style="margin:0;color:#6E5257;font-size:13px;">${escapeHtml(venueAddress)}</p>` : ''}
+                      </div>
+                    </div>
+                  `}
                 </div>
                 <div class="royal-venue-info-box">
                   <p style="margin:0 0 4px;font-weight:700;color:#7B1828">${escapeHtml(venueName)}</p>
                   ${venueAddress ? `<p style="margin:0 0 4px;color:#3E1F26;font-size:14px">${escapeHtml(venueAddress)}</p>` : ''}
-                  ${venueComment ? `<p style="margin:0;color:#6E5257;font-size:12.5px;font-style:italic">${escapeHtml(venueComment)}</p>` : ''}
+                  ${venueComment && venueComment !== venueName && venueComment !== venueAddress ? `<p style="margin:0;color:#6E5257;font-size:12.5px;font-style:italic">${escapeHtml(venueComment)}</p>` : ''}
                 </div>
                 <div class="royal-action-row">
-                  <a href="${mapUrl || 'https://maps.google.com/?q=' + encodeURIComponent(venueName + ' ' + venueAddress)}" target="_blank" rel="noopener noreferrer" class="royal-btn-primary">
+                  <a href="${escapeHtml(navUrl)}" target="_blank" rel="noopener noreferrer" class="royal-btn-primary">
                     <svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
                     Navigate via Google Maps
                   </a>
@@ -2227,6 +2242,15 @@
         wedding.banquet_photo = venuePhoto || wedding.banquet_photo;
         wedding.hero_image = couplePhoto || wedding.hero_image;
         wedding.venue_image = venuePhoto || wedding.venue_image;
+
+        wedding.venue = (wedding.venue || orderMetadata?.venue || orderMetadata?.venue_name || orderMetadata?.venue_title || '').trim();
+        wedding.venue_name = (wedding.venue_name || wedding.venue || orderMetadata?.venue_name || orderMetadata?.venue || '').trim();
+        wedding.venue_title = (wedding.venue_title || orderMetadata?.venue_title || '').trim();
+        wedding.banquet_name = (wedding.banquet_name || wedding.venue_name || orderMetadata?.banquet_name || orderMetadata?.venue_name || '').trim();
+        wedding.address = (wedding.address || orderMetadata?.address || orderMetadata?.venue_address || orderMetadata?.location || '').trim();
+        wedding.venue_address = (wedding.venue_address || wedding.address || orderMetadata?.venue_address || orderMetadata?.address || '').trim();
+        wedding.city = (wedding.city || orderMetadata?.city || '').trim();
+        wedding.map_url = (wedding.map_url || orderMetadata?.map_url || '').trim();
 
         function normalizeMusicUrl(url) {
           if (!url) return '';
