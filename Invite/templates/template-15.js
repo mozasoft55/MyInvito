@@ -328,7 +328,7 @@ h2.t15-h2 {
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 45%, rgba(0,0,0,.45), rgba(0,0,0,.88));
+  background: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, .2), rgba(0, 0, 0, .6));
   transition: opacity 1.8s ease;
 }
 .t15-lit #t15-dark, .lit #dark {
@@ -344,53 +344,104 @@ h2.t15-h2 {
   pointer-events: none;
 }
 
-/* Semi-Transparent Frosted Glass Board */
+/* Classic Ivory-Parchment Card with Double Gold Frame */
 #t15-gb, #gb, .t15-gb {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   width: 84cqw;
-  padding: 6.5cqw 4.5cqw;
+  padding: 9cqw 6cqw 8cqw;
   z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.4cqw;
-  border-radius: 4cqw;
-  background: rgba(255, 248, 235, .42);
-  -webkit-backdrop-filter: blur(14px) saturate(1.3);
-  backdrop-filter: blur(14px) saturate(1.3);
-  border: .35cqw solid rgba(201, 164, 92, .9);
-  box-shadow: 0 3cqw 9cqw #000a, inset 0 0 0 1cqw rgba(255, 255, 255, .18), inset 0 0 0 1.3cqw rgba(201, 164, 92, .45);
+  border-radius: 1.6cqw;
+  background: radial-gradient(ellipse at 50% 0, rgba(255, 252, 243, .97), rgba(247, 236, 212, .95) 70%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: .5cqw solid #b8923f;
+  box-shadow: 0 3cqw 9cqw rgba(0, 0, 0, .65), 0 0 0 1cqw rgba(201, 164, 92, .25), inset 0 0 0 1.1cqw #fffaf0, inset 0 0 0 1.5cqw #c9a45c, inset 0 0 6cqw rgba(184, 146, 63, .18);
   transition: opacity .8s ease, transform .8s ease;
 }
-#t15-gb::before, #gb::before, .t15-gb::before {
-  content: "✦";
+#t15-gb::before, #t15-gb::after, #gb::before, #gb::after, .t15-gb::before, .t15-gb::after {
+  content: "❖";
   position: absolute;
-  top: -3.2cqw;
   left: 50%;
   transform: translateX(-50%);
+  width: 9cqw;
+  height: 9cqw;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
   font-size: 5cqw;
-  color: #c9a45c;
-  text-shadow: 0 .4cqw 1cqw #0008;
+  color: #b8923f;
+  background: #fbf3e0;
+  border: .4cqw solid #b8923f;
+  box-shadow: 0 .6cqw 1.6cqw #0007;
+}
+#t15-gb::before, #gb::before, .t15-gb::before {
+  top: -4.5cqw;
+}
+#t15-gb::after, #gb::after, .t15-gb::after {
+  bottom: -4.5cqw;
 }
 #t15-gb.out, #gb.out, .t15-gb.out {
   opacity: 0;
   transform: translate(-50%, -56%) scale(.92);
   pointer-events: none;
 }
-#t15-gb .t15-ab, #gb .ab, .t15-gb .t15-ab {
+#t15-gb .t15-ab, #gb .ab, .t15-gb .t15-ab, #t15-gb .ab, #gb .t15-ab {
   position: static;
   transform: none;
   max-width: 100%;
-  text-shadow: 0 .2cqw .6cqw rgba(255, 255, 255, .55);
+  text-shadow: none;
 }
-.t15-rule, #gb .rule, #t15-gb .rule {
-  width: 40%;
-  height: .3cqw;
-  background: linear-gradient(90deg, transparent, #c9a45c, transparent);
-  margin: 1cqw 0;
+#t15-gb #t15-t-title, #t15-gb #t-title, #gb #t-title, #gb #t15-t-title,
+#t15-gb #t15-t-inv, #t15-gb #t-inv, #gb #t-inv, #gb #t15-t-inv,
+#t15-gb #t15-t-pers, #t15-gb #t-pers, #gb #t-pers, #gb #t15-t-pers {
+  color: #8a6a2a !important;
+  font-weight: 600;
+}
+#t15-gb #t15-t-title, #t15-gb #t-title, #gb #t-title, #gb #t15-t-title {
+  font-size: 3.3cqw;
+  line-height: 1.7;
+  letter-spacing: .22em;
+}
+#t15-gb #t15-t-groom, #t15-gb #t-groom, #gb #t-groom, #gb #t15-t-groom,
+#t15-gb #t15-t-bride, #t15-gb #t-bride, #gb #t-bride, #gb #t15-t-bride {
+  color: #5a1020 !important;
+  text-shadow: 0 .2cqw 0 #fff8e8, 0 .5cqw 1cqw rgba(90, 16, 32, .18);
+}
+#t15-gb #t15-t-amp, #t15-gb #t-amp, #gb #t-amp, #gb #t15-t-amp {
+  color: #b8923f !important;
+  font-size: 7cqw;
+}
+#t15-gb #t15-t-guest, #t15-gb #t-guest, #gb #t-guest, #gb #t15-t-guest {
+  color: #4a1020 !important;
+  font: 700 7cqw 'Cormorant Garamond', Georgia, serif;
+  letter-spacing: .04em;
+  margin: .5cqw 0;
+}
+#t15-gb .t15-rule, #t15-gb .rule, #gb .rule, #gb .t15-rule {
+  width: 62%;
+  height: .35cqw;
+  margin: 1.4cqw 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, #b8923f 25%, #e8c77a 50%, #b8923f 75%, transparent);
+  position: relative;
+  display: block;
+}
+#t15-gb .t15-rule::after, #t15-gb .rule::after, #gb .rule::after, #gb .t15-rule::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.6cqw;
+  height: 1.6cqw;
+  background: #b8923f;
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 .t15-open-btn, #open, #t15-open {
   font: 600 3.6cqw 'Cinzel', Georgia, serif;
@@ -409,6 +460,13 @@ h2.t15-h2 {
 @keyframes t15Pulse {
   0%, 100% { box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(201, 164, 92, 0.5); }
   50% { box-shadow: 0 1.5cqw 4.5cqw rgba(0, 0, 0, 0.75), 0 0 0 1.5cqw rgba(201, 164, 92, 0); }
+}
+#t15-gb #t15-open, #t15-gb .t15-open-btn, #t15-gb #open, #gb #open, #gb #t15-open {
+  margin-top: 3cqw;
+  background: linear-gradient(180deg, #8a1c34, #4e0d1c);
+  color: #f6dfa4;
+  border: .4cqw solid #c9a45c;
+  box-shadow: 0 1cqw 2.4cqw rgba(0, 0, 0, .45), inset 0 .2cqw 0 rgba(255, 255, 255, .25);
 }
 #t-title, #t15-t-title {
   white-space: pre-line;
@@ -832,7 +890,7 @@ export function mount(root, options = {}) {
     }
     const p1 = el('t15-p1') || el('p1');
     if (p1) {
-      p1.style.setProperty('--co', L.curtainOpacity == null ? 1 : L.curtainOpacity);
+      p1.style.setProperty('--co', L.curtainOpacity == null ? .62 : L.curtainOpacity);
     }
     place('t15-t-title', 'title', ceremonyTitle, 3.6);
     place('t15-t-groom', 'groom', primaryName, 11);

@@ -137,8 +137,11 @@ test('Template 15 — mount() initializes without throwing and returns a cleanup
 test('Template 15 — front cover frosted-glass board & locked scrolling before OPEN sequence', async () => {
   const templateHtml = fs.readFileSync(path.join(rootDir, 'template-15.html'), 'utf8');
 
-  // Frosted-glass board styling & markup in standalone template-15.html
+  // Ivory-parchment card styling & markup in standalone template-15.html
   assert.match(templateHtml, /#gb\s*\{[^}]*backdrop-filter:\s*blur/);
+  assert.match(templateHtml, /#b8923f/);
+  assert.match(templateHtml, /❖/);
+  assert.match(templateHtml, /curtainOpacity\s*==\s*null\s*\?\s*\.62/);
   assert.match(templateHtml, /<div id="gb">/);
   assert.match(templateHtml, /<main class="stage locked" id="stage">/);
 
@@ -155,6 +158,8 @@ test('Template 15 — front cover frosted-glass board & locked scrolling before 
   // Modular template-15.js verification
   const templateJs = fs.readFileSync(path.join(rootDir, 'templates', 'template-15.js'), 'utf8');
   assert.match(templateJs, /#t15-gb[\s\S]*backdrop-filter:\s*blur/);
+  assert.match(templateJs, /❖/);
+  assert.match(templateJs, /curtainOpacity\s*==\s*null\s*\?\s*\.62/);
   assert.match(templateJs, /\.t15-stage\.locked/);
   assert.match(templateJs, /overflow:\s*hidden !important/);
   assert.match(templateJs, /\.t15-curt[\s\S]*transition:\s*transform 3\.4s/);
