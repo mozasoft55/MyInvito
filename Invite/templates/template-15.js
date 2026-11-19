@@ -252,27 +252,147 @@ h2.t15-h2 {
 }
 
 /* PAGE 1: FRONT COVER */
+.t15-stage.locked, .stage.locked {
+  overflow: hidden !important;
+  scroll-snap-type: none !important;
+  touch-action: none !important;
+}
 #t15-p1 {
   background: #110408;
 }
-#t15-glow {
+#t15-glow, #glow {
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.8s ease;
   z-index: 2;
 }
-#t15-fx {
+#t15-fx, #fx {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 4;
+  z-index: 7;
 }
 
-.t15-open-btn {
+/* 3D Cinematic Curtains */
+.t15-curt, .curt {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.4%;
+  z-index: 4;
+  opacity: var(--co, 1);
+  transition: transform 3.4s cubic-bezier(.55, .05, .25, 1);
+  background: repeating-linear-gradient(90deg, #3a0a16 0, #7a1a2e 4cqw, #4a1020 8cqw, #8a2238 11cqw, #3a0a16 14cqw);
+  box-shadow: inset 0 0 8cqw #000a, 0 0 6cqw #000a;
+}
+.t15-curt::before, .curt::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6cqh;
+  background: linear-gradient(#e8c77a, #8a6a2a);
+  box-shadow: 0 1cqw 2cqw #0008;
+}
+.t15-curt::after, .curt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,.35), transparent 25%, transparent 70%, rgba(0,0,0,.5));
+}
+.t15-cl, .cl {
+  left: 0;
+  transform-origin: left center;
+  border-right: .8cqw solid #c9a45c;
+}
+.t15-cr, .cr {
+  right: 0;
+  transform-origin: right center;
+  border-left: .8cqw solid #c9a45c;
+}
+.t15-opened .t15-cl, .opened .cl {
+  transform: translateX(-3%) scaleX(.14) rotateY(25deg);
+}
+.t15-opened .t15-cr, .opened .cr {
+  transform: translateX(3%) scaleX(.14) rotateY(-25deg);
+}
+
+#t15-dark, #dark {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, rgba(0,0,0,.45), rgba(0,0,0,.88));
+  transition: opacity 1.8s ease;
+}
+.t15-lit #t15-dark, .lit #dark {
+  opacity: 0;
+}
+
+#t15-flash, #flash {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: #fff7e0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Semi-Transparent Frosted Glass Board */
+#t15-gb, #gb, .t15-gb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 84cqw;
+  padding: 6.5cqw 4.5cqw;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4cqw;
+  border-radius: 4cqw;
+  background: rgba(255, 248, 235, .42);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+  border: .35cqw solid rgba(201, 164, 92, .9);
+  box-shadow: 0 3cqw 9cqw #000a, inset 0 0 0 1cqw rgba(255, 255, 255, .18), inset 0 0 0 1.3cqw rgba(201, 164, 92, .45);
+  transition: opacity .8s ease, transform .8s ease;
+}
+#t15-gb::before, #gb::before, .t15-gb::before {
+  content: "✦";
+  position: absolute;
+  top: -3.2cqw;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5cqw;
+  color: #c9a45c;
+  text-shadow: 0 .4cqw 1cqw #0008;
+}
+#t15-gb.out, #gb.out, .t15-gb.out {
+  opacity: 0;
+  transform: translate(-50%, -56%) scale(.92);
+  pointer-events: none;
+}
+#t15-gb .t15-ab, #gb .ab, .t15-gb .t15-ab {
+  position: static;
+  transform: none;
+  max-width: 100%;
+  text-shadow: 0 .2cqw .6cqw rgba(255, 255, 255, .55);
+}
+.t15-rule, #gb .rule, #t15-gb .rule {
+  width: 40%;
+  height: .3cqw;
+  background: linear-gradient(90deg, transparent, #c9a45c, transparent);
+  margin: 1cqw 0;
+}
+.t15-open-btn, #open, #t15-open {
   font: 600 3.6cqw 'Cinzel', Georgia, serif;
   letter-spacing: 0.28em;
   padding: 2.2cqw 7.5cqw;
@@ -283,33 +403,16 @@ h2.t15-h2 {
   box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6), inset 0 0 1cqw rgba(243, 217, 160, 0.3);
   cursor: pointer;
   z-index: 6;
-  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 2cqw;
   animation: t15Pulse 2.4s infinite ease-in-out;
 }
-.t15-open-btn:active {
-  transform: translate(-50%, -50%) scale(0.96);
-}
-
 @keyframes t15Pulse {
   0%, 100% { box-shadow: 0 1cqw 3cqw rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(201, 164, 92, 0.5); }
   50% { box-shadow: 0 1.5cqw 4.5cqw rgba(0, 0, 0, 0.75), 0 0 0 1.5cqw rgba(201, 164, 92, 0); }
 }
-
-.t15-door {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  background: var(--t15-landing) no-repeat;
-  background-size: 200% 100%;
-  z-index: 5;
-  transition: transform 1.8s cubic-bezier(0.6, 0.05, 0.3, 1);
-  box-shadow: 0 0 6cqw rgba(0, 0, 0, 0.85);
+#t-title, #t15-t-title {
+  white-space: pre-line;
 }
-.t15-dl { left: 0; transform-origin: left; }
-.t15-dr { right: 0; background-position: 100% 0; transform-origin: right; }
-.t15-opened .t15-dl { transform: rotateY(-105deg); }
-.t15-opened .t15-dr { transform: rotateY(105deg); }
 
 /* PAGE 2: COUPLE DETAILS */
 #t15-p2 {
@@ -521,20 +624,27 @@ h2.t15-h2 {
 }
 </style>
 
-<main class="t15-stage" id="t15-stage">
+<main class="t15-stage stage locked" id="t15-stage">
   <!-- PAGE 1: FRONT COVER BACKGROUND -->
   <section class="t15-section" id="t15-p1">
-    <div class="t15-bg" id="t15-b1" style="background-image: var(--t15-landing);"></div>
-    <div id="t15-glow"></div>
+    <div class="t15-bg bg" id="t15-b1" style="background-image: var(--t15-landing);"></div>
+    <div id="t15-glow" class="glow"></div>
+    <div class="t15-curt curt t15-cl cl"></div>
+    <div class="t15-curt curt t15-cr cr"></div>
+    <div id="t15-dark" class="dark"></div>
+    <div id="t15-gb" class="t15-gb gb">
+      <div class="t15-ab ab t15-cinzel cinzel" id="t15-t-title">${esc(ceremonyTitle)}</div>
+      <div class="t15-ab ab t15-script script" id="t15-t-groom">${esc(primaryName)}</div>
+      <div class="t15-ab ab t15-script script" id="t15-t-amp">&amp;</div>
+      <div class="t15-ab ab t15-script script" id="t15-t-bride">${esc(secondaryName)}</div>
+      <i class="t15-rule rule"></i>
+      <div class="t15-ab ab t15-cinzel cinzel" id="t15-t-inv">CORDIALLY INVITED</div>
+      <div class="t15-ab ab" id="t15-t-guest" style="font-weight:700;">${esc(guestName)}</div>
+      <div class="t15-ab ab t15-cinzel cinzel" id="t15-t-pers">${esc(personLabel)}</div>
+      <button class="t15-open-btn open-btn" id="t15-open" type="button" aria-label="Open Invitation">OPEN</button>
+    </div>
     <canvas id="t15-fx"></canvas>
-    <div class="t15-ab t15-cinzel" id="t15-t-title">${esc(ceremonyTitle)}</div>
-    <div class="t15-ab t15-script" id="t15-t-groom">${esc(primaryName)}</div>
-    <div class="t15-ab t15-script" id="t15-t-amp">&amp;</div>
-    <div class="t15-ab t15-script" id="t15-t-bride">${esc(secondaryName)}</div>
-    <div class="t15-ab t15-cinzel" id="t15-t-inv">Cordially invites the presence of</div>
-    <div class="t15-ab" id="t15-t-guest" style="font-weight:700;">${esc(guestName)}</div>
-    <div class="t15-ab t15-cinzel" id="t15-t-pers">${esc(personLabel)}</div>
-    <button class="t15-ab t15-open-btn" id="t15-open" type="button" aria-label="Open Invitation">OPEN</button>
+    <div id="t15-flash" class="flash"></div>
   </section>
 
   <!-- PAGE 2: COUPLE DETAILS OVER IMAGE 2 -->
@@ -690,52 +800,63 @@ export function mount(root, options = {}) {
     focal: [50, 50]
   }, window.T15_LAYOUT || {}, wedding.t15_layout || {});
 
-  function el(id) { return root.querySelector('#' + id); }
+  const ceremonyTitle = clean(wedding.ceremony_title || wedding.title || 'WELCOME\nA CELEBRATION OF LOVE');
+
+  function el(id) {
+    if (!root) return null;
+    return root.querySelector('#' + id) || root.querySelector('#' + id.replace(/^t15-/, ''));
+  }
 
   function place(id, key, txt, fs) {
     const e = el(id);
     if (!e) return;
-    const p = L[key] || [50, 50, 70];
     e.textContent = txt;
     if (!txt) { e.hidden = true; return; }
-    e.style.left = p[0] + '%';
-    e.style.top = p[1] + '%';
+    e.hidden = false;
     e.style.color = (key === 'groom' || key === 'bride') ? '#5a1020' : '#7a1a2e';
     e.style.fontSize = fs + 'cqw';
-    const parentW = e.parentElement ? e.parentElement.clientWidth : 400;
-    const targetW = (p[2] * parentW) / 100;
+    const gb = el('t15-gb') || el('gb');
+    const w = (gb ? gb.clientWidth * 0.88 : 350);
     let s = fs;
-    while (e.scrollWidth > targetW && s > 1.5) {
+    while (e.scrollWidth > w && s > 1.5) {
       s -= 0.3;
       e.style.fontSize = s + 'cqw';
     }
   }
 
   function layoutCover() {
-    place('t15-t-title', 'title', 'WELCOME · A CELEBRATION OF LOVE', 3.6);
+    const gb = el('t15-gb') || el('gb');
+    if (gb) {
+      gb.style.top = ((L.board && L.board.y) || 50) + '%';
+      gb.style.width = ((L.board && L.board.w) || 84) + 'cqw';
+    }
+    const p1 = el('t15-p1') || el('p1');
+    if (p1) {
+      p1.style.setProperty('--co', L.curtainOpacity == null ? 1 : L.curtainOpacity);
+    }
+    place('t15-t-title', 'title', ceremonyTitle, 3.6);
     place('t15-t-groom', 'groom', primaryName, 11);
     place('t15-t-amp', 'amp', '&', 8);
     place('t15-t-bride', 'bride', secondaryName, 11);
     place('t15-t-inv', 'inv', 'CORDIALLY INVITED', 3.4);
     place('t15-t-guest', 'guest', guestName, 7);
     place('t15-t-pers', 'pers', personLabel, 3.4);
-
-    const o = el('t15-open');
-    if (o) {
-      o.style.left = L.open[0] + '%';
-      o.style.top = L.open[1] + '%';
-    }
   }
 
   layoutCover();
   window.addEventListener('resize', layoutCover);
 
-  // Sparkles on Page 1
-  const fx = el('t15-fx');
+  /* Scroll lock + OPEN sequence */
+  const stage = el('t15-stage') || (root.classList && root.classList.contains('t15-stage') ? root : root.querySelector('.t15-stage, .stage'));
+  let locked = true;
+  const p1 = el('t15-p1') || el('p1');
+  const fx = el('t15-fx') || el('fx');
   let fc = fx ? fx.getContext('2d') : null;
-  let sp = [];
-  let fxOn = false;
+  let P = [];
+  let run = false;
   let animId = null;
+  const ds = ['t15-p2', 't15-p3', 't15-p4', 't15-p5', 'p2', 'p3', 'p4', 'p5'];
+  const timeouts = [];
 
   function sizeCanvas(c) {
     if (!c) return;
@@ -744,61 +865,154 @@ export function mount(root, options = {}) {
     c.height = c.clientHeight * dpr;
   }
 
-  function spark() {
-    if (!fxOn || !fc) return;
-    sizeCanvas(fx);
-    fc.clearRect(0, 0, fx.width, fx.height);
-    const dpr = window.devicePixelRatio || 1;
-    if (sp.length < 50) {
-      const a = L.lamps.length ? L.lamps[Math.floor(Math.random() * L.lamps.length)] : [Math.random() * 100, Math.random() * 100];
-      sp.push({
-        x: (a[0] / 100) * fx.width,
-        y: (a[1] / 100) * fx.height,
-        vx: (Math.random() - 0.5) * 2 * dpr,
-        vy: (-Math.random() * 2 - 0.5) * dpr,
-        l: 1
+  ds.forEach(i => {
+    const elem = el(i);
+    if (elem) elem.inert = true;
+  });
+  if (stage) stage.classList.add('locked');
+
+  function stopScroll(e) {
+    if (locked) e.preventDefault();
+  }
+  const scrollEvents = ['wheel', 'touchmove'];
+  scrollEvents.forEach(evt => {
+    document.addEventListener(evt, stopScroll, { passive: false });
+    window.addEventListener(evt, stopScroll, { passive: false });
+    if (stage) stage.addEventListener(evt, stopScroll, { passive: false });
+  });
+
+  function onKeydown(e) {
+    if (locked && e.target && e.target.id !== 't15-open' && e.target.id !== 'open' && /^( |PageUp|PageDown|Home|End|ArrowUp|ArrowDown)$/.test(e.key)) {
+      e.preventDefault();
+    }
+  }
+  window.addEventListener('keydown', onKeydown, true);
+
+  function onScroll() {
+    if (locked && stage && stage.scrollTop > 0) {
+      stage.scrollTop = 0;
+    }
+  }
+  if (stage) stage.addEventListener('scroll', onScroll);
+
+  function burst(x, y, n, h) {
+    const d = window.devicePixelRatio || 1;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.283;
+      const s = (1.5 + Math.random() * 4.5) * d;
+      P.push({
+        x: x, y: y,
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        g: 0.06 * d, l: 1,
+        d: 0.012 + Math.random() * 0.01,
+        h: h, r: 2.2
       });
     }
-    sp = sp.filter(s => {
-      s.x += s.vx;
-      s.y += s.vy;
-      s.vy += 0.03 * dpr;
-      s.l -= 0.014;
-      fc.fillStyle = 'rgba(255,214,120,' + Math.max(s.l, 0) + ')';
-      fc.beginPath();
-      fc.arc(s.x, s.y, 2 * dpr * s.l, 0, Math.PI * 2);
-      fc.fill();
-      return s.l > 0;
+  }
+
+  function glit() {
+    if (!fx) return;
+    const d = window.devicePixelRatio || 1;
+    P.push({
+      x: Math.random() * fx.width,
+      y: fx.height * (0.3 + Math.random() * 0.6),
+      vx: (Math.random() - 0.5) * 0.6 * d,
+      vy: -(0.4 + Math.random()) * d,
+      g: 0, l: 1, d: 0.01, h: 45, r: 1.8
     });
-    animId = requestAnimationFrame(spark);
+  }
+
+  function loop() {
+    if (!fc || !fx) return;
+    fc.clearRect(0, 0, fx.width, fx.height);
+    fc.globalCompositeOperation = 'lighter';
+    if (run) { glit(); glit(); }
+    P = P.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.g;
+      p.l -= p.d;
+      if (p.l <= 0) return false;
+      fc.fillStyle = 'hsla(' + p.h + ',100%,62%,' + p.l + ')';
+      fc.beginPath();
+      fc.arc(p.x, p.y, p.r * (window.devicePixelRatio || 1) * p.l + 0.3, 0, 7);
+      fc.fill();
+      return true;
+    });
+    if (run || P.length) animId = requestAnimationFrame(loop);
+  }
+
+  function pataka() {
+    const fl = el('t15-flash') || el('flash');
+    if (fl && fl.animate) fl.animate([{ opacity: 0 }, { opacity: 0.75 }, { opacity: 0 }], { duration: 240 });
+    if (p1 && p1.animate) p1.animate([
+      { transform: 'translate(0,0)' },
+      { transform: 'translate(-5px,3px)' },
+      { transform: 'translate(4px,-3px)' },
+      { transform: 'translate(0,0)' }
+    ], { duration: 240 });
+    if (fx) burst(fx.width * (0.2 + Math.random() * 0.6), fx.height * (0.25 + Math.random() * 0.3), 30, 30 + Math.random() * 30);
   }
 
   // Open Button Handler
-  const openBtn = el('t15-open');
+  const openBtn = el('t15-open') || el('open');
   if (openBtn) {
     openBtn.onclick = function() {
+      if (!locked || this.disabled) return;
       this.disabled = true;
-      this.style.opacity = '0';
-      const g = el('t15-glow');
+
+      const g = el('t15-glow') || el('glow');
       if (g) {
-        g.style.background = L.lamps.map(a => `radial-gradient(circle at ${a[0]}% ${a[1]}%, rgba(255,190,90,0.6), transparent 20%)`).join(',') || 'radial-gradient(circle at 50% 50%, rgba(255,190,90,0.5), transparent 40%)';
-        g.style.opacity = '1';
+        g.style.background = (L.lamps && L.lamps.length)
+          ? L.lamps.map(a => `radial-gradient(circle at ${a[0]}% ${a[1]}%,rgba(255,190,90,.55),transparent 18%)`).join(',')
+          : 'radial-gradient(circle at 50% 40%,rgba(255,200,110,.35),transparent 60%)';
       }
-      fxOn = true;
-      spark();
-      const p1 = el('t15-p1');
-      if (L.doors && p1) {
-        const dl = document.createElement('div'); dl.className = 't15-door t15-dl';
-        const dr = document.createElement('div'); dr.className = 't15-door t15-dr';
-        p1.appendChild(dl);
-        p1.appendChild(dr);
-        requestAnimationFrame(() => p1.classList.add('t15-opened'));
-      }
-      setTimeout(() => {
-        const p2 = el('t15-p2');
-        if (p2) p2.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => { fxOn = false; }, 1400);
-      }, L.doors ? 1600 : 900);
+
+      const gb = el('t15-gb') || el('gb');
+      if (gb) gb.classList.add('out');
+
+      /* 600ms: lights ON + particle loop starts */
+      timeouts.push(setTimeout(() => {
+        if (p1) {
+          p1.classList.add('lit');
+          p1.classList.add('t15-lit');
+        }
+        if (g) g.style.opacity = '1';
+        if (fx) sizeCanvas(fx);
+        run = true;
+        loop();
+      }, 600));
+
+      /* 1500ms: curtains part */
+      timeouts.push(setTimeout(() => {
+        if (p1) {
+          p1.classList.add('opened');
+          p1.classList.add('t15-opened');
+        }
+      }, 1500));
+
+      /* Staggered bursts & patakas */
+      [1800, 2300, 2900, 3500, 4100, 4600].forEach((t, i) => {
+        timeouts.push(setTimeout(() => {
+          if (!fx) return;
+          i % 2 ? pataka() : burst(fx.width * (0.2 + Math.random() * 0.6), fx.height * (0.2 + Math.random() * 0.35), 60, [45, 350, 35][i % 3]);
+        }, t));
+      });
+
+      /* 5400ms: UNLOCK ONLY AFTER FULL ANIMATION FINISHES */
+      timeouts.push(setTimeout(() => {
+        run = false;
+        locked = false;
+        if (stage) stage.classList.remove('locked');
+        ds.forEach(i => {
+          const elem = el(i);
+          if (elem) elem.inert = false;
+        });
+        const p2 = el('t15-p2') || el('p2');
+        if (p2 && p2.scrollIntoView) {
+          p2.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 5400));
     };
   }
 
@@ -1022,7 +1236,15 @@ export function mount(root, options = {}) {
 
   // Cleanup Function
   return function cleanup() {
+    timeouts.forEach(t => clearTimeout(t));
     window.removeEventListener('resize', layoutCover);
+    window.removeEventListener('keydown', onKeydown, true);
+    scrollEvents.forEach(evt => {
+      document.removeEventListener(evt, stopScroll);
+      window.removeEventListener(evt, stopScroll);
+      if (stage) stage.removeEventListener(evt, stopScroll);
+    });
+    if (stage) stage.removeEventListener('scroll', onScroll);
     if (animId) cancelAnimationFrame(animId);
     if (petAnimId) cancelAnimationFrame(petAnimId);
     if (cdInterval) clearInterval(cdInterval);

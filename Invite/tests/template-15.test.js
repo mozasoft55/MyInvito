@@ -46,11 +46,18 @@ test('Template 15 — module renders 5-page cinematic wedding invitation with cu
 
   // 1. Check structure & CSS variable binding of custom backgrounds
   assert.match(html, /id="t15-stage"/);
+  assert.match(html, /class="[^"]*t15-stage[^"]*locked[^"]*"/);
   assert.match(html, /--t15-landing:\s*url\('https:\/\/example\.com\/custom-landing-bg\.webp'\)/);
   assert.match(html, /--t15-page:\s*url\('https:\/\/example\.com\/custom-page-bg\.webp'\)/);
 
-  // 2. Page 1: Cover / Landing Stage
+  // 2. Page 1: Cover / Landing Stage with Frosted Glass Board & Curtains
   assert.match(html, /id="t15-p1"/);
+  assert.match(html, /id="t15-gb"/);
+  assert.match(html, /class="[^"]*t15-curt[^"]*t15-cl[^"]*"/);
+  assert.match(html, /class="[^"]*t15-curt[^"]*t15-cr[^"]*"/);
+  assert.match(html, /id="t15-dark"/);
+  assert.match(html, /id="t15-flash"/);
+  assert.match(html, /class="[^"]*t15-rule[^"]*"/);
   assert.match(html, /id="t15-open"/);
   assert.match(html, /Param/);
   assert.match(html, /Pari/);
@@ -125,6 +132,33 @@ test('Template 15 — mount() initializes without throwing and returns a cleanup
   });
   assert.equal(typeof cleanup, 'function', 'mount returns a callable cleanup function');
   assert.doesNotThrow(() => cleanup(), 'cleanup function executes cleanly without throwing');
+});
+
+test('Template 15 — front cover frosted-glass board & locked scrolling before OPEN sequence', async () => {
+  const templateHtml = fs.readFileSync(path.join(rootDir, 'template-15.html'), 'utf8');
+
+  // Frosted-glass board styling & markup in standalone template-15.html
+  assert.match(templateHtml, /#gb\s*\{[^}]*backdrop-filter:\s*blur/);
+  assert.match(templateHtml, /<div id="gb">/);
+  assert.match(templateHtml, /<main class="stage locked" id="stage">/);
+
+  // Cinematic 3D curtains
+  assert.match(templateHtml, /\.curt\s*\{[^}]*transition:\s*transform 3\.4s cubic-bezier/);
+  assert.match(templateHtml, /<div class="curt cl"><\/div>/);
+  assert.match(templateHtml, /<div class="curt cr"><\/div>/);
+
+  // Strict scrolling lock event handlers present
+  assert.match(templateHtml, /\["wheel",\s*"touchmove"\]\.forEach/);
+  assert.match(templateHtml, /stage\.classList\.add\("locked"\)/);
+  assert.match(templateHtml, /setTimeout\(function\(\)\s*\{[\s\S]*stage\.classList\.remove\("locked"\)[\s\S]*\},\s*5400\)/);
+
+  // Modular template-15.js verification
+  const templateJs = fs.readFileSync(path.join(rootDir, 'templates', 'template-15.js'), 'utf8');
+  assert.match(templateJs, /#t15-gb[\s\S]*backdrop-filter:\s*blur/);
+  assert.match(templateJs, /\.t15-stage\.locked/);
+  assert.match(templateJs, /overflow:\s*hidden !important/);
+  assert.match(templateJs, /\.t15-curt[\s\S]*transition:\s*transform 3\.4s/);
+  assert.match(templateJs, /stage\.classList\.remove\('locked'\)/);
 });
 
 test('Onboarding validation — requires both background images strictly for Template 15 and NEVER for Templates 01–14', async () => {
