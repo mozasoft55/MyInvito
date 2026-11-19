@@ -59,6 +59,17 @@
       min-height: 100vh;
       min-height: 100dvh;
       position: relative;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    input, textarea {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
     }
 
     /* Fixed single-screen slide templates (e.g. template-01, template-02, template-04, template-05) */
@@ -1088,6 +1099,64 @@
   <canvas id="ambient-particle-canvas" aria-hidden="true"></canvas>
   <main id="app-mount"></main>
 
+  <!-- Proprietary Tamper Protection & Anti-Theft Guard -->
+  <script>
+    (function() {
+      // 1. Domain License & Anti-Theft Guard: Protect against unauthorized stolen re-hosting
+      var host = (typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : '').toLowerCase();
+      var isAllowedHost = (
+        !host ||
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host.endsWith('.local') ||
+        host.endsWith('.workers.dev') ||
+        host.endsWith('.pages.dev') ||
+        host.endsWith('.github.io') ||
+        host.includes('eweddinghubs') ||
+        host.includes('myinvito') ||
+        host.includes('primeecard')
+      );
+      if (!isAllowedHost) {
+        console.warn('⚠️ Stolen code detected. Unauthorized domain execution blocked.');
+        window.addEventListener('DOMContentLoaded', function() {
+          var mount = document.getElementById('app-mount');
+          if (mount) {
+            mount.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#140105;color:#D4AF37;font-family:serif;text-align:center;padding:24px;"><div><h2>⚠️ License Notice</h2><p>This digital invitation is protected by copyright and authorized only on licensed domains.</p></div></div>';
+          }
+        });
+      }
+
+      // 2. Prevent Right-Click / Context Menu on invitation surfaces
+      document.addEventListener('contextmenu', function(e) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        e.preventDefault();
+        return false;
+      }, { capture: true });
+
+      // 3. Block DevTools keyboard shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+      document.addEventListener('keydown', function(e) {
+        if (
+          e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+          (e.ctrlKey && ['U', 'u', 'S', 's'].includes(e.key))
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }, { capture: true });
+
+      // 4. Security Warning Console Banner
+      try {
+        console.log(
+          '%c⚜️ Prime eCard / MyInvito ⚜️\n%cThis wedding invitation software, design tokens, and animation suites are proprietary intellectual property. Unauthorized copying, reverse-engineering, or scraping is strictly monitored.',
+          'font-size: 16px; font-weight: bold; color: #D4AF37; text-shadow: 0 1px 2px #000;',
+          'font-size: 12px; color: #f5e2b8; line-height: 1.5;'
+        );
+      } catch (_) {}
+    })();
+  </script>
+
   <script type="module">
     import { fetchInvitationByCode, submitRsvp, buildMapEmbedUrl, buildNavigateUrl } from './api.js';
 
@@ -1465,7 +1534,7 @@
                 </div>
                 <div class="royal-map-frame">
                   ${embedMapUrl ? `
-                    <iframe title="${escapeHtml(venueName || 'Banquet Hall Map')}" src="${escapeHtml(embedMapUrl)}" class="royal-map-iframe" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    <iframe title="${escapeHtml(venueName || 'Banquet Hall Map')}" data-src="${escapeHtml(embedMapUrl)}" src="about:blank" class="royal-map-iframe" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
                   ` : `
                     <div class="royal-map-placeholder" style="display:flex;align-items:center;justify-content:center;height:100%;min-height:220px;color:#7B1828;text-align:center;padding:20px;font-family:Georgia,serif;background:#fff8ee;border-radius:12px;">
                       <div>
@@ -1719,7 +1788,13 @@
         setActiveNav('map');
         document.body.classList.add('royal-modal-open');
         if (rsvpModal) rsvpModal.classList.add('hidden');
-        if (mapModal) mapModal.classList.remove('hidden');
+        if (mapModal) {
+          const mapFrame = mapModal.querySelector('.royal-map-iframe');
+          if (mapFrame && mapFrame.dataset.src && (!mapFrame.src || mapFrame.src === 'about:blank' || mapFrame.src.endsWith('about:blank'))) {
+            mapFrame.src = mapFrame.dataset.src;
+          }
+          mapModal.classList.remove('hidden');
+        }
       }
 
       function closeMap() {
