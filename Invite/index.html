@@ -1420,7 +1420,7 @@
         <!-- Floating Bottom Navigation Pill Dock (RSVP, Map, Dates, Music) -->
         <nav aria-label="Wedding Quick Navigation" class="royal-dock-wrap">
           <div class="royal-dock-pill">
-            <button type="button" id="royalDockRsvp" class="royal-dock-btn active" aria-label="Open RSVP Modal">
+            <button type="button" id="royalDockRsvp" class="royal-dock-btn" aria-label="Open RSVP Modal">
               <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 7l8.5 6 8.5-6"/></svg>
               <span>RSVP</span>
             </button>
@@ -1699,11 +1699,14 @@
 
       function openRsvp() {
         setActiveNav('rsvp');
+        document.body.classList.add('royal-modal-open');
         if (mapModal) mapModal.classList.add('hidden');
         if (rsvpModal) rsvpModal.classList.remove('hidden');
       }
 
       function closeRsvp() {
+        setActiveNav(null);
+        document.body.classList.remove('royal-modal-open');
         if (rsvpModal) rsvpModal.classList.add('hidden');
       }
 
@@ -1711,11 +1714,14 @@
 
       function openMap() {
         setActiveNav('map');
+        document.body.classList.add('royal-modal-open');
         if (rsvpModal) rsvpModal.classList.add('hidden');
         if (mapModal) mapModal.classList.remove('hidden');
       }
 
       function closeMap() {
+        setActiveNav(null);
+        document.body.classList.remove('royal-modal-open');
         if (mapModal) mapModal.classList.add('hidden');
       }
 
@@ -1723,6 +1729,10 @@
         setActiveNav('dates');
         closeRsvp();
         closeMap();
+        if (typeof window.__template02Go === 'function') {
+          window.__template02Go(3);
+          return;
+        }
         const targets = [
           '#dates-section',
           '.t04-events-sec',
@@ -1748,6 +1758,9 @@
 
       function scrollToMap() {
         closeRsvp();
+        if (typeof window.__template02Go === 'function') {
+          window.__template02Go(3);
+        }
         const targets = [
           '#map-section',
           '.t04-venue-showcase',
@@ -1769,6 +1782,13 @@
         }
         openMap();
       }
+
+      window.addEventListener('keydown', e => {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+          if (rsvpModal && !rsvpModal.classList.contains('hidden')) closeRsvp();
+          if (mapModal && !mapModal.classList.contains('hidden')) closeMap();
+        }
+      });
 
       // Dock buttons
       const btnRsvp = document.getElementById('royalDockRsvp');

@@ -38,7 +38,7 @@
     .guest-card a.guest-link { display:block; overflow-wrap:anywhere; color:#553139; font:12px/1.45 ui-monospace,Consolas,monospace; }
     .actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; }
     .actions button,.actions a { min-height:36px; padding:6px 12px; font-size:.78rem; }
-    dialog { width:min(440px, calc(100vw - 24px)); border:1px solid var(--gold); border-radius:16px; padding:20px; background:var(--paper); color:var(--ink); box-shadow:0 24px 80px #0008; }
+    dialog { width:min(440px, calc(100vw - 24px)); max-height:calc(100dvh - 32px); overflow-y:auto; border:1px solid var(--gold); border-radius:16px; padding:20px; background:var(--paper); color:var(--ink); box-shadow:0 24px 80px #0008; }
     dialog::backdrop { background:#17050acc; }
     dialog h2 { margin:0 0 6px; color:var(--wine); }
     #qr-content { display:grid; justify-items:center; gap:12px; margin:16px 0; }
@@ -50,6 +50,7 @@
       .panel { padding:16px; }
       .guest-card { grid-template-columns:minmax(0,1fr); }
       .actions { justify-content:flex-start; }
+      input, select, textarea { font-size:16px !important; }
     }
   </style>
 </head>

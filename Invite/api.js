@@ -3,6 +3,16 @@ import { SUPABASE_CONFIG } from './supabase-config.js';
 const REQUEST_TIMEOUT_MS = 8000;
 const THEME_COLOR_KEYS = ['primary', 'primary_dark', 'accent', 'paper_top', 'paper_bottom', 'text'];
 const inflightInvitationRequests = new Map();
+const invitationMemoryCache = new Map();
+const CACHE_TTL_MS = 60000;
+
+export function clearInvitationCache(code) {
+  if (code) {
+    invitationMemoryCache.delete(String(code).trim().toUpperCase());
+  } else {
+    invitationMemoryCache.clear();
+  }
+}
 
 function cleanText(value, maxLength) {
   if (typeof value !== 'string' && typeof value !== 'number') return '';
@@ -438,13 +448,22 @@ function findLocalInvitation(code) {
   return null;
 }
 
-export function fetchInvitationByCode(inviteCode, { signal } = {}) {
+export function fetchInvitationByCode(inviteCode, { signal, skipCache = false } = {}) {
   const code = String(inviteCode || '').trim();
   if (!code || code.length > 120) {
     return Promise.reject(new Error('Open your personalized invitation using its ?code= invite link.'));
   }
 
   const inflightKey = code.toUpperCase();
+
+  if (!skipCache && invitationMemoryCache.has(inflightKey)) {
+    const cached = invitationMemoryCache.get(inflightKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      return Promise.resolve(cached.data);
+    }
+    invitationMemoryCache.delete(inflightKey);
+  }
+
   if (inflightInvitationRequests.has(inflightKey)) {
     return inflightInvitationRequests.get(inflightKey);
   }
@@ -566,7 +585,9 @@ export function fetchInvitationByCode(inviteCode, { signal } = {}) {
         }
       }
 
-      return normalizeInvitation(data, code);
+      const normalized = normalizeInvitation(data, code);
+      invitationMemoryCache.set(inflightKey, { timestamp: Date.now(), data: normalized });
+      return normalized;
     } finally {
       inflightInvitationRequests.delete(inflightKey);
     }
@@ -613,5 +634,6 @@ export async function submitRsvp({ inviteCode, response, attendees, wishesMessag
     }
   });
   if (!result || result.success !== true) throw new Error('Your RSVP could not be saved.');
+  invitationMemoryCache.delete(code.toUpperCase());
   return result;
 }

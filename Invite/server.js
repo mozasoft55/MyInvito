@@ -64,18 +64,63 @@ const server = http.createServer((req, res) => {
   } catch (_) {}
 
   // Check file exists
-  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(`<h1>404 Not Found</h1><p>The requested file <code>${reqPath}</code> was not found.</p>`);
+  let stat;
+  try {
+    if (!fs.existsSync(filePath) || !(stat = fs.statSync(filePath)).isFile()) {
+      res.writeHead(404, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN',
+        'Referrer-Policy': 'strict-origin-when-cross-origin'
+      });
+      res.end(`<h1>404 Not Found</h1><p>The requested file <code>${reqPath}</code> was not found.</p>`);
+      return;
+    }
+  } catch (_) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('500 Internal Server Error');
     return;
   }
 
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
+  // Smart caching headers
+  let cacheControl = 'public, max-age=0, must-revalidate';
+  if (['.mp3', '.wav', '.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf'].includes(ext)) {
+    cacheControl = 'public, max-age=604800, stale-while-revalidate=86400';
+  } else if (['.css', '.js'].includes(ext)) {
+    cacheControl = 'public, max-age=3600, stale-while-revalidate=86400';
+  }
+
+  const mtime = stat.mtime.toUTCString();
+  const etag = `W/"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+
+  const securityHeaders = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+  };
+
+  // Conditional request (304 Not Modified)
+  if (req.headers['if-none-match'] === etag || req.headers['if-modified-since'] === mtime) {
+    res.writeHead(304, {
+      ...securityHeaders,
+      'ETag': etag,
+      'Last-Modified': mtime,
+      'Cache-Control': cacheControl
+    });
+    res.end();
+    return;
+  }
+
   res.writeHead(200, {
+    ...securityHeaders,
     'Content-Type': contentType,
-    'Cache-Control': 'no-cache, no-store, must-revalidate'
+    'Cache-Control': cacheControl,
+    'ETag': etag,
+    'Last-Modified': mtime
   });
 
   const stream = fs.createReadStream(filePath);

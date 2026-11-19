@@ -256,7 +256,7 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
     ? esc(wedding.message)
     : `With immense joy, we invite you to celebrate the wedding union of ${names}`;
 
-  const dots = i => `<div class="dots">${[0, 1, 2, 3, 4].map(k => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>`;
+  const dots = i => `<div class="dots" role="tablist" aria-label="Section navigation">${[0, 1, 2, 3, 4].map(k => `<button type="button" class="dot-btn ${k === i ? 'on' : ''}" data-next="${k}" role="tab" aria-selected="${k === i}" aria-label="Go to section ${k + 1}"></button>`).join('')}</div>`;
   const next = (to, label) => `<button class="btn" type="button" data-next="${to}"><span>${label}</span><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`;
   const P = (i, inner, btn, cls = '') => `<section class="sp${i ? '' : ' on'}" data-index="${i}">${dots(i)}<div class="bd ${cls}">${inner}</div>${btn}</section>`;
 
@@ -277,7 +277,7 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .ru{position:absolute;inset:0;overflow:hidden;display:flex;justify-content:center;background:radial-gradient(circle at 50% 15%,var(--ox2),#120104 72%);font-family:'Lora',Georgia,serif;color:var(--ink)}
 .vp{position:relative;width:100%;max-width:430px;height:100%}
-.sp{position:absolute;inset:max(6px,env(safe-area-inset-top)) 6px max(8px,env(safe-area-inset-bottom));font-size:clamp(11px,min(2.2dvh,4.6vw),19px);line-height:1.4;
+.sp{position:absolute;inset:max(6px,env(safe-area-inset-top)) 6px calc(68px + max(12px,env(safe-area-inset-bottom,12px))) 6px;font-size:clamp(11px,min(2.2dvh,4.6vw),19px);line-height:1.4;
  border-radius:min(44vw,190px) min(44vw,190px) 24px 24px;background:linear-gradient(180deg,var(--pt) 45%,var(--pb));border:3px solid #dfc384;
  box-shadow:0 20px 60px rgba(0,0,0,.75),0 0 30px rgba(185,138,47,.2),inset 0 0 30px rgba(212,175,55,.12);display:flex;flex-direction:column;align-items:center;text-align:center;
  padding:1.1em 1.5em 1.1em;visibility:hidden;opacity:0;transform:scale(.97) translateY(10px);transition:opacity .45s,transform .45s,visibility .45s}
@@ -286,7 +286,7 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
 .sp:after{content:"";position:absolute;inset:16px;border:1px dashed rgba(183,138,47,.45);border-radius:inherit;pointer-events:none}
 .bd{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;overflow-y:auto;scrollbar-width:none;padding-top:.4em}.bd::-webkit-scrollbar{display:none}
 .bd.t{padding-top:2.2em}
-.dots{display:flex;gap:.4em;margin:.2em 0 .3em;flex-shrink:0}.dots i{width:.45em;height:.45em;border-radius:50%;background:rgba(183,138,47,.3);transition:.3s}.dots i.on{width:1.6em;border-radius:.3em;background:var(--gold)}
+.dots{display:flex;gap:.5em;margin:.2em 0 .3em;flex-shrink:0;z-index:10}.dots i,.dot-btn{width:.55em;height:.55em;border-radius:50%;background:rgba(183,138,47,.35);border:none;padding:0;cursor:pointer;transition:.3s;-webkit-tap-highlight-color:transparent}.dots i.on,.dot-btn.on{width:1.8em;border-radius:.3em;background:var(--gold)}.dot-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .cap{font-family:'Cinzel',serif;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ox)}
 .sc{font-family:'Great Vibes',cursive;color:var(--ox);line-height:1.1;font-weight:400}.amp{font-family:'Lora',serif;font-size:.5em;font-style:italic;vertical-align:middle}
 .nm{font-family:'Playfair Display',serif;font-weight:700;color:var(--ox);line-height:1.2}
@@ -369,8 +369,11 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
     cur = n;
     setTimeout(() => { a.classList.remove('out'); b.classList.add('on'); }, 350);
   };
+  if (typeof window !== 'undefined') {
+    window.__template02Go = go;
+  }
 
-  root.addEventListener('click', e => {
+  const handleClick = e => {
     const b = e.target.closest('[data-next]');
     if (!b) return;
     go(+b.dataset.next);
@@ -378,7 +381,34 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
       played = true;
       au.play().then(() => ab.classList.add('spin')).catch(() => {});
     }
-  });
+  };
+  root.addEventListener('click', handleClick);
+
+  // Touch Swipe Navigation for mobile
+  let touchStartX = 0;
+  let touchStartY = 0;
+  const handleTouchStart = e => {
+    if (e.touches && e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
+  };
+  const handleTouchEnd = e => {
+    if (!touchStartX || !e.changedTouches || e.changedTouches.length !== 1) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    touchStartX = 0;
+    touchStartY = 0;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      if (dx < 0 && cur < S.length - 1) {
+        go(cur + 1);
+      } else if (dx > 0 && cur > 0) {
+        go(cur - 1);
+      }
+    }
+  };
+  root.addEventListener('touchstart', handleTouchStart, { passive: true });
+  root.addEventListener('touchend', handleTouchEnd, { passive: true });
 
   if (au) {
     au.addEventListener('ended', () => ab.classList.remove('spin'));
@@ -400,11 +430,12 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
     E.forEach((el, i) => { if (el) el.textContent = pad(v[i]); });
   };
 
+  let iv = null;
   if (t === null) {
     E.forEach(el => { if (el) el.textContent = '—'; });
   } else {
     tick();
-    var iv = setInterval(() => { root.isConnected ? tick() : clearInterval(iv); }, 1000);
+    iv = setInterval(() => { root.isConnected ? tick() : clearInterval(iv); }, 1000);
   }
 
   const cal = $('#cal');
@@ -429,17 +460,35 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
   }
 
   const sm = $('#sm'), cv = $('#cv');
-  $('#sc').onclick = () => {
-    sm.classList.add('on');
-    scratch(cv);
-    if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
-      const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
-      const cx = r ? r.left + r.width / 2 : null;
-      const cy = r ? r.top + r.height / 2 : null;
-      window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+  const sc = $('#sc'), cs = $('#cs');
+  if (sc && sm && cv) {
+    sc.onclick = () => {
+      sm.classList.add('on');
+      scratch(cv);
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+        const cx = r ? r.left + r.width / 2 : null;
+        const cy = r ? r.top + r.height / 2 : null;
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(cx, cy);
+      }
+    };
+  }
+  if (cs && sm) {
+    cs.onclick = () => sm.classList.remove('on');
+  }
+
+  return () => {
+    if (iv) clearInterval(iv);
+    if (au) {
+      try { au.pause(); } catch (_) {}
+    }
+    root.removeEventListener('click', handleClick);
+    root.removeEventListener('touchstart', handleTouchStart);
+    root.removeEventListener('touchend', handleTouchEnd);
+    if (typeof window !== 'undefined' && window.__template02Go === go) {
+      delete window.__template02Go;
     }
   };
-  $('#cs').onclick = () => sm.classList.remove('on');
 }
 
 function scratch(c) {
