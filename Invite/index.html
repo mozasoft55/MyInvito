@@ -1310,10 +1310,13 @@
 
         isMusicPlaying = true;
         try {
-          // Priority: User's explicitly chosen music in localStorage takes precedence
-          const storedChoice = (typeof localStorage !== 'undefined' && localStorage.getItem('wedding_music_url_' + (currentWedding.order_reference || '')))
-            || (typeof localStorage !== 'undefined' && localStorage.getItem('wedding-music-url'));
-          let musicSrc = (storedChoice && storedChoice !== 'none') ? storedChoice : (currentWedding.music_url || currentWedding.audio_url || './invitation.mp3');
+          // Priority: Order-scoped choice -> wedding.music_url from DB -> fallback to invitation.mp3
+          const orderScopedChoice = (typeof localStorage !== 'undefined' && currentWedding.order_reference)
+            ? localStorage.getItem('wedding_music_url_' + currentWedding.order_reference)
+            : null;
+          let musicSrc = (orderScopedChoice && orderScopedChoice !== 'none')
+            ? orderScopedChoice
+            : (currentWedding.music_url || currentWedding.audio_url || (typeof localStorage !== 'undefined' ? localStorage.getItem('wedding-music-url') : null) || './invitation.mp3');
           musicSrc = normalizeSongUrl(musicSrc);
 
           if (!bgAudio) {
@@ -2302,21 +2305,27 @@
           return s;
         }
 
-        const userMusicChoice = getStored('wedding_music_url_' + (wedding.order_reference || ''))
-          || getStored('wedding-music-url');
-        const userMusicTitle = getStored('wedding_music_title_' + (wedding.order_reference || ''))
-          || getStored('wedding-music-title');
+        const scopedMusicChoice = wedding.order_reference ? getStored('wedding_music_url_' + wedding.order_reference) : null;
+        const scopedMusicTitle = wedding.order_reference ? getStored('wedding_music_title_' + wedding.order_reference) : null;
+        const globalMusicChoice = getStored('wedding-music-url');
+        const globalMusicTitle = getStored('wedding-music-title');
 
-        if (userMusicChoice && userMusicChoice !== 'none') {
-          wedding.music_url = normalizeMusicUrl(userMusicChoice);
-        } else if (wedding.music_url) {
+        if (scopedMusicChoice && scopedMusicChoice !== 'none') {
+          wedding.music_url = normalizeMusicUrl(scopedMusicChoice);
+        } else if (wedding.music_url && wedding.music_url !== 'none') {
           wedding.music_url = normalizeMusicUrl(wedding.music_url);
+        } else if (globalMusicChoice && globalMusicChoice !== 'none' && isPreviewMode) {
+          wedding.music_url = normalizeMusicUrl(globalMusicChoice);
         } else {
           wedding.music_url = './invitation.mp3';
         }
 
-        if (userMusicTitle) {
-          wedding.music_title = userMusicTitle;
+        if (scopedMusicTitle) {
+          wedding.music_title = scopedMusicTitle;
+        } else if (wedding.music_title) {
+          wedding.music_title = wedding.music_title;
+        } else if (globalMusicTitle && isPreviewMode) {
+          wedding.music_title = globalMusicTitle;
         }
 
         weddingPayload.wedding.music_url = wedding.music_url;

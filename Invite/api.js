@@ -84,8 +84,14 @@ export function normalizeWeddingRecord(record) {
   const bridePhoto = cleanPhoto(record.bride_photo || record.bride_photo_url || record.bride_image || record.image2 || record.photo_bride);
   const couplePhoto = cleanPhoto(record.couple_photo || record.couple_photo_url || record.hero_image || record.image3 || record.couple_image);
   const venuePhoto = cleanPhoto(record.venue_photo || record.venue_photo_url || record.venue_image || record.banquet_photo || record.image4 || record.banquet_image);
-  const landingBg = cleanPhoto(record.landing_background || record.landingBackground || record.front_background || record.cover_background);
+  const landingBg = cleanPhoto(record.landing_background || record.landingBackground || record.front_background || record.cover_background || record.image5);
   const pageBg = cleanPhoto(record.page_background || record.pageBackground || record.couple_background);
+
+  const resolvedVenue = cleanText(record.venue || record.venue_name || record.banquet_name || record.hall_name || '', 180);
+  const resolvedAddress = cleanText(record.address || record.venue_address || record.location || '', 500);
+  const resolvedMusicUrl = cleanText(record.music_url || record.audio_url || record.music_link || record.soundtrack_url || '', 500000);
+  const resolvedMusicTitle = cleanText(record.music_title || record.audio_title || '', 200);
+  const resolvedMusicId = cleanText(record.music_id || '', 100);
 
   return {
     ...record,
@@ -95,12 +101,17 @@ export function normalizeWeddingRecord(record) {
     groom_full: cleanText(record.groom_full, 140),
     date: normalizeDate(record.event_date || record.date),
     time: normalizeTime(record.time),
-    venue: cleanText(record.venue, 180),
-    venue_name: cleanText(record.venue_name || record.venue || record.banquet_name, 180),
+    venue: resolvedVenue,
+    venue_name: resolvedVenue,
+    banquet_name: resolvedVenue,
     venue_title: cleanText(record.venue_title, 120),
-    address: cleanText(record.address, 500),
-    venue_address: cleanText(record.venue_address || record.address, 500),
+    address: resolvedAddress,
+    venue_address: resolvedAddress,
     map_url: cleanText(record.map_url, 2000),
+    music_url: resolvedMusicUrl,
+    audio_url: resolvedMusicUrl,
+    music_title: resolvedMusicTitle,
+    music_id: resolvedMusicId,
     rsvp_contacts: cleanText(record.rsvp_contacts, 1200),
     rsvp_number: cleanText(record.rsvp_number, 40).replace(/[^\d+]/g, ''),
     theme_colors: Object.keys(themeColors).length ? themeColors : undefined,
@@ -134,7 +145,8 @@ export function normalizeWeddingRecord(record) {
     image1: groomPhoto,
     image2: bridePhoto,
     image3: couplePhoto,
-    image4: venuePhoto
+    image4: venuePhoto,
+    image5: landingBg
   };
 }
 
@@ -583,6 +595,25 @@ export function fetchInvitationByCode(inviteCode, { signal, skipCache = false } 
         if (localMatch.guest.name || localMatch.guest.guest_name) {
           data.guest.guest_name = localMatch.guest.name || localMatch.guest.guest_name;
         }
+      }
+
+      if (data && data.wedding && localMatch && localMatch.wedding) {
+        const lw = localMatch.wedding;
+        const dw = data.wedding;
+        if (!dw.music_url && lw.music_url) dw.music_url = lw.music_url;
+        if (!dw.music_title && lw.music_title) dw.music_title = lw.music_title;
+        if (!dw.music_id && lw.music_id) dw.music_id = lw.music_id;
+        if (!dw.venue && lw.venue) dw.venue = lw.venue;
+        if (!dw.venue_name && lw.venue_name) dw.venue_name = lw.venue_name;
+        if (!dw.address && lw.address) dw.address = lw.address;
+        if (!dw.venue_address && lw.venue_address) dw.venue_address = lw.venue_address;
+        if (!dw.map_url && lw.map_url) dw.map_url = lw.map_url;
+        if (!dw.groom_photo && lw.groom_photo) dw.groom_photo = lw.groom_photo;
+        if (!dw.bride_photo && lw.bride_photo) dw.bride_photo = lw.bride_photo;
+        if (!dw.couple_photo && lw.couple_photo) dw.couple_photo = lw.couple_photo;
+        if (!dw.venue_photo && lw.venue_photo) dw.venue_photo = lw.venue_photo;
+        if (!dw.landing_background && lw.landing_background) dw.landing_background = lw.landing_background;
+        if (!dw.page_background && lw.page_background) dw.page_background = lw.page_background;
       }
 
       const normalized = normalizeInvitation(data, code);

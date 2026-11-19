@@ -472,7 +472,7 @@ begin
   insert into public.wedding_details (
     wedding_id, status, host_name, bride_full, groom_full, bride_parents,
     groom_parents, ceremony_title, invocation, ceremony_time, venue_title,
-    venue, address, map_url, slug, image1, image2, image3, image4
+    venue, address, map_url, slug, image1, image2, image3, image4, image5, music_url
   )
   values (
     v_wedding_id,
@@ -486,14 +486,16 @@ begin
     nullif(btrim(coalesce(p_input->>'invocation', '')), ''),
     nullif(p_input->>'ceremony_time', '')::time,
     nullif(btrim(coalesce(p_input->>'venue_title', '')), ''),
-    nullif(btrim(coalesce(p_input->>'venue', '')), ''),
-    nullif(btrim(coalesce(p_input->>'address', '')), ''),
+    nullif(btrim(coalesce(p_input->>'venue', p_input->>'venue_name', p_input->>'banquet_name', '')), ''),
+    nullif(btrim(coalesce(p_input->>'address', p_input->>'venue_address', p_input->>'location', '')), ''),
     nullif(btrim(coalesce(p_input->>'map_url', '')), ''),
     v_slug,
-    nullif(btrim(coalesce(p_input->>'groom_photo', p_input->>'image1', '')), ''),
-    nullif(btrim(coalesce(p_input->>'bride_photo', p_input->>'image2', '')), ''),
-    nullif(btrim(coalesce(p_input->>'couple_photo', p_input->>'hero_image', p_input->>'image3', '')), ''),
-    nullif(btrim(coalesce(p_input->>'venue_photo', p_input->>'banquet_photo', p_input->>'image4', '')), '')
+    nullif(btrim(coalesce(p_input->>'groom_photo', p_input->>'groom_photo_url', p_input->>'photo_groom', p_input->>'image1', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_photo', p_input->>'bride_photo_url', p_input->>'photo_bride', p_input->>'image2', '')), ''),
+    nullif(btrim(coalesce(p_input->>'couple_photo', p_input->>'couple_photo_url', p_input->>'hero_image', p_input->>'image3', '')), ''),
+    nullif(btrim(coalesce(p_input->>'venue_photo', p_input->>'venue_photo_url', p_input->>'banquet_photo', p_input->>'image4', '')), ''),
+    nullif(btrim(coalesce(p_input->>'landing_background', p_input->>'landingBackground', p_input->>'page_background', p_input->>'image5', '')), ''),
+    nullif(btrim(coalesce(p_input->>'music_url', p_input->>'audio_url', p_input->>'soundtrack_url', '')), '')
   );
 
   insert into public.guests (
