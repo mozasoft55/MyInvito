@@ -59,7 +59,8 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'template-11',
   'template-12',
   'template-13',
-  'template-14'
+  'template-14',
+  'template-15'
 ]);
 
 export const DEFAULT_STYLES = Object.freeze([
@@ -76,7 +77,8 @@ export const DEFAULT_STYLES = Object.freeze([
   { template_id: 'template-11', style_name: 'Royal Gate & Ivory Arch' },
   { template_id: 'template-12', style_name: 'Regal Gateway' },
   { template_id: 'template-13', style_name: 'Temple Palace Sanctuary' },
-  { template_id: 'template-14', style_name: 'Grand Royal Pavilion' }
+  { template_id: 'template-14', style_name: 'Grand Royal Pavilion' },
+  { template_id: 'template-15', style_name: 'Custom Background Design' }
 ]);
 
 export const DEFAULT_THEMES = Object.freeze([
@@ -141,6 +143,13 @@ export function validateOnboarding(input) {
   if (!isIsoDate(weddingDate)) errors.event_date = 'Enter a valid wedding date.';
   const template = required('template_style', 'Invitation design', 30);
   if (!AVAILABLE_TEMPLATES.includes(template)) errors.template_style = 'Choose an available invitation design.';
+
+  if (template === 'template-15') {
+    const landingBg = text('landing_background', 500000) || text('landingBackground', 500000);
+    const pageBg = text('page_background', 500000) || text('pageBackground', 500000);
+    if (!landingBg) errors.landing_background = 'Upload Front Cover Background Image is required for Template 15.';
+    if (!pageBg) errors.page_background = 'Upload Couple Details Background Image is required for Template 15.';
+  }
 
   const events = Array.isArray(input.events) ? input.events : [];
   if (!events.length || events.length > 40) errors.events = 'Add between 1 and 40 programme events.';
@@ -207,6 +216,10 @@ export function validateOnboarding(input) {
     bride_photo: text('bride_photo', 500000),
     couple_photo: text('couple_photo', 500000),
     venue_photo: text('venue_photo', 500000),
+    landing_background: text('landing_background', 500000) || text('landingBackground', 500000),
+    landingBackground: text('landing_background', 500000) || text('landingBackground', 500000),
+    page_background: text('page_background', 500000) || text('pageBackground', 500000),
+    pageBackground: text('page_background', 500000) || text('pageBackground', 500000),
     music_id: text('music_id', 100),
     music_title: text('music_title', 200),
     music_url: text('music_url', 500000),

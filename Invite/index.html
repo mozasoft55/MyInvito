@@ -1997,7 +1997,7 @@
       'template-01', 'template-02', 'template-03', 'template-04',
       'template-05', 'template-06', 'template-07', 'template-08',
       'template-09', 'template-10', 'template-11', 'template-12',
-      'template-13', 'template-14'
+      'template-13', 'template-14', 'template-15'
     ]);
 
     async function bootstrap() {
@@ -2251,6 +2251,26 @@
         wedding.venue_address = (wedding.venue_address || wedding.address || orderMetadata?.venue_address || orderMetadata?.address || '').trim();
         wedding.city = (wedding.city || orderMetadata?.city || '').trim();
         wedding.map_url = (wedding.map_url || orderMetadata?.map_url || '').trim();
+
+        const landingBg = wedding.landing_background
+          || wedding.landingBackground
+          || orderMetadata?.landing_background
+          || orderMetadata?.landingBackground
+          || (orderRef ? getStored('wedding_landing_background_' + orderRef) : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored('template_photo_template-15_landing') : '')
+          || '';
+        const pageBg = wedding.page_background
+          || wedding.pageBackground
+          || orderMetadata?.page_background
+          || orderMetadata?.pageBackground
+          || (orderRef ? getStored('wedding_page_background_' + orderRef) : '')
+          || (isPreviewMode && isSelectedTemplate ? getStored('template_photo_template-15_page') : '')
+          || '';
+
+        wedding.landing_background = landingBg;
+        wedding.landingBackground = landingBg;
+        wedding.page_background = pageBg;
+        wedding.pageBackground = pageBg;
 
         function normalizeMusicUrl(url) {
           if (!url) return '';

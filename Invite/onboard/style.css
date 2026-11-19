@@ -884,3 +884,187 @@ form:has(input[name="name_order"][value="bride_first"]:checked) .couple-cards-gr
     border-radius: 14px;
   }
 }
+
+/* Template 15: Custom Background Upload Section */
+.t15-bg-box {
+  margin-top: 24px;
+  padding: 20px;
+  background: #fffdfa;
+  border: 1.5px solid #d4af37;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(110, 20, 41, 0.06);
+  animation: t15FadeIn 0.3s ease;
+}
+
+@keyframes t15FadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.t15-badge-required {
+  font-size: 11px;
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #7a1426;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.t15-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.t15-upload-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e7d8c4;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+.t15-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.t15-upload-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #502132;
+}
+
+.t15-upload-badge {
+  font-size: 11px;
+  font-family: Arial, sans-serif;
+  padding: 2px 8px;
+  background: #fdf5e6;
+  color: #8c6820;
+  border: 1px solid #eed8a1;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.t15-upload-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 12px;
+  line-height: 1.35;
+}
+
+.t15-dropzone {
+  position: relative;
+  min-height: 150px;
+  border: 2px dashed #d5c3ab;
+  border-radius: 10px;
+  background: #fcfbf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
+}
+
+.t15-dropzone:hover, .t15-dropzone.drag-over {
+  border-color: #8a6a2a;
+  background: #fdfaf3;
+}
+
+.t15-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.t15-empty-view {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.t15-icon {
+  font-size: 28px;
+}
+
+.t15-drop-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #502132;
+}
+
+.t15-drop-sub {
+  font-size: 12px;
+  color: #8a7c7c;
+  font-family: Arial, sans-serif;
+}
+
+.t15-preview-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  width: 100%;
+  z-index: 3;
+}
+
+.t15-preview-img {
+  max-width: 130px;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #d4af37;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.t15-preview-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.t15-meta-text {
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  color: #2e5939;
+  font-weight: 600;
+  text-align: left;
+}
+
+.t15-replace-btn {
+  font-size: 11px;
+  padding: 4px 12px;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .t15-upload-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

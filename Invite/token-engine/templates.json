@@ -744,6 +744,52 @@
         "--border-radius-btn": "40px",
         "--card-shadow": "0 24px 60px rgba(21, 6, 8, 0.85), inset 0 1px 0 rgba(255, 230, 180, 0.2)"
       }
+    },
+    {
+      "id": "advance-custom-background-suite",
+      "legacyId": "template-15",
+      "title": "Custom Background Image Design",
+      "community": "Advance",
+      "category": [
+        "Advance",
+        "Custom",
+        "Modern"
+      ],
+      "theme": "Customer Custom 2-Background Suite with 3D Depth & Scratch Reveal",
+      "themeBadge": "Custom 3D",
+      "tags": [
+        "Advance",
+        "Custom Background",
+        "User Artwork",
+        "Cinematic 3D",
+        "Scratch Card",
+        "Template 15"
+      ],
+      "thumbnail": "./assets/template-15-cover.webp",
+      "fonts": [
+        "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,700&family=Great+Vibes&display=swap"
+      ],
+      "tokens": {
+        "--card-bg": "linear-gradient(180deg, #150608 0%, #250a0f 50%, #0e0305 100%)",
+        "--card-surface": "rgba(37, 10, 15, 0.92)",
+        "--card-surface-hover": "rgba(55, 15, 22, 0.98)",
+        "--card-border": "1.5px solid #d4af37",
+        "--text-primary": "#fff9f2",
+        "--text-secondary": "#e7c480",
+        "--text-muted": "rgba(231, 196, 128, 0.72)",
+        "--accent-gold": "#d4af37",
+        "--accent-gold-light": "#fae19c",
+        "--accent-foil": "linear-gradient(110deg, #6b0c1b 0%, #d4af37 35%, #fffbe8 50%, #d4af37 65%, #6b0c1b 100%)",
+        "--accent-jewel": "#6b0c1b",
+        "--card-font-display": "'Cinzel', Georgia, serif",
+        "--card-font-body": "'Cormorant Garamond', Georgia, serif",
+        "--card-font-accent": "'Great Vibes', cursive",
+        "--frame-motif": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23d4af37' stroke-width='1.5'%3E%3Cpath d='M50 0 C20 30 20 70 50 100 C80 70 80 30 50 0 Z' stroke-opacity='0.35'/%3E%3Ccircle cx='50' cy='50' r='14' stroke-opacity='0.4'/%3E%3C/svg%3E\")",
+        "--corner-motif": "radial-gradient(circle at 0 0, rgba(212, 175, 55, 0.45) 0%, transparent 70%)",
+        "--border-radius-card": "26px",
+        "--border-radius-btn": "40px",
+        "--card-shadow": "0 24px 60px rgba(21, 6, 8, 0.85), inset 0 1px 0 rgba(255, 230, 180, 0.2)"
+      }
     }
   ]
 }

@@ -249,6 +249,68 @@
             <div id="theme-preview" class="theme-preview" aria-live="polite"></div>
             <p id="design-warning" class="inline-error" role="status" hidden></p>
 
+            <!-- Template 15: Custom Background Uploads (Visible ONLY when Template 15 is selected) -->
+            <div id="template-15-bg-section" class="t15-bg-box" hidden>
+              <div class="subsection-head t15-section-head">
+                <div>
+                  <h4>Template 15: Custom Background Images <span class="t15-badge-required">Mandatory</span></h4>
+                  <p>Upload your own 2 background designs (front cover &amp; couple details). Auto-compressed to ~100 KB WebP each.</p>
+                </div>
+              </div>
+              <div class="t15-upload-grid">
+                <!-- Slot 1: Front Cover Background -->
+                <div class="t15-upload-card" id="t15-front-card">
+                  <div class="t15-upload-header">
+                    <span class="t15-upload-title">1. Upload Front Cover Background Image *</span>
+                    <span class="t15-upload-badge">Front Cover</span>
+                  </div>
+                  <p class="t15-upload-hint">Used as the main landing page background (portrait 2:3 aspect recommended).</p>
+                  <div class="t15-dropzone" id="t15-front-dropzone">
+                    <input type="file" id="t15-front-input" accept="image/jpeg,image/png,image/webp" class="t15-file-input">
+                    <div class="t15-empty-view" id="t15-front-empty">
+                      <span class="t15-icon">🖼️</span>
+                      <span class="t15-drop-label">Choose or drag Front Cover Image</span>
+                      <small class="t15-drop-sub">JPG, PNG, or WebP (Target ~100 KB)</small>
+                    </div>
+                    <div class="t15-preview-view" id="t15-front-preview-wrap" hidden>
+                      <img id="t15-front-preview" class="t15-preview-img" alt="Front Cover Preview">
+                      <div class="t15-preview-meta">
+                        <span id="t15-front-meta" class="t15-meta-text"></span>
+                        <button type="button" class="button button-outline button-small t15-replace-btn" id="t15-front-replace">Replace</button>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" name="landing_background" id="t15-front-data">
+                </div>
+
+                <!-- Slot 2: Couple Details Background -->
+                <div class="t15-upload-card" id="t15-page-card">
+                  <div class="t15-upload-header">
+                    <span class="t15-upload-title">2. Upload Couple Details Background Image *</span>
+                    <span class="t15-upload-badge">Couple Details</span>
+                  </div>
+                  <p class="t15-upload-hint">Used as the background for Bride &amp; Groom details (portrait 2:3 aspect recommended).</p>
+                  <div class="t15-dropzone" id="t15-page-dropzone">
+                    <input type="file" id="t15-page-input" accept="image/jpeg,image/png,image/webp" class="t15-file-input">
+                    <div class="t15-empty-view" id="t15-page-empty">
+                      <span class="t15-icon">🖼️</span>
+                      <span class="t15-drop-label">Choose or drag Couple Details Image</span>
+                      <small class="t15-drop-sub">JPG, PNG, or WebP (Target ~100 KB)</small>
+                    </div>
+                    <div class="t15-preview-view" id="t15-page-preview-wrap" hidden>
+                      <img id="t15-page-preview" class="t15-preview-img" alt="Couple Details Preview">
+                      <div class="t15-preview-meta">
+                        <span id="t15-page-meta" class="t15-meta-text"></span>
+                        <button type="button" class="button button-outline button-small t15-replace-btn" id="t15-page-replace">Replace</button>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" name="page_background" id="t15-page-data">
+                </div>
+              </div>
+              <p id="t15-error-msg" class="inline-error" role="status" hidden></p>
+            </div>
+
             <!-- Wedding Invitation Music Selection (Optional) -->
             <div class="subsection-head music-section-head">
               <div>

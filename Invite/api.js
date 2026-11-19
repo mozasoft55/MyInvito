@@ -74,6 +74,8 @@ export function normalizeWeddingRecord(record) {
   const bridePhoto = cleanPhoto(record.bride_photo || record.bride_photo_url || record.bride_image || record.image2 || record.photo_bride);
   const couplePhoto = cleanPhoto(record.couple_photo || record.couple_photo_url || record.hero_image || record.image3 || record.couple_image);
   const venuePhoto = cleanPhoto(record.venue_photo || record.venue_photo_url || record.venue_image || record.banquet_photo || record.image4 || record.banquet_image);
+  const landingBg = cleanPhoto(record.landing_background || record.landingBackground || record.front_background || record.cover_background);
+  const pageBg = cleanPhoto(record.page_background || record.pageBackground || record.couple_background);
 
   return {
     ...record,
@@ -112,6 +114,10 @@ export function normalizeWeddingRecord(record) {
     couple_photo_url: couplePhoto,
     venue_photo: venuePhoto,
     venue_photo_url: venuePhoto,
+    landing_background: landingBg,
+    landingBackground: landingBg,
+    page_background: pageBg,
+    pageBackground: pageBg,
     hero_image: couplePhoto,
     venue_image: venuePhoto,
     banquet_photo: venuePhoto,
@@ -353,6 +359,28 @@ function findLocalInvitation(code) {
           wedding.couple_photo = couplePhoto || wedding.couple_photo;
           wedding.venue_photo = venuePhoto || wedding.venue_photo;
           wedding.banquet_photo = venuePhoto || wedding.banquet_photo;
+
+          const landingBg = cleanPhoto(wedding.landing_background
+            || wedding.landingBackground
+            || order.landing_background
+            || order.landingBackground
+            || (ref ? localStorage.getItem('wedding_landing_background_' + ref) : '')
+            || '');
+          const pageBg = cleanPhoto(wedding.page_background
+            || wedding.pageBackground
+            || order.page_background
+            || order.pageBackground
+            || (ref ? localStorage.getItem('wedding_page_background_' + ref) : '')
+            || '');
+
+          if (landingBg) {
+            wedding.landing_background = landingBg;
+            wedding.landingBackground = landingBg;
+          }
+          if (pageBg) {
+            wedding.page_background = pageBg;
+            wedding.pageBackground = pageBg;
+          }
 
           const musicUrl = wedding.music_url
             || order.music_url

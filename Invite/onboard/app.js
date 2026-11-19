@@ -893,6 +893,14 @@ function updateTemplatePreview() {
     link.href = `../studio.html#${encodeURIComponent(val)}`;
     link.textContent = `👁 Preview ${val} ↗`;
   }
+  toggleTemplate15BackgroundUploads();
+}
+
+function toggleTemplate15BackgroundUploads() {
+  const section = document.getElementById('template-15-bg-section');
+  if (!section) return;
+  const isT15 = (form?.elements?.template_style?.value === 'template-15');
+  section.hidden = !isT15;
 }
 
 function renderDesignChoices(styles, availableThemes, warning = '') {
@@ -1064,6 +1072,18 @@ function collectInput(overrideData = null) {
     formData.music_title = selectedMusic.title || '';
     formData.music_url = selectedMusic.src || '';
   }
+  if (!formData.landing_background) {
+    const landing = document.getElementById('t15-front-data')?.value
+      || (typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('onboard_session_template-15_front') || sessionStorage.getItem('template_photo_template-15_front') || sessionStorage.getItem('template_photo_template-15_landing')) : '')
+      || '';
+    if (landing) formData.landing_background = landing;
+  }
+  if (!formData.page_background) {
+    const page = document.getElementById('t15-page-data')?.value
+      || (typeof sessionStorage !== 'undefined' ? (sessionStorage.getItem('onboard_session_template-15_page') || sessionStorage.getItem('template_photo_template-15_page')) : '')
+      || '';
+    if (page) formData.page_background = page;
+  }
   return validateOnboarding({
     ...formData,
     events: eventRows
@@ -1091,11 +1111,32 @@ function validateStep(index) {
     readEventInputs();
     const input = collectInput();
     const fieldErrors = Object.fromEntries(Object.entries(input.errors).filter(([key]) =>
-      ['event_date', 'template_style', 'theme_name', 'map_url', 'ceremony_time'].includes(key)
+      ['event_date', 'template_style', 'theme_name', 'map_url', 'ceremony_time', 'landing_background', 'page_background'].includes(key)
       || key === 'events' || key.startsWith('event_')
     ));
     for (const name of ['event_date', 'template_style', 'theme_name']) {
       if (!form.elements[name].value) fieldErrors[name] = 'Please choose a value.';
+    }
+    const isT15 = form.elements.template_style?.value === 'template-15';
+    const errBox = document.getElementById('t15-error-msg');
+    if (isT15) {
+      if (!input.value.landing_background) {
+        fieldErrors.landing_background = 'Upload the front cover background image.';
+      }
+      if (!input.value.page_background) {
+        fieldErrors.page_background = 'Upload the couple details background image.';
+      }
+      if (errBox) {
+        if (!input.value.landing_background || !input.value.page_background) {
+          errBox.textContent = 'Template 15 requires both background images (Front Cover and Couple Details).';
+          errBox.hidden = false;
+        } else {
+          errBox.textContent = '';
+          errBox.hidden = true;
+        }
+      }
+    } else {
+      if (errBox) errBox.hidden = true;
     }
     if (Object.keys(fieldErrors).length) {
       showError('Please complete the celebration details.', fieldErrors);
@@ -1456,6 +1497,10 @@ form.addEventListener('submit', async event => {
     if (bridePhoto) rawFormData.bride_photo = bridePhoto;
     if (couplePhoto) rawFormData.couple_photo = couplePhoto;
     if (venuePhoto) rawFormData.venue_photo = venuePhoto;
+    const landingBg = rawFormData.landing_background || document.getElementById('t15-front-data')?.value || sessionStorage.getItem('onboard_session_template-15_front') || '';
+    const pageBg = rawFormData.page_background || document.getElementById('t15-page-data')?.value || sessionStorage.getItem('onboard_session_template-15_page') || '';
+    if (landingBg) rawFormData.landing_background = landingBg;
+    if (pageBg) rawFormData.page_background = pageBg;
 
     const inputData = cashRequestMode 
       ? validateCashRequest(rawFormData).value
@@ -1540,6 +1585,8 @@ form.addEventListener('submit', async event => {
       banquet_photo: venuePhoto || rawFormData.venue_photo || '',
       hero_image: couplePhoto || rawFormData.couple_photo || '',
       venue_image: venuePhoto || rawFormData.venue_photo || '',
+      landing_background: rawFormData.landing_background || '',
+      page_background: rawFormData.page_background || '',
       events: eventRows || [],
       payment_status: result.payment_status || 'Pending Verification',
       order_status: result.order_status || 'draft',
@@ -1607,6 +1654,20 @@ form.addEventListener('submit', async event => {
       sessionStorage.setItem(`template_photo_${tplStyle}_venue`, venuePhoto);
     }
 
+    // Persist background URLs strictly scoped to currentOrderReference and template-15
+    if (rawFormData.landing_background) {
+      safeStorageSet(localStorage, 'wedding_landing_background_' + currentOrderReference, rawFormData.landing_background);
+      safeStorageSet(localStorage, 'template_photo_template-15_front', rawFormData.landing_background);
+      safeStorageSet(localStorage, 'template_photo_template-15_landing', rawFormData.landing_background);
+      sessionStorage.setItem('template_photo_template-15_front', rawFormData.landing_background);
+      sessionStorage.setItem('template_photo_template-15_landing', rawFormData.landing_background);
+    }
+    if (rawFormData.page_background) {
+      safeStorageSet(localStorage, 'wedding_page_background_' + currentOrderReference, rawFormData.page_background);
+      safeStorageSet(localStorage, 'template_photo_template-15_page', rawFormData.page_background);
+      sessionStorage.setItem('template_photo_template-15_page', rawFormData.page_background);
+    }
+
     // Clean up temporary session upload keys and purge any legacy un-scoped keys
     ['groom', 'bride', 'couple', 'venue'].forEach(s => {
       try {
@@ -1615,6 +1676,11 @@ form.addEventListener('submit', async event => {
         localStorage.removeItem(`wedding_${s}_photo`);
         sessionStorage.removeItem(`wedding-${s}-photo`);
         sessionStorage.removeItem(`onboard-${s}-photo`);
+      } catch (_) {}
+    });
+    ['front', 'page'].forEach(s => {
+      try {
+        sessionStorage.removeItem(`onboard_session_template-15_${s}`);
       } catch (_) {}
     });
 
@@ -2027,6 +2093,253 @@ function initTrackOrderModal() {
   });
 }
 
+// ── Template 15 Background Uploads & Compression Module ────────────────
+const T15_SLOTS_CONFIG = [
+  {
+    key: 'front',
+    label: 'Front Cover Background Image',
+    inputId: 't15-front-input',
+    dropzoneId: 't15-front-dropzone',
+    emptyId: 't15-front-empty',
+    previewWrapId: 't15-front-preview-wrap',
+    previewImgId: 't15-front-preview',
+    metaId: 't15-front-meta',
+    replaceBtnId: 't15-front-replace',
+    dataInputId: 't15-front-data'
+  },
+  {
+    key: 'page',
+    label: 'Couple Details Background Image',
+    inputId: 't15-page-input',
+    dropzoneId: 't15-page-dropzone',
+    emptyId: 't15-page-empty',
+    previewWrapId: 't15-page-preview-wrap',
+    previewImgId: 't15-page-preview',
+    metaId: 't15-page-meta',
+    replaceBtnId: 't15-page-replace',
+    dataInputId: 't15-page-data'
+  }
+];
+
+function loadT15Image(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read image file')); };
+    img.src = url;
+  });
+}
+
+function canvasToWebpBlob(canvas, quality) {
+  return new Promise((resolve) => {
+    if (canvas.toBlob) {
+      canvas.toBlob((blob) => {
+        if (blob) return resolve(blob);
+        try {
+          const dataUrl = canvas.toDataURL('image/webp', quality);
+          const parts = dataUrl.split(',');
+          const byteString = atob(parts[1]);
+          const mimeString = parts[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+          resolve(new Blob([ab], { type: mimeString }));
+        } catch (_) {
+          resolve(null);
+        }
+      }, 'image/webp', quality);
+    } else {
+      try {
+        const dataUrl = canvas.toDataURL('image/webp', quality);
+        const parts = dataUrl.split(',');
+        const byteString = atob(parts[1]);
+        const mimeString = parts[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+        resolve(new Blob([ab], { type: mimeString }));
+      } catch (_) {
+        resolve(null);
+      }
+    }
+  });
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function compressT15Background(file, onProgress) {
+  const img = await loadT15Image(file);
+  const scale = Math.min(1, 800 / img.naturalWidth, 1200 / img.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  let lo = 0.5, hi = 0.92, best = null;
+  const TARGET = 100 * 1024;
+  for (let n = 0; n < 6; n++) {
+    const q = (lo + hi) / 2;
+    const b = await canvasToWebpBlob(canvas, q);
+    if (!b) throw new Error('WebP encoding not supported');
+    if (onProgress) onProgress((n + 1) / 6);
+    if (b.size <= TARGET) {
+      best = b;
+      lo = q;
+    } else {
+      hi = q;
+    }
+    if (!best && n === 5) {
+      best = await canvasToWebpBlob(canvas, 0.5);
+    }
+  }
+  return { blob: best, width: canvas.width, height: canvas.height };
+}
+
+function setT15SlotImage(slotKey, dataUrl, metaText) {
+  const slot = T15_SLOTS_CONFIG.find(s => s.key === slotKey);
+  if (!slot) return;
+  const emptyEl = document.getElementById(slot.emptyId);
+  const previewWrap = document.getElementById(slot.previewWrapId);
+  const previewImg = document.getElementById(slot.previewImgId);
+  const metaEl = document.getElementById(slot.metaId);
+  const dataInput = document.getElementById(slot.dataInputId);
+
+  if (dataInput) dataInput.value = dataUrl;
+  if (emptyEl) emptyEl.hidden = true;
+  if (previewWrap) previewWrap.hidden = false;
+  if (previewImg) {
+    previewImg.src = dataUrl;
+    previewImg.hidden = false;
+  }
+  if (metaEl && metaText) metaEl.textContent = metaText;
+
+  sessionStorage.setItem('onboard_session_template-15_' + slot.key, dataUrl);
+  sessionStorage.setItem('template_photo_template-15_' + slot.key, dataUrl);
+  safeStorageSet(localStorage, 'template_photo_template-15_' + slot.key, dataUrl);
+  if (slot.key === 'front') {
+    sessionStorage.setItem('template_photo_template-15_landing', dataUrl);
+    safeStorageSet(localStorage, 'template_photo_template-15_landing', dataUrl);
+  }
+}
+
+function initTemplate15Uploads() {
+  const ACCEPT = ['image/jpeg', 'image/png', 'image/webp'];
+
+  T15_SLOTS_CONFIG.forEach(slot => {
+    const input = document.getElementById(slot.inputId);
+    const dropzone = document.getElementById(slot.dropzoneId);
+    const metaEl = document.getElementById(slot.metaId);
+    const replaceBtn = document.getElementById(slot.replaceBtnId);
+
+    async function handleFile(file) {
+      if (!file) return;
+      if (!ACCEPT.includes(file.type)) {
+        if (metaEl) metaEl.textContent = 'Please choose a JPG, PNG, or WebP image.';
+        return;
+      }
+      try {
+        if (metaEl) metaEl.textContent = 'Optimizing… 0%';
+        const res = await compressT15Background(file, (p) => {
+          if (metaEl) metaEl.textContent = 'Optimizing… ' + Math.round(p * 100) + '%';
+        });
+        const dataUrl = await blobToDataUrl(res.blob);
+        const metaText = `${res.width}×${res.height} · ${Math.round(res.blob.size / 1024)} KB (was ${Math.round(file.size / 1024)} KB)`;
+        setT15SlotImage(slot.key, dataUrl, metaText);
+
+        const errBox = document.getElementById('t15-error-msg');
+        if (errBox) {
+          const l = document.getElementById('t15-front-data')?.value;
+          const p = document.getElementById('t15-page-data')?.value;
+          if (l && p) errBox.hidden = true;
+        }
+      } catch (err) {
+        if (metaEl) metaEl.textContent = 'Compression error: ' + (err.message || 'Failed');
+      }
+    }
+
+    if (input) {
+      input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (file) handleFile(file);
+      });
+    }
+
+    if (replaceBtn && input) {
+      replaceBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        input.click();
+      });
+    }
+
+    if (dropzone) {
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('t15-dragover');
+      });
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('t15-dragover');
+      });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('t15-dragover');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) handleFile(file);
+      });
+    }
+
+    // Restore saved images from sessionStorage or localStorage
+    const saved = sessionStorage.getItem('onboard_session_template-15_' + slot.key)
+      || sessionStorage.getItem('template_photo_template-15_' + slot.key)
+      || localStorage.getItem('template_photo_template-15_' + slot.key)
+      || (slot.key === 'front' ? sessionStorage.getItem('template_photo_template-15_landing') : null);
+    if (saved) {
+      setT15SlotImage(slot.key, saved, 'Saved background image');
+    }
+  });
+
+  // Attach window.Template15 helper API
+  window.Template15 = {
+    isSelected: () => form?.elements?.template_style?.value === 'template-15',
+    ready: () => {
+      const l = document.getElementById('t15-front-data')?.value || sessionStorage.getItem('onboard_session_template-15_front') || '';
+      const p = document.getElementById('t15-page-data')?.value || sessionStorage.getItem('onboard_session_template-15_page') || '';
+      return Boolean(l && p);
+    },
+    save: async (customerId, invitationId) => {
+      const l = document.getElementById('t15-front-data')?.value || sessionStorage.getItem('onboard_session_template-15_front') || '';
+      const p = document.getElementById('t15-page-data')?.value || sessionStorage.getItem('onboard_session_template-15_page') || '';
+      return {
+        landingBackground: l,
+        pageBackground: p
+      };
+    },
+    build: async (templateHtml, imgs, layout) => {
+      let v = '';
+      for (const k of ['landing', 'page', 'border']) {
+        if (imgs && imgs[k]) {
+          const val = typeof imgs[k] === 'string' ? imgs[k] : await blobToDataUrl(imgs[k]);
+          v += `--${k}:url('${val}');`;
+        }
+      }
+      let html = templateHtml.replace('/*__ASSETS__*/', v);
+      if (layout) {
+        html = html.replace('window.T15_LAYOUT||{}', JSON.stringify(layout));
+      }
+      return html;
+    }
+  };
+}
+
 // ── Form Draft Persistence (Auto-Save & Resume Unsaved Work) ──────────
 function initFormDraftPersistence() {
   const draftBanner = document.getElementById('draft-resume-banner');
@@ -2085,6 +2398,14 @@ function initFormDraftPersistence() {
             }
           }
         });
+        if (draft.template_style === 'template-15' || form?.elements?.template_style?.value === 'template-15') {
+          if (draft.landing_background) {
+            setT15SlotImage('front', draft.landing_background, 'Restored from draft');
+          }
+          if (draft.page_background) {
+            setT15SlotImage('page', draft.page_background, 'Restored from draft');
+          }
+        }
         if (draftBanner) draftBanner.hidden = true;
       } catch (e) {
         console.warn('[Onboard] Failed restoring draft:', e);
@@ -2126,7 +2447,14 @@ function initFormDraftPersistence() {
         if (formData.couple_photo) formData.hero_image = formData.couple_photo;
         if (formData.venue_photo) formData.venue_image = formData.venue_photo;
 
-        if (formData.customer_name || formData.bride_name || formData.groom_name || formData.phone || formData.groom_photo || formData.bride_photo || formData.couple_photo || formData.venue_photo) {
+        if (formData.template_style === 'template-15' || form?.elements?.template_style?.value === 'template-15') {
+          const l = document.getElementById('t15-front-data')?.value || sessionStorage.getItem('onboard_session_template-15_front') || '';
+          const p = document.getElementById('t15-page-data')?.value || sessionStorage.getItem('onboard_session_template-15_page') || '';
+          if (l) formData.landing_background = l;
+          if (p) formData.page_background = p;
+        }
+
+        if (formData.customer_name || formData.bride_name || formData.groom_name || formData.phone || formData.groom_photo || formData.bride_photo || formData.couple_photo || formData.venue_photo || formData.landing_background || formData.page_background) {
           localStorage.setItem('primeecard_onboard_draft', JSON.stringify(formData));
         }
       } catch (_) {}
@@ -2143,4 +2471,6 @@ initActiveOrderDetection();
 initTrackOrderModal();
 initFormDraftPersistence();
 initMusicPicker();
+initTemplate15Uploads();
+toggleTemplate15BackgroundUploads();
 updateCoupleCardsOrder(form.elements.name_order?.value || 'groom_first');
