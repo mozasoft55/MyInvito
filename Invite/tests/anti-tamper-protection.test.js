@@ -28,4 +28,9 @@ test('index.html includes comprehensive anti-tamper, anti-theft, and lazy loadin
   // 5. Lazy-loading Google Maps Iframe (drastically reduces network footprint)
   assert.ok(indexHtml.includes('data-src="${escapeHtml(embedMapUrl)}"'), 'Map iframe must use data-src for on-demand lazy loading');
   assert.ok(indexHtml.includes('mapFrame.dataset.src'), 'openMap must populate src on demand');
+
+  // 6. Developer Inspection Bypass (allows owner to test and inspect without blocking themselves)
+  assert.ok(indexHtml.includes('isDevUnlocked'), 'Must implement developer bypass check');
+  assert.ok(indexHtml.includes("params.has('debug') || params.has('dev')"), 'Must support ?debug or ?dev query param');
+  assert.ok(indexHtml.includes("e.ctrlKey && e.altKey && (e.key === 'D' || e.key === 'd')"), 'Must support Ctrl+Alt+D secret toggle');
 });

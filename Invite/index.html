@@ -72,6 +72,15 @@
       user-select: text;
     }
 
+    .dev-unlocked #app-mount,
+    .dev-unlocked .royal-dock-wrap,
+    .dev-unlocked .royal-modal-overlay {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
     /* Fixed single-screen slide templates (e.g. template-01, template-02, template-04, template-05) */
     html.fixed-template,
     body.fixed-template {
@@ -1126,15 +1135,56 @@
         });
       }
 
-      // 2. Prevent Right-Click / Context Menu on invitation surfaces
+      // Developer Inspection Bypass Check:
+      // Allows owner/developer to inspect network, requests, responses, and console:
+      // A) Running on localhost / 127.0.0.1
+      // B) URL query parameter contains ?debug=1 or ?dev=1
+      // C) Session storage has 'primeecard_dev_unlocked' === '1'
+      // D) Secret keyboard shortcut: Press Ctrl + Alt + D
+      var isDevUnlocked = false;
+      try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.has('debug') || params.has('dev') || host === 'localhost' || host === '127.0.0.1') {
+          isDevUnlocked = true;
+          sessionStorage.setItem('primeecard_dev_unlocked', '1');
+        } else if (sessionStorage.getItem('primeecard_dev_unlocked') === '1') {
+          isDevUnlocked = true;
+        }
+      } catch (_) {}
+
+      // Secret keyboard toggle: Ctrl + Alt + D toggles dev inspection mode on/off
+      document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.altKey && (e.key === 'D' || e.key === 'd')) {
+          isDevUnlocked = !isDevUnlocked;
+          try {
+            sessionStorage.setItem('primeecard_dev_unlocked', isDevUnlocked ? '1' : '0');
+          } catch (_) {}
+          if (isDevUnlocked) {
+            document.documentElement.classList.add('dev-unlocked');
+            console.log('%c🛠️ Developer Inspection Mode: UNLOCKED (DevTools & Right-click enabled)', 'color: #10B981; font-weight: bold; font-size: 14px;');
+          } else {
+            document.documentElement.classList.remove('dev-unlocked');
+            console.log('%c🔒 Developer Inspection Mode: LOCKED', 'color: #EF4444; font-weight: bold; font-size: 14px;');
+          }
+          return;
+        }
+      });
+
+      if (isDevUnlocked) {
+        document.documentElement.classList.add('dev-unlocked');
+      }
+
+      // 2. Prevent Right-Click / Context Menu on invitation surfaces (Bypassed if isDevUnlocked)
       document.addEventListener('contextmenu', function(e) {
+        if (isDevUnlocked) return;
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         e.preventDefault();
         return false;
       }, { capture: true });
 
-      // 3. Block DevTools keyboard shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+      // 3. Block DevTools keyboard shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S) (Bypassed if isDevUnlocked)
       document.addEventListener('keydown', function(e) {
+        if (isDevUnlocked) return;
         if (
           e.key === 'F12' ||
           (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
