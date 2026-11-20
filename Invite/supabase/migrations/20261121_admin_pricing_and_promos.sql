@@ -281,7 +281,252 @@ $$;
 revoke all on function public.admin_toggle_promo_status(text, boolean) from public, anon;
 grant execute on function public.admin_toggle_promo_status(text, boolean) to authenticated, service_role;
 
--- 5. Extend manage_admin_portal to route pricing & promo actions
+-- 5. Guarantee prerequisite columns and tables for payments & cash requests
+alter table if exists public.onboarding_orders
+  add column if not exists card_status text not null default 'Active';
+
+alter table if exists public.onboarding_orders
+  add column if not exists advance_verified_paise bigint not null default 0;
+
+create table if not exists public.onboarding_cash_requests (
+  request_id uuid primary key default gen_random_uuid(),
+  request_reference text not null unique,
+  customer_name text not null,
+  email text not null,
+  phone text not null,
+  city text not null,
+  bride_name text not null,
+  groom_name text not null,
+  event_date date not null,
+  request_details text,
+  status text not null default 'New',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- 6. Standalone get_admin_payment_queue RPC
+create or replace function public.get_admin_payment_queue()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_queue jsonb;
+begin
+  if not public.check_is_mfa_admin() then
+    raise exception using errcode = '42501', message = 'Administrator access required.';
+  end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'payment_id', p.payment_id,
+    'order_reference', p.order_reference,
+    'customer_id', p.customer_id,
+    'wedding_id', p.wedding_id,
+    'customer_name', c.customer_name,
+    'customer_email', c.email,
+    'customer_phone', c.phone,
+    'city', c.city,
+    'couple_name', w.couple_name,
+    'event_date', w.event_date,
+    'package', c.package,
+    'payment_mode', p.payment_mode,
+    'expected_amount_paise', p.expected_amount_paise,
+    'claimed_amount_paise', p.claimed_amount_paise,
+    'verified_amount_paise', p.verified_amount_paise,
+    'external_reference', p.external_reference,
+    'proof_storage_path', p.proof_storage_path,
+    'payment_status', p.payment_status,
+    'card_status', coalesce(o.card_status, 'Active'),
+    'verified_by', p.verified_by,
+    'verified_at', p.verified_at,
+    'rejection_reason', p.rejection_reason,
+    'preview_guest_code', (
+      select g.invite_code from public.guests g
+      where g.wedding_id = p.wedding_id
+      order by g.created_at asc limit 1
+    ),
+    'submitted_at', p.submitted_at
+  ) order by p.submitted_at desc), '[]'::jsonb)
+  into v_queue
+  from public.onboarding_payments p
+  join public.customers c on c.customer_id = p.customer_id
+  join public.weddings w on w.id = p.wedding_id
+  left join public.onboarding_orders o on o.order_reference = p.order_reference;
+
+  return v_queue;
+end;
+$$;
+
+revoke all on function public.get_admin_payment_queue() from public, anon;
+grant execute on function public.get_admin_payment_queue() to authenticated, service_role;
+
+-- 7. Standalone get_admin_cash_quote_requests RPC
+create or replace function public.get_admin_cash_quote_requests()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_requests jsonb;
+begin
+  if not public.check_is_mfa_admin() then
+    raise exception using errcode = '42501', message = 'Administrator access required.';
+  end if;
+
+  select coalesce(jsonb_agg(to_jsonb(q) order by q.created_at desc), '[]'::jsonb)
+  into v_requests
+  from (
+    select request_id, request_reference, customer_name, email, phone, city,
+           bride_name, groom_name, event_date, request_details, status, created_at
+    from public.onboarding_cash_requests
+    where status in ('New', 'Contacted')
+    order by created_at desc
+    limit 200
+  ) q;
+
+  return coalesce(v_requests, '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.get_admin_cash_quote_requests() from public, anon;
+grant execute on function public.get_admin_cash_quote_requests() to authenticated, service_role;
+
+-- 8. Standalone update_admin_cash_quote_request RPC
+create or replace function public.update_admin_cash_quote_request(
+  p_request_id uuid,
+  p_status text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_status text := btrim(coalesce(p_status, ''));
+begin
+  if not public.check_is_mfa_admin() then
+    raise exception using errcode = '42501', message = 'Administrator access required.';
+  end if;
+
+  if v_status not in ('New', 'Contacted', 'Converted', 'Cancelled') then
+    raise exception using errcode = '22023', message = 'Invalid request status: %', v_status;
+  end if;
+
+  update public.onboarding_cash_requests
+  set status = v_status,
+      updated_at = now()
+  where request_id = p_request_id;
+
+  return jsonb_build_object('success', true, 'request_id', p_request_id, 'status', v_status);
+end;
+$$;
+
+revoke all on function public.update_admin_cash_quote_request(uuid, text) from public, anon;
+grant execute on function public.update_admin_cash_quote_request(uuid, text) to authenticated, service_role;
+
+-- 9. Standalone verify_onboarding_payment RPC
+create or replace function public.verify_onboarding_payment(
+  p_payment_id uuid,
+  p_verified_amount_paise bigint,
+  p_decision text,
+  p_rejection_reason text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_payment public.onboarding_payments%rowtype;
+  v_order public.onboarding_orders%rowtype;
+  v_verified_total bigint;
+begin
+  if not public.check_is_mfa_admin() then
+    raise exception using errcode = '42501', message = 'Administrator access required.';
+  end if;
+
+  if p_decision not in ('verify', 'reject') then
+    raise exception using errcode = '22023', message = 'Invalid payment decision.';
+  end if;
+
+  select * into v_payment
+  from public.onboarding_payments
+  where payment_id = p_payment_id
+  for update;
+
+  if not found then
+    raise exception using errcode = 'P0002', message = 'Payment record not found.';
+  end if;
+
+  select * into v_order
+  from public.onboarding_orders
+  where order_reference = v_payment.order_reference
+  for update;
+
+  if v_payment.payment_status in ('Paid', 'Refunded', 'Rejected') then
+    raise exception using errcode = '22023', message = 'Payment is already finalized.';
+  end if;
+
+  if p_decision = 'verify' then
+    if p_verified_amount_paise is null or p_verified_amount_paise < 1
+       or p_verified_amount_paise > v_payment.expected_amount_paise then
+      raise exception using errcode = '22023', message = 'Verified amount is outside the allowed payment amount.';
+    end if;
+
+    update public.onboarding_payments
+    set verified_amount_paise = p_verified_amount_paise,
+        payment_status = case when p_verified_amount_paise >= v_payment.expected_amount_paise then 'Paid' else 'Partially Paid' end,
+        verified_at = now(),
+        verified_by = auth.uid(),
+        rejection_reason = null
+    where payment_id = p_payment_id;
+  else
+    if length(btrim(coalesce(p_rejection_reason, ''))) not between 3 and 500 then
+      raise exception using errcode = '22023', message = 'Please provide a rejection reason (3-500 characters).';
+    end if;
+
+    update public.onboarding_payments
+    set payment_status = 'Rejected',
+        verified_at = now(),
+        verified_by = auth.uid(),
+        rejection_reason = btrim(p_rejection_reason)
+    where payment_id = p_payment_id;
+  end if;
+
+  select coalesce(sum(verified_amount_paise), 0)::bigint into v_verified_total
+  from public.onboarding_payments
+  where order_reference = v_payment.order_reference;
+
+  update public.onboarding_orders
+  set advance_verified_paise = v_verified_total,
+      order_status = case
+        when v_verified_total >= advance_expected_paise then 'Confirmed'
+        else order_status
+      end,
+      payment_status = case
+        when v_verified_total >= payable_total_paise then 'Paid'
+        when v_verified_total > 0 then 'Partially Paid'
+        else payment_status
+      end,
+      updated_at = now()
+  where order_reference = v_payment.order_reference;
+
+  return jsonb_build_object(
+    'success', true,
+    'payment_id', p_payment_id,
+    'order_reference', v_payment.order_reference,
+    'decision', p_decision,
+    'verified_amount_paise', coalesce(p_verified_amount_paise, 0)
+  );
+end;
+$$;
+
+revoke all on function public.verify_onboarding_payment(uuid, bigint, text, text) from public, anon;
+grant execute on function public.verify_onboarding_payment(uuid, bigint, text, text) to authenticated, service_role;
+
+-- 10. Unified manage_admin_portal Dispatcher
 create or replace function public.manage_admin_portal(
   p_action text,
   p_payload jsonb default '{}'::jsonb
@@ -306,11 +551,62 @@ begin
   end if;
 
   if p_action = 'list' then
-    v_res := public.get_admin_payment_queue();
+    begin
+      v_res := public.get_admin_payment_queue();
+    exception when undefined_function then
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'payment_id', p.payment_id,
+        'order_reference', p.order_reference,
+        'customer_id', p.customer_id,
+        'wedding_id', p.wedding_id,
+        'customer_name', c.customer_name,
+        'customer_email', c.email,
+        'customer_phone', c.phone,
+        'city', c.city,
+        'couple_name', w.couple_name,
+        'event_date', w.event_date,
+        'package', c.package,
+        'payment_mode', p.payment_mode,
+        'expected_amount_paise', p.expected_amount_paise,
+        'claimed_amount_paise', p.claimed_amount_paise,
+        'verified_amount_paise', p.verified_amount_paise,
+        'external_reference', p.external_reference,
+        'proof_storage_path', p.proof_storage_path,
+        'payment_status', p.payment_status,
+        'card_status', coalesce(o.card_status, 'Active'),
+        'verified_by', p.verified_by,
+        'verified_at', p.verified_at,
+        'rejection_reason', p.rejection_reason,
+        'preview_guest_code', (
+          select g.invite_code from public.guests g
+          where g.wedding_id = p.wedding_id
+          order by g.created_at asc limit 1
+        ),
+        'submitted_at', p.submitted_at
+      ) order by p.submitted_at desc), '[]'::jsonb)
+      into v_res
+      from public.onboarding_payments p
+      join public.customers c on c.customer_id = p.customer_id
+      join public.weddings w on w.id = p.wedding_id
+      left join public.onboarding_orders o on o.order_reference = p.order_reference;
+    end;
     return jsonb_build_object('success', true, 'payments', coalesce(v_res, '[]'::jsonb));
 
   elsif p_action = 'list_cash_requests' then
-    v_res := public.get_admin_cash_quote_requests();
+    begin
+      v_res := public.get_admin_cash_quote_requests();
+    exception when undefined_function then
+      select coalesce(jsonb_agg(to_jsonb(q) order by q.created_at desc), '[]'::jsonb)
+      into v_res
+      from (
+        select request_id, request_reference, customer_name, email, phone, city,
+               bride_name, groom_name, event_date, request_details, status, created_at
+        from public.onboarding_cash_requests
+        where status in ('New', 'Contacted')
+        order by created_at desc
+        limit 200
+      ) q;
+    end;
     return jsonb_build_object('success', true, 'cash_requests', coalesce(v_res, '[]'::jsonb));
 
   elsif p_action = 'update_cash_request' then

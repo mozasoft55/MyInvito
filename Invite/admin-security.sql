@@ -359,6 +359,9 @@ begin
     'proof_storage_path', p.proof_storage_path,
     'payment_status', p.payment_status,
     'card_status', coalesce(o.card_status, 'Active'),
+    'verified_by', p.verified_by,
+    'verified_at', p.verified_at,
+    'rejection_reason', p.rejection_reason,
     'preview_guest_code', (
       select g.invite_code from public.guests g
       where g.wedding_id = p.wedding_id

@@ -390,12 +390,21 @@ async function openConsole() {
 
 async function renderQueue() {
   showError('');
-  const [queue, cash] = await Promise.all([
+  const [queueRes, cashRes] = await Promise.allSettled([
     callAdmin('list', { action: 'list' }),
     callAdmin('list_cash_requests', { action: 'list_cash_requests' })
   ]);
-  payments = queue.payments || [];
-  cashRequests = cash.cash_requests || [];
+
+  if (queueRes.status === 'fulfilled') {
+    payments = queueRes.value.payments || [];
+  } else {
+    showError(queueRes.reason?.message || 'Failed to load payment queue.');
+  }
+
+  if (cashRes.status === 'fulfilled') {
+    cashRequests = cashRes.value.cash_requests || [];
+  }
+
   renderStats();
   renderPayments();
   renderCashRequests();
