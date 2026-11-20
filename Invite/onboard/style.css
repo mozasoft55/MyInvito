@@ -77,6 +77,14 @@ button,a{-webkit-tap-highlight-color:transparent}
 .package-price{font:600 19px Georgia,serif;color:#4e1e2b}
 .package-copy small,.package-copy ul{color:var(--muted);font-size:14px}
 .package-copy ul{padding-left:18px;margin:3px 0}
+.promo-section{margin:16px 0;padding:14px;background:#fffdf9;border:1px dashed #cbb69d;border-radius:10px}
+.promo-label{display:block;font:600 14px "Playfair Display",Georgia,serif;color:var(--wine);margin-bottom:8px}
+.promo-input-group{display:flex;gap:8px;align-items:center}
+.promo-input-group input{flex:1;max-width:260px;text-transform:uppercase;font-weight:600;letter-spacing:1px;padding:8px 12px;border:1px solid #d4c5b3;border-radius:6px}
+.promo-message{margin:8px 0 0;font-size:13px}
+.promo-message.msg-success{color:#1e6b37;font-weight:600}
+.promo-message.msg-error{color:#842336}
+.promo-applied-tag{display:inline-flex;align-items:center;gap:6px;background:#eef7ee;color:#1e6b37;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600}
 .payment-methods{display:flex;gap:12px;margin:22px 0}
 .payment-choice{flex:1;display:flex;align-items:center;gap:10px;border:1px solid #dfd2c0;border-radius:9px;padding:13px;background:#fffefa;cursor:pointer}
 .payment-choice:has(input:checked){border-color:#7a2639}

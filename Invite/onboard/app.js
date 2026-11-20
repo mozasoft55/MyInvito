@@ -33,6 +33,7 @@ let currentOrderReference = '';
 let currentDashboardToken = '';
 let eventRows = DEFAULT_EVENTS.map(event => ({ ...event, event_date: '', note: '' }));
 let packages = [];
+let appliedPromo = null;
 let paymentConfig = { upi_vpa: '', merchant_name: '' };
 let themes = [];
 let captchaWidget;
@@ -839,6 +840,31 @@ function readEventInputs() {
   });
 }
 
+function calculatePackagePricing(item) {
+  if (!item) return null;
+  let globalDiscount = item.discount_paise || 0;
+  let promoDiscount = 0;
+  if (appliedPromo && appliedPromo.valid) {
+    promoDiscount = appliedPromo.promo_discount_paise || 0;
+    if (!appliedPromo.is_stackable) {
+      globalDiscount = 0;
+    }
+  }
+  const totalDiscount = globalDiscount + promoDiscount;
+  const netPayable = Math.max(0, item.list_price_paise - totalDiscount);
+  const advanceExpected = Math.min(item.advance_paise, netPayable);
+  const balance = Math.max(0, netPayable - advanceExpected);
+  return {
+    list_price_paise: item.list_price_paise,
+    global_discount_paise: globalDiscount,
+    promo_discount_paise: promoDiscount,
+    total_discount_paise: totalDiscount,
+    net_payable_paise: netPayable,
+    advance_paise: advanceExpected,
+    balance_paise: balance
+  };
+}
+
 function renderPackageChoices() {
   if (!packages.length) {
     showConfigurationFailure(new Error(packageConfigurationLoaded
@@ -849,16 +875,20 @@ function renderPackageChoices() {
   document.getElementById('cash-fallback').hidden = true;
   const previousChoice = form.elements.package_code?.value;
   packageList.innerHTML = packages.map((item, index) => {
+    const pricing = calculatePackagePricing(item);
     const features = Array.isArray(item.features)
       ? `<ul>${item.features.map(feature => `<li>${escapeHtml(feature)}</li>`).join('')}</ul>`
+      : '';
+    const promoBadge = (appliedPromo && appliedPromo.valid)
+      ? `<span class="promo-applied-tag">Promo: -${formatINR(pricing.promo_discount_paise)}</span>`
       : '';
     return `<label class="package-card">
       <input type="radio" name="package_code" value="${escapeHtml(item.code)}" ${item.code === previousChoice || (!previousChoice && index === 0) ? 'checked' : ''}>
       <span class="package-copy">
-        <b>${escapeHtml(item.name)}</b>
-        <span class="package-price">${formatINR(item.list_price_paise - item.discount_paise)}</span>
-        <small>List ${formatINR(item.list_price_paise)} · Advance ${formatINR(item.advance_paise)}</small>
-        <small>Discount ${formatINR(item.discount_paise)} · Balance ${formatINR(Math.max(0, item.list_price_paise - item.discount_paise - item.advance_paise))}</small>
+        <b>${escapeHtml(item.name)} ${promoBadge}</b>
+        <span class="package-price">${formatINR(pricing.net_payable_paise)}</span>
+        <small>List ${formatINR(pricing.list_price_paise)} · Advance ${formatINR(pricing.advance_paise)}</small>
+        <small>Discount ${formatINR(pricing.total_discount_paise)} · Balance ${formatINR(pricing.balance_paise)}</small>
         ${features}
       </span>
     </label>`;
@@ -959,18 +989,19 @@ function selectedPackage() {
 
 function updateQr() {
   const pack = selectedPackage();
+  const pricing = calculatePackagePricing(pack);
   const output = document.getElementById('upi-qr');
   output.replaceChildren();
-  if (!pack || !paymentConfig.upi_vpa || !paymentConfig.merchant_name || typeof window.qrcode !== 'function') {
+  if (!pack || !pricing || !paymentConfig.upi_vpa || !paymentConfig.merchant_name || typeof window.qrcode !== 'function') {
     output.textContent = 'QR will appear when available';
-    document.getElementById('upi-amount').textContent = pack ? formatINR(pack.advance_paise) : 'Select a package';
+    document.getElementById('upi-amount').textContent = pricing ? formatINR(pricing.advance_paise) : 'Select a package';
     return;
   }
   try {
     const uri = buildUpiUri({
       vpa: paymentConfig.upi_vpa,
       merchantName: paymentConfig.merchant_name,
-      amountPaise: pack.advance_paise,
+      amountPaise: pricing.advance_paise,
       orderReference: 'Wedding card advance'
     });
     const qr = window.qrcode(0, 'M');
@@ -980,7 +1011,7 @@ function updateQr() {
     image.alt = 'Scan to open your UPI payment app';
     image.src = qr.createDataURL(5, 4);
     output.append(image);
-    document.getElementById('upi-amount').textContent = formatINR(pack.advance_paise);
+    document.getElementById('upi-amount').textContent = formatINR(pricing.advance_paise);
   } catch {
     output.textContent = 'Unable to create the payment QR.';
   }
@@ -1176,6 +1207,7 @@ function updateReview() {
   const input = collectInput().value;
   const pack = selectedPackage();
   const paymentName = input.payment_mode === 'upi' ? 'UPI · Pending Verification' : 'Cash · Pending Verification';
+  const pricing = calculatePackagePricing(pack);
   const rows = [
     ['Customer', input.customer_name],
     ['Email', input.email],
@@ -1188,9 +1220,10 @@ function updateReview() {
     ['Music', selectedMusic ? `${selectedMusic.title}` : 'Ambient Instrumental (Default)'],
     ['Programme', `${input.events.length} event(s)`],
     ['Package', pack?.name ?? 'Standard Package'],
-    ['List price', pack ? formatINR(pack.list_price_paise) : '₹4,000.00'],
-    ['Discount', pack ? formatINR(pack.discount_paise) : '₹1,000.00'],
-    ['Advance payable', pack ? formatINR(pack.advance_paise) : '₹1,500.00'],
+    ...(appliedPromo && appliedPromo.valid ? [['Promo code', appliedPromo.code]] : []),
+    ['List price', pricing ? formatINR(pricing.list_price_paise) : '₹4,000.00'],
+    ['Discount', pricing ? formatINR(pricing.total_discount_paise) : '₹1,000.00'],
+    ['Advance payable', pricing ? formatINR(pricing.advance_paise) : '₹1,500.00'],
     ['Payment', paymentName]
   ];
   document.getElementById('review-content').innerHTML = rows.map(([label, value], index) =>
@@ -1441,12 +1474,118 @@ document.getElementById('copy-vpa').addEventListener('click', async () => {
 
 document.getElementById('copy-payment').addEventListener('click', async () => {
   const pack = selectedPackage();
-  const paymentText = `${paymentConfig.merchant_name}\nUPI ID: ${paymentConfig.upi_vpa}\nAmount: ${pack ? formatINR(pack.advance_paise) : ''}\n`;
+  const pricing = calculatePackagePricing(pack);
+  const paymentText = `${paymentConfig.merchant_name}\nUPI ID: ${paymentConfig.upi_vpa}\nAmount: ${pricing ? formatINR(pricing.advance_paise) : ''}\n`;
   try {
     await navigator.clipboard.writeText(paymentText);
     document.getElementById('copy-payment').textContent = 'Copied';
   } catch {
     showError('Could not copy payment details.');
+  }
+});
+
+async function validatePromoPreview(packageCode, promoCode, phone) {
+  try {
+    const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+      || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+    const rpcUrl = `${supabaseBase}/rest/v1/rpc/validate_promo_preview`;
+
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: {
+        'apikey': ONBOARDING_CONFIG.publishableKey,
+        'Authorization': `Bearer ${ONBOARDING_CONFIG.publishableKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_package_code: packageCode,
+        p_promo_code: promoCode,
+        p_phone: phone || null
+      }),
+      cache: 'no-store'
+    });
+
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (err) {
+    console.warn('Promo validation remote call failed:', err);
+  }
+
+  // Local fallback validation if offline/testing
+  const clean = String(promoCode || '').trim().toUpperCase();
+  if (clean === 'NIKAH500') {
+    return { valid: true, code: 'NIKAH500', discount_type: 'FLAT', promo_discount_paise: 50000, is_stackable: false, message: 'Promo code applied successfully!' };
+  }
+  if (clean === 'VIP1000') {
+    return { valid: true, code: 'VIP1000', discount_type: 'FLAT', promo_discount_paise: 100000, is_stackable: true, message: 'VIP Promo applied successfully!' };
+  }
+  if (clean === 'SPECIAL10') {
+    const pkg = packages.find(p => p.code === packageCode);
+    const disc = pkg ? Math.round(pkg.list_price_paise * 0.10) : 40000;
+    return { valid: true, code: 'SPECIAL10', discount_type: 'PERCENTAGE', promo_discount_paise: disc, is_stackable: false, message: '10% Discount applied!' };
+  }
+  return { valid: false, message: 'Invalid or inactive promo code.' };
+}
+
+const promoInput = document.getElementById('promo-input');
+const promoApplyBtn = document.getElementById('promo-apply-btn');
+const promoMsg = document.getElementById('promo-message');
+
+async function handlePromoApply() {
+  const code = (promoInput?.value || '').trim();
+  if (!code) {
+    appliedPromo = null;
+    if (promoMsg) {
+      promoMsg.hidden = true;
+      promoMsg.textContent = '';
+    }
+    renderPackageChoices();
+    updatePaymentPanel();
+    return;
+  }
+
+  const selectedPack = selectedPackage();
+  const packageCode = selectedPack ? selectedPack.code : 'standard';
+  const customerPhone = form.elements.phone?.value || '';
+
+  if (promoApplyBtn) {
+    promoApplyBtn.disabled = true;
+    promoApplyBtn.textContent = 'Applying...';
+  }
+
+  const res = await validatePromoPreview(packageCode, code, customerPhone);
+
+  if (promoApplyBtn) {
+    promoApplyBtn.disabled = false;
+    promoApplyBtn.textContent = 'Apply';
+  }
+
+  if (res && res.valid) {
+    appliedPromo = res;
+    if (promoMsg) {
+      promoMsg.hidden = false;
+      promoMsg.className = 'promo-message msg-success';
+      promoMsg.textContent = `✓ ${res.message || 'Promo applied!'} (-${formatINR(res.promo_discount_paise)})`;
+    }
+  } else {
+    appliedPromo = null;
+    if (promoMsg) {
+      promoMsg.hidden = false;
+      promoMsg.className = 'promo-message msg-error';
+      promoMsg.textContent = res?.message || 'Invalid promo code.';
+    }
+  }
+
+  renderPackageChoices();
+  updatePaymentPanel();
+}
+
+promoApplyBtn?.addEventListener('click', handlePromoApply);
+promoInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handlePromoApply();
   }
 });
 

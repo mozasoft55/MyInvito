@@ -226,6 +226,7 @@ export function validateOnboarding(input) {
     template_style: template,
     theme_name: required('theme_name', 'Theme', 60),
     package_code: required('package_code', 'Package', 40),
+    promo_code: text('promo_code', 30).toUpperCase(),
     payment_mode: paymentMode,
     utr: paymentMode === 'upi' ? paymentUtr : '',
     events: normalizedEvents

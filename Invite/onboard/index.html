@@ -343,6 +343,14 @@
             <h3>Package & payment</h3>
             <p class="section-hint">Package prices come from the business configuration. Payment is verified separately by our team.</p>
             <div id="package-list" class="package-list" aria-live="polite"><p class="loading-line">Loading available packages…</p></div>
+            <div id="promo-section" class="promo-section">
+              <label class="promo-label" for="promo-input">Have a promo code?</label>
+              <div class="promo-input-group">
+                <input id="promo-input" name="promo_code" type="text" maxlength="30" placeholder="e.g. NIKAH500" autocomplete="off" spellcheck="false">
+                <button id="promo-apply-btn" type="button" class="button button-outline button-small">Apply</button>
+              </div>
+              <p id="promo-message" class="promo-message" role="status" hidden></p>
+            </div>
             <div id="cash-fallback" class="cash-fallback" hidden>
               <p><strong>Package selection is temporarily unavailable.</strong> You can still send a cash/manual quote request. This is an inquiry, not a confirmed order; our team will contact you to confirm the package and price.</p>
               <button id="cash-fallback-button" type="button" class="button button-outline">Continue with cash / manual quote</button>
