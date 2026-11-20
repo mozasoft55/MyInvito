@@ -45,7 +45,36 @@ grant execute on function public.check_is_mfa_admin() to authenticated, service_
 -- Ensure timestamp and validity columns exist on onboarding_orders
 alter table if exists public.onboarding_orders
   add column if not exists activated_at timestamptz,
-  add column if not exists expires_at timestamptz;
+  add column if not exists expires_at timestamptz,
+  add column if not exists applied_promo_code text,
+  add column if not exists promo_discount_paise bigint default 0;
+
+-- Drop foreign key constraint on applied_promo_code if present (so ORD-XXXX referral codes can be saved and promo deletion doesn't fail)
+alter table if exists public.onboarding_orders
+  drop constraint if exists onboarding_orders_applied_promo_code_fkey;
+
+-- Enhance promo_codes with category and partner_name
+alter table if exists public.promo_codes
+  add column if not exists category text not null default 'Campaign',
+  add column if not exists partner_name text;
+
+-- Create Global Couple Referral Settings table
+create table if not exists public.onboarding_referral_settings (
+  id int primary key default 1 check (id = 1),
+  is_enabled boolean not null default true,
+  discount_type text not null default 'FLAT' check (discount_type in ('FLAT', 'PERCENTAGE')),
+  discount_value_paise bigint not null default 50000 check (discount_value_paise > 0),
+  max_discount_cap_paise bigint default null,
+  is_stackable boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+-- Seed default referral settings (₹500 flat discount, stackable, enabled)
+insert into public.onboarding_referral_settings (
+  id, is_enabled, discount_type, discount_value_paise, max_discount_cap_paise, is_stackable
+)
+values (1, true, 'FLAT', 50000, null, true)
+on conflict (id) do nothing;
 
 -- 1. admin_get_pricing_config
 create or replace function public.admin_get_pricing_config()
@@ -57,6 +86,7 @@ as $$
 declare
   v_packages jsonb;
   v_promos jsonb;
+  v_referral_settings jsonb;
 begin
   if not public.check_is_mfa_admin() then
     raise exception using errcode = '42501', message = 'Administrator access with MFA verification required.';
@@ -88,15 +118,39 @@ begin
     'used_count', pr.used_count,
     'valid_until', pr.valid_until,
     'is_active', pr.is_active,
+    'category', coalesce(pr.category, 'Campaign'),
+    'partner_name', pr.partner_name,
     'created_at', pr.created_at
   ) order by pr.created_at desc), '[]'::jsonb)
   into v_promos
   from public.promo_codes pr;
 
+  select jsonb_build_object(
+    'is_enabled', coalesce(s.is_enabled, true),
+    'discount_type', coalesce(s.discount_type, 'FLAT'),
+    'discount_value_paise', coalesce(s.discount_value_paise, 50000),
+    'max_discount_cap_paise', s.max_discount_cap_paise,
+    'is_stackable', coalesce(s.is_stackable, true),
+    'updated_at', s.updated_at
+  ) into v_referral_settings
+  from public.onboarding_referral_settings s
+  where s.id = 1;
+
+  if v_referral_settings is null then
+    v_referral_settings := jsonb_build_object(
+      'is_enabled', true,
+      'discount_type', 'FLAT',
+      'discount_value_paise', 50000,
+      'max_discount_cap_paise', null,
+      'is_stackable', true
+    );
+  end if;
+
   return jsonb_build_object(
     'success', true,
     'packages', v_packages,
-    'promo_codes', v_promos
+    'promo_codes', v_promos,
+    'referral_settings', v_referral_settings
   );
 end;
 $$;
@@ -164,7 +218,67 @@ $$;
 revoke all on function public.admin_update_package_pricing(text, bigint, bigint, bigint, boolean) from public, anon;
 grant execute on function public.admin_update_package_pricing(text, bigint, bigint, bigint, boolean) to authenticated, service_role;
 
--- 3. admin_upsert_promo_code
+-- 2b. admin_update_referral_settings
+create or replace function public.admin_update_referral_settings(
+  p_is_enabled boolean,
+  p_discount_type text,
+  p_discount_value_paise bigint,
+  p_max_discount_cap_paise bigint default null,
+  p_is_stackable boolean default true
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_type text := upper(trim(coalesce(p_discount_type, 'FLAT')));
+begin
+  if not public.check_is_mfa_admin() then
+    raise exception using errcode = '42501', message = 'Administrator access with MFA verification required.';
+  end if;
+
+  if v_type not in ('FLAT', 'PERCENTAGE') then
+    raise exception using errcode = '22023', message = 'Discount type must be FLAT or PERCENTAGE.';
+  end if;
+
+  if p_discount_value_paise <= 0 then
+    raise exception using errcode = '22023', message = 'Discount value must be greater than zero.';
+  end if;
+
+  if v_type = 'PERCENTAGE' and p_discount_value_paise > 100 then
+    raise exception using errcode = '22023', message = 'Percentage discount cannot exceed 100%.';
+  end if;
+
+  insert into public.onboarding_referral_settings (
+    id, is_enabled, discount_type, discount_value_paise, max_discount_cap_paise, is_stackable, updated_at
+  )
+  values (
+    1, coalesce(p_is_enabled, true), v_type, p_discount_value_paise, p_max_discount_cap_paise, coalesce(p_is_stackable, true), now()
+  )
+  on conflict (id) do update set
+    is_enabled = excluded.is_enabled,
+    discount_type = excluded.discount_type,
+    discount_value_paise = excluded.discount_value_paise,
+    max_discount_cap_paise = excluded.max_discount_cap_paise,
+    is_stackable = excluded.is_stackable,
+    updated_at = now();
+
+  return jsonb_build_object(
+    'success', true,
+    'is_enabled', coalesce(p_is_enabled, true),
+    'discount_type', v_type,
+    'discount_value_paise', p_discount_value_paise,
+    'max_discount_cap_paise', p_max_discount_cap_paise,
+    'is_stackable', coalesce(p_is_stackable, true)
+  );
+end;
+$$;
+
+revoke all on function public.admin_update_referral_settings(boolean, text, bigint, bigint, boolean) from public, anon;
+grant execute on function public.admin_update_referral_settings(boolean, text, bigint, bigint, boolean) to authenticated, service_role;
+
+-- 3. admin_upsert_promo_code (Enhanced with Category & Partner Note)
 create or replace function public.admin_upsert_promo_code(
   p_code text,
   p_discount_type text,
@@ -175,7 +289,9 @@ create or replace function public.admin_upsert_promo_code(
   p_is_stackable boolean default false,
   p_usage_limit int default null,
   p_valid_until timestamptz default null,
-  p_is_active boolean default true
+  p_is_active boolean default true,
+  p_category text default 'Campaign',
+  p_partner_name text default null
 )
 returns jsonb
 language plpgsql
@@ -185,6 +301,8 @@ as $$
 declare
   v_code text := upper(trim(coalesce(p_code, '')));
   v_type text := upper(trim(coalesce(p_discount_type, 'FLAT')));
+  v_category text := trim(coalesce(p_category, 'Campaign'));
+  v_partner text := nullif(trim(coalesce(p_partner_name, '')), '');
   v_normalized_phones text[] := null;
 begin
   if not public.check_is_mfa_admin() then
@@ -222,13 +340,14 @@ begin
   insert into public.promo_codes (
     code, discount_type, discount_value_paise, max_discount_cap_paise,
     applicable_package_code, allowed_phones, is_stackable, usage_limit,
-    valid_until, is_active
+    valid_until, is_active, category, partner_name
   )
   values (
     v_code, v_type, p_discount_value_paise, p_max_discount_cap_paise,
     nullif(trim(p_applicable_package_code), ''), v_normalized_phones,
     coalesce(p_is_stackable, false), p_usage_limit,
-    p_valid_until, coalesce(p_is_active, true)
+    p_valid_until, coalesce(p_is_active, true),
+    v_category, v_partner
   )
   on conflict (code) do update set
     discount_type = excluded.discount_type,
@@ -239,20 +358,56 @@ begin
     is_stackable = excluded.is_stackable,
     usage_limit = excluded.usage_limit,
     valid_until = excluded.valid_until,
-    is_active = excluded.is_active;
+    is_active = excluded.is_active,
+    category = excluded.category,
+    partner_name = excluded.partner_name;
 
   return jsonb_build_object(
     'success', true,
     'code', v_code,
     'discount_type', v_type,
     'discount_value_paise', p_discount_value_paise,
-    'is_active', coalesce(p_is_active, true)
+    'is_active', coalesce(p_is_active, true),
+    'category', v_category,
+    'partner_name', v_partner
   );
 end;
 $$;
 
-revoke all on function public.admin_upsert_promo_code(text, text, bigint, bigint, text, text[], boolean, int, timestamptz, boolean) from public, anon;
-grant execute on function public.admin_upsert_promo_code(text, text, bigint, bigint, text, text[], boolean, int, timestamptz, boolean) to authenticated, service_role;
+revoke all on function public.admin_upsert_promo_code(text, text, bigint, bigint, text, text[], boolean, int, timestamptz, boolean, text, text) from public, anon;
+grant execute on function public.admin_upsert_promo_code(text, text, bigint, bigint, text, text[], boolean, int, timestamptz, boolean, text, text) to authenticated, service_role;
+
+-- 3b. admin_delete_promo_codes (Single & Bulk Delete without Cascading to Orders)
+create or replace function public.admin_delete_promo_codes(
+  p_codes text[]
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_count int := 0;
+begin
+  if not public.check_is_mfa_admin() then
+    raise exception using errcode = '42501', message = 'Administrator access with MFA verification required.';
+  end if;
+
+  if p_codes is null or array_length(p_codes, 1) = 0 then
+    return jsonb_build_object('success', false, 'error', 'No promo codes specified.');
+  end if;
+
+  delete from public.promo_codes
+  where code = any(p_codes);
+
+  get diagnostics v_count = row_count;
+
+  return jsonb_build_object('success', true, 'deleted_count', v_count);
+end;
+$$;
+
+revoke all on function public.admin_delete_promo_codes(text[]) from public, anon;
+grant execute on function public.admin_delete_promo_codes(text[]) to authenticated, service_role;
 
 -- 4. admin_toggle_promo_status
 create or replace function public.admin_toggle_promo_status(
@@ -357,7 +512,9 @@ begin
     'activated_at', coalesce(o.activated_at, p.verified_at),
     'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
     'template_style', w.template_style,
-    'template_number', w.template_style
+    'template_number', w.template_style,
+    'applied_promo_code', o.applied_promo_code,
+    'promo_discount_paise', coalesce(o.promo_discount_paise, 0)
   ) order by p.submitted_at desc), '[]'::jsonb)
   into v_queue
   from public.onboarding_payments p
@@ -601,7 +758,9 @@ begin
         'activated_at', coalesce(o.activated_at, p.verified_at),
         'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
         'template_style', w.template_style,
-        'template_number', w.template_style
+        'template_number', w.template_style,
+        'applied_promo_code', o.applied_promo_code,
+        'promo_discount_paise', coalesce(o.promo_discount_paise, 0)
       ) order by p.submitted_at desc), '[]'::jsonb)
       into v_res
       from public.onboarding_payments p
@@ -678,13 +837,29 @@ begin
       coalesce((p_payload ->> 'is_stackable')::boolean, false),
       nullif(p_payload ->> 'usage_limit', '')::int,
       nullif(p_payload ->> 'valid_until', '')::timestamptz,
-      coalesce((p_payload ->> 'is_active')::boolean, true)
+      coalesce((p_payload ->> 'is_active')::boolean, true),
+      coalesce(p_payload ->> 'category', 'Campaign'),
+      nullif(p_payload ->> 'partner_name', '')
     );
 
   elsif p_action = 'toggle_promo_status' then
     return public.admin_toggle_promo_status(
       p_payload ->> 'code',
       (p_payload ->> 'is_active')::boolean
+    );
+
+  elsif p_action = 'delete_promo_codes' then
+    return public.admin_delete_promo_codes(
+      array(select jsonb_array_elements_text(p_payload -> 'codes'))
+    );
+
+  elsif p_action = 'update_referral_settings' then
+    return public.admin_update_referral_settings(
+      coalesce((p_payload ->> 'is_enabled')::boolean, true),
+      coalesce(p_payload ->> 'discount_type', 'FLAT'),
+      (p_payload ->> 'discount_value_paise')::bigint,
+      nullif(p_payload ->> 'max_discount_cap_paise', '')::bigint,
+      coalesce((p_payload ->> 'is_stackable')::boolean, true)
     );
 
   else
@@ -865,5 +1040,149 @@ $$;
 
 revoke all on function public.manage_customer_dashboard(text, text, jsonb) from public;
 grant execute on function public.manage_customer_dashboard(text, text, jsonb) to anon, authenticated, service_role;
+
+-- 12. Lightweight Promo & Couple Order ID Referral Preview RPC
+create or replace function public.validate_promo_preview(
+  p_package_code text,
+  p_promo_code text,
+  p_phone text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_code text := upper(trim(coalesce(p_promo_code, '')));
+  v_pkg record;
+  v_promo record;
+  v_disc_paise bigint := 0;
+  v_ref_order record;
+  v_ref_settings record;
+  v_normalized_input_phone text;
+  v_ref_customer_phone text;
+begin
+  if v_code = '' then
+    return jsonb_build_object('valid', false, 'message', 'Please enter a promo or referral code.');
+  end if;
+
+  select * into v_pkg
+  from public.onboarding_packages
+  where package_code = p_package_code and active = true;
+
+  if not found then
+    return jsonb_build_object('valid', false, 'message', 'Invalid or unavailable package selected.');
+  end if;
+
+  -- 1. Check promo_codes table first (B2B Partner & Campaign Codes)
+  select * into v_promo
+  from public.promo_codes
+  where code = v_code and is_active = true;
+
+  if found then
+    if v_promo.valid_until is not null and v_promo.valid_until < now() then
+      return jsonb_build_object('valid', false, 'message', 'Promo code has expired.');
+    end if;
+
+    if v_promo.usage_limit is not null and v_promo.used_count >= v_promo.usage_limit then
+      return jsonb_build_object('valid', false, 'message', 'Promo code usage limit has been reached.');
+    end if;
+
+    if v_promo.applicable_package_code is not null and v_promo.applicable_package_code <> p_package_code then
+      return jsonb_build_object('valid', false, 'message', 'Promo code is not applicable for this package.');
+    end if;
+
+    -- Calculate promo discount
+    if v_promo.discount_type = 'FLAT' then
+      v_disc_paise := v_promo.discount_value_paise;
+    else
+      v_disc_paise := round((v_pkg.list_price_paise * v_promo.discount_value_paise) / 100.0);
+      if v_promo.max_discount_cap_paise is not null and v_disc_paise > v_promo.max_discount_cap_paise then
+        v_disc_paise := v_promo.max_discount_cap_paise;
+      end if;
+    end if;
+
+    return jsonb_build_object(
+      'valid', true,
+      'code', v_promo.code,
+      'is_referral', false,
+      'discount_type', v_promo.discount_type,
+      'promo_discount_paise', v_disc_paise,
+      'is_stackable', v_promo.is_stackable,
+      'message', 'Promo code applied successfully!'
+    );
+  end if;
+
+  -- 2. Check Dynamic Couple Referral via Order ID (e.g. ORD-DFE714DB)
+  select * into v_ref_settings
+  from public.onboarding_referral_settings
+  where id = 1;
+
+  if v_ref_settings is null or not v_ref_settings.is_enabled then
+    return jsonb_build_object('valid', false, 'message', 'Invalid promo code.');
+  end if;
+
+  select o.*, c.phone as customer_phone into v_ref_order
+  from public.onboarding_orders o
+  join public.customers c on c.customer_id = o.customer_id
+  where upper(trim(o.order_reference)) = v_code;
+
+  if not found then
+    return jsonb_build_object('valid', false, 'message', 'Invalid promo code or referral Order ID.');
+  end if;
+
+  -- Rule 1: Order must be Verified / Confirmed & Live & Active
+  if v_ref_order.order_status not in ('Confirmed', 'In Production', 'Delivered')
+     or coalesce(v_ref_order.card_status, 'Active') = 'Suspended'
+     or coalesce(v_ref_order.advance_verified_paise, 0) < 1 then
+    return jsonb_build_object('valid', false, 'message', 'Referral Order ID must be verified and active to grant a discount.');
+  end if;
+
+  -- Rule 2: 1-time use per Order ID
+  if exists (
+    select 1 from public.onboarding_orders
+    where upper(trim(coalesce(applied_promo_code, ''))) = v_code
+  ) then
+    return jsonb_build_object('valid', false, 'message', 'This couple referral Order ID has already been redeemed.');
+  end if;
+
+  -- Rule 3: Anti-chain loop
+  if v_ref_order.applied_promo_code is not null and v_ref_order.applied_promo_code like 'ORD-%' then
+    return jsonb_build_object('valid', false, 'message', 'This order was booked using a referral code and cannot refer another order.');
+  end if;
+
+  -- Rule 4: Self-referral prevention
+  if p_phone is not null and btrim(p_phone) <> '' then
+    v_normalized_input_phone := right(regexp_replace(p_phone, '\D', '', 'g'), 10);
+    v_ref_customer_phone := right(regexp_replace(v_ref_order.customer_phone, '\D', '', 'g'), 10);
+    if v_normalized_input_phone = v_ref_customer_phone and v_normalized_input_phone <> '' then
+      return jsonb_build_object('valid', false, 'message', 'You cannot use your own Order ID as a referral code.');
+    end if;
+  end if;
+
+  -- Calculate referral discount
+  if v_ref_settings.discount_type = 'FLAT' then
+    v_disc_paise := v_ref_settings.discount_value_paise;
+  else
+    v_disc_paise := round((v_pkg.list_price_paise * v_ref_settings.discount_value_paise) / 100.0);
+    if v_ref_settings.max_discount_cap_paise is not null and v_disc_paise > v_ref_settings.max_discount_cap_paise then
+      v_disc_paise := v_ref_settings.max_discount_cap_paise;
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'valid', true,
+    'code', v_ref_order.order_reference,
+    'is_referral', true,
+    'discount_type', v_ref_settings.discount_type,
+    'promo_discount_paise', v_disc_paise,
+    'is_stackable', v_ref_settings.is_stackable,
+    'message', 'Couple Referral Applied! Special discount unlocked.'
+  );
+end;
+$$;
+
+revoke all on function public.validate_promo_preview(text, text, text) from public;
+grant execute on function public.validate_promo_preview(text, text, text) to anon, authenticated, service_role;
 
 commit;

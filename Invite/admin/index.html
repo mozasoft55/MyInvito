@@ -183,6 +183,49 @@
           </div>
         </div>
 
+        <!-- Dynamic Couple Referral Settings (Order ID Referral) -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Viral Growth &amp; Referrals</p>
+              <h2>Dynamic Couple Referral Settings (Order ID Referral)</h2>
+            </div>
+          </div>
+          <p class="financial-note">Allow verified couples to share their Order ID (e.g. <code>ORD-DFE714DB</code>) with friends for a 1-time discount without manual code generation.</p>
+
+          <form id="referral-settings-form" class="promo-creator-card" novalidate>
+            <div class="form-grid-3">
+              <label class="field">Referral Discount Type
+                <select name="referral_discount_type" required>
+                  <option value="FLAT">Flat Amount (₹)</option>
+                  <option value="PERCENTAGE">Percentage (%)</option>
+                </select>
+              </label>
+              <label class="field">Discount Value (<span id="ref-val-indicator">₹</span>)
+                <input name="referral_discount_value" type="number" step="1" min="1" placeholder="e.g. 500" required>
+              </label>
+              <label class="field">Max Discount Cap (₹) <span class="optional">for % only</span>
+                <input name="referral_max_cap" type="number" step="1" min="0" placeholder="Optional Max Cap">
+              </label>
+            </div>
+
+            <div class="form-grid-3">
+              <label class="field checkbox-field checkbox-field-mt">
+                <input name="referral_is_enabled" type="checkbox" checked>
+                <span><b>Enable Couple Order ID Referrals</b></span>
+              </label>
+              <label class="field checkbox-field checkbox-field-mt">
+                <input name="referral_is_stackable" type="checkbox" checked>
+                <span><b>Stackable</b> (Adds on top of package discount)</span>
+              </label>
+              <div class="btn-align-end-wrap">
+                <button type="submit" id="btn-save-referral-settings" class="button button-gold button-block">Save Referral Rule</button>
+              </div>
+            </div>
+            <p id="referral-form-message" class="msg" role="alert" hidden></p>
+          </form>
+        </div>
+
         <!-- Promo Code Generator & Manager -->
         <div class="panel">
           <div class="panel-head">
@@ -191,12 +234,13 @@
               <h2>Promo Code Generator &amp; Manager</h2>
             </div>
           </div>
-          <p class="financial-note">Create custom campaign codes or client-specific discount codes locked to 10-digit mobile numbers.</p>
+          <p class="financial-note">Create B2B Partner / Photographer codes (e.g. <code>RAHUL-STUDIO</code>) or promotional campaign codes.</p>
 
           <form id="promo-create-form" class="promo-creator-card" novalidate>
+            <input type="hidden" name="editing_code" value="">
             <div class="form-grid-3">
               <label class="field">Promo Code
-                <input name="code" type="text" placeholder="e.g. NIKAH500" required maxlength="30" class="code-uppercase">
+                <input name="code" type="text" placeholder="e.g. RAHUL-STUDIO" required maxlength="30" class="code-uppercase">
               </label>
               <label class="field">Discount Type
                 <select name="discount_type" required>
@@ -210,8 +254,18 @@
             </div>
 
             <div class="form-grid-3">
-              <label class="field">Max Discount Cap (₹) <span class="optional">for % only</span>
-                <input name="max_cap" type="number" step="1" min="0" placeholder="Optional Max Cap">
+              <label class="field">Category / Label
+                <select name="category" required>
+                  <option value="B2B Partner">B2B Partner</option>
+                  <option value="Photographer">Photographer</option>
+                  <option value="Campaign" selected>Campaign</option>
+                  <option value="Influencer">Influencer</option>
+                  <option value="Seasonal">Seasonal</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+              <label class="field">Partner Name / Note <span class="optional">e.g. Studio name</span>
+                <input name="partner_name" type="text" maxlength="60" placeholder="e.g. Rahul Studio (Photographer)">
               </label>
               <label class="field">Applicable Package
                 <select name="applicable_package">
@@ -220,12 +274,12 @@
                   <option value="premium">Royal Arch Premium</option>
                 </select>
               </label>
-              <label class="field">Target Mobile No. <span class="optional">10 digits</span>
-                <input name="allowed_phone" type="tel" maxlength="15" placeholder="Optional Mobile Lock">
-              </label>
             </div>
 
             <div class="form-grid-3">
+              <label class="field">Max Discount Cap (₹) <span class="optional">for % only</span>
+                <input name="max_cap" type="number" step="1" min="0" placeholder="Optional Max Cap">
+              </label>
               <label class="field">Usage Limit <span class="optional">blank = unlimited</span>
                 <input name="usage_limit" type="number" min="1" placeholder="e.g. 1 or 50">
               </label>
@@ -233,29 +287,37 @@
                 <input name="is_stackable" type="checkbox">
                 <span><b>Stackable</b> (Adds on top of global discount)</span>
               </label>
-              <div class="btn-align-end-wrap">
-                <button type="submit" id="btn-create-promo" class="button button-gold button-block">Create Promo Code</button>
-              </div>
+            </div>
+
+            <div class="promo-form-actions-row">
+              <button type="submit" id="btn-create-promo" class="button button-gold">Create Promo Code</button>
+              <button type="button" id="btn-cancel-edit-promo" class="button button-outline" hidden>Cancel Edit</button>
             </div>
             <p id="promo-form-message" class="msg" role="alert" hidden></p>
           </form>
+
+          <div class="bulk-actions-toolbar">
+            <span id="promo-selected-count" class="text-muted">0 selected</span>
+            <button type="button" id="btn-bulk-delete-promos" class="button button-danger button-small" disabled>Delete Selected</button>
+          </div>
 
           <div class="table-responsive table-scroll-wrap">
             <table class="admin-data-table promo-table" id="promo-table">
               <thead>
                 <tr>
+                  <th class="th-cb"><input type="checkbox" id="promo-select-all" title="Select All"></th>
                   <th>Code</th>
+                  <th>Category / Note</th>
                   <th>Discount</th>
                   <th>Scope</th>
-                  <th>Target Phone</th>
                   <th>Usage (Used/Limit)</th>
                   <th>Stacking</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="promo-table-body">
-                <tr><td colspan="8" class="empty">Loading promo codes…</td></tr>
+                <tr><td colspan="9" class="empty">Loading promo codes…</td></tr>
               </tbody>
             </table>
           </div>

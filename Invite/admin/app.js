@@ -146,6 +146,8 @@ let payments = [];
 let cashRequests = [];
 let adminPackages = [];
 let adminPromos = [];
+let referralSettings = null;
+let selectedPromoCodes = new Set();
 let enrollFactorId = '';
 let passwordFails = getStoredInt('wedding-admin-pwd-fails', 0);
 let codeFails = getStoredInt('wedding-admin-code-fails', 0);
@@ -564,7 +566,7 @@ function renderPayments() {
     if (!tabMatch) return false;
 
     if (searchQuery) {
-      const matchTarget = `${payment.order_reference} ${payment.customer_name} ${payment.customer_phone} ${payment.couple_name}`.toLowerCase();
+      const matchTarget = `${payment.order_reference} ${payment.customer_name} ${payment.customer_phone} ${payment.couple_name} ${payment.applied_promo_code || ''}`.toLowerCase();
       return matchTarget.includes(searchQuery);
     }
 
@@ -660,6 +662,16 @@ function renderPayments() {
             <span class="cell-label">Card Expiry (90 Days)</span>
             <span class="cell-value">${expiryInfo.isActivated ? `${escapeHtml(expiryInfo.formattedDate)} ${expiryInfo.badgeHtml}` : '<span class="text-muted">Starts upon activation</span>'}</span>
           </div>
+
+          ${payment.applied_promo_code ? `
+            <div class="grid-cell">
+              <span class="cell-label">Promo / Referral Code</span>
+              <span class="cell-value">
+                <strong class="code-tag">${escapeHtml(payment.applied_promo_code)}</strong>
+                ${payment.promo_discount_paise ? `<small class="text-muted">(-${formatINR(payment.promo_discount_paise)})</small>` : ''}
+              </span>
+            </div>
+          ` : ''}
 
           ${hasCity ? `
             <div class="grid-cell">
@@ -971,6 +983,13 @@ async function loadPricingConfig() {
     const res = await callAdmin('get_pricing_config');
     adminPackages = (res && res.packages) || [];
     adminPromos = (res && res.promo_codes) || [];
+    referralSettings = (res && res.referral_settings) || {
+      is_enabled: true,
+      discount_type: 'FLAT',
+      discount_value_paise: 50000,
+      max_discount_cap_paise: null,
+      is_stackable: true
+    };
   } catch (err) {
     console.warn('Live pricing config load failed, using fallback:', err);
     if (!adminPackages.length) {
@@ -996,12 +1015,26 @@ async function loadPricingConfig() {
     if (!adminPromos.length) {
       adminPromos = [
         {
-          code: 'NIKAH500',
+          code: 'RAHUL-STUDIO',
+          category: 'B2B Partner',
+          partner_name: 'Rahul Studio (Photographer)',
           discount_type: 'FLAT',
           discount_value_paise: 50000,
           max_discount_cap_paise: null,
           applicable_package_code: null,
-          allowed_phones: null,
+          is_stackable: true,
+          usage_limit: null,
+          used_count: 0,
+          is_active: true
+        },
+        {
+          code: 'NIKAH500',
+          category: 'Campaign',
+          partner_name: 'Wedding Season Launch',
+          discount_type: 'FLAT',
+          discount_value_paise: 50000,
+          max_discount_cap_paise: null,
+          applicable_package_code: null,
           is_stackable: false,
           usage_limit: 100,
           used_count: 0,
@@ -1009,9 +1042,70 @@ async function loadPricingConfig() {
         }
       ];
     }
+    if (!referralSettings) {
+      referralSettings = {
+        is_enabled: true,
+        discount_type: 'FLAT',
+        discount_value_paise: 50000,
+        max_discount_cap_paise: null,
+        is_stackable: true
+      };
+    }
   }
   renderPackagePricingCards();
+  renderReferralSettingsForm();
   renderPromoCodesTable();
+}
+
+function renderReferralSettingsForm() {
+  const form = $('referral-settings-form');
+  if (!form || !referralSettings) return;
+
+  const type = referralSettings.discount_type || 'FLAT';
+  if (form.elements.referral_discount_type) form.elements.referral_discount_type.value = type;
+
+  const valInput = form.elements.referral_discount_value;
+  const indicator = $('ref-val-indicator');
+  if (valInput) {
+    if (type === 'FLAT') {
+      valInput.value = (Number(referralSettings.discount_value_paise || 50000) / 100).toFixed(0);
+      valInput.placeholder = 'e.g. 500';
+      if (indicator) indicator.textContent = '₹';
+    } else {
+      valInput.value = referralSettings.discount_value_paise || 10;
+      valInput.placeholder = 'e.g. 10';
+      if (indicator) indicator.textContent = '%';
+    }
+  }
+
+  const capInput = form.elements.referral_max_cap;
+  if (capInput) {
+    capInput.value = referralSettings.max_discount_cap_paise ? (Number(referralSettings.max_discount_cap_paise) / 100).toFixed(0) : '';
+  }
+
+  if (form.elements.referral_is_enabled) {
+    form.elements.referral_is_enabled.checked = referralSettings.is_enabled !== false;
+  }
+  if (form.elements.referral_is_stackable) {
+    form.elements.referral_is_stackable.checked = referralSettings.is_stackable !== false;
+  }
+}
+
+function updateBulkDeleteToolbar() {
+  const countEl = $('promo-selected-count');
+  const bulkBtn = $('btn-bulk-delete-promos');
+  const selectAll = $('promo-select-all');
+
+  const count = selectedPromoCodes.size;
+  if (countEl) countEl.textContent = `${count} selected`;
+  if (bulkBtn) {
+    bulkBtn.disabled = count === 0;
+    bulkBtn.textContent = count > 0 ? `Delete Selected (${count})` : 'Delete Selected';
+  }
+  if (selectAll) {
+    selectAll.checked = adminPromos.length > 0 && count === adminPromos.length;
+    selectAll.indeterminate = count > 0 && count < adminPromos.length;
+  }
 }
 
 function renderPackagePricingCards() {
@@ -1074,11 +1168,13 @@ function renderPromoCodesTable() {
   const tbody = $('promo-table-body');
   if (!tbody) return;
   if (!adminPromos.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">No promo codes created yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">No promo codes created yet.</td></tr>';
+    updateBulkDeleteToolbar();
     return;
   }
 
   tbody.innerHTML = adminPromos.map(promo => {
+    const isSelected = selectedPromoCodes.has(promo.code);
     const discountText = promo.discount_type === 'FLAT'
       ? formatINR(promo.discount_value_paise) + ' Flat'
       : `${promo.discount_value_paise}%` + (promo.max_discount_cap_paise ? ` (Cap: ${formatINR(promo.max_discount_cap_paise)})` : '');
@@ -1087,9 +1183,16 @@ function renderPromoCodesTable() {
       ? (promo.applicable_package_code === 'standard' ? 'Standard' : (promo.applicable_package_code === 'premium' ? 'Premium' : promo.applicable_package_code))
       : 'All Packages';
 
-    const phonesText = (promo.allowed_phones && promo.allowed_phones.length)
-      ? promo.allowed_phones.join(', ')
-      : 'All Customers';
+    const cat = promo.category || 'Campaign';
+    let catClass = 'badge-cat-campaign';
+    if (cat.toLowerCase().includes('b2b')) catClass = 'badge-cat-b2b';
+    else if (cat.toLowerCase().includes('photographer')) catClass = 'badge-cat-photographer';
+    else if (cat.toLowerCase().includes('influencer')) catClass = 'badge-cat-influencer';
+
+    const categoryHtml = `
+      <span class="badge-cat ${catClass}">${escapeHtml(cat)}</span>
+      ${promo.partner_name ? `<span class="promo-partner-note">${escapeHtml(promo.partner_name)}</span>` : ''}
+    `;
 
     const usageText = `${promo.used_count || 0} / ${promo.usage_limit != null ? promo.usage_limit : '∞'}`;
     const stackText = promo.is_stackable ? '✓ Stackable' : 'Override';
@@ -1099,21 +1202,38 @@ function renderPromoCodesTable() {
 
     return `
       <tr data-promo-row="${escapeHtml(promo.code)}">
-        <td><strong>${escapeHtml(promo.code)}</strong></td>
+        <td class="td-cb">
+          <input type="checkbox" class="cb-promo-select" data-code="${escapeHtml(promo.code)}" ${isSelected ? 'checked' : ''}>
+        </td>
+        <td>
+          <strong class="promo-code-clickable" data-filter-code="${escapeHtml(promo.code)}" title="Click to view orders booked with ${escapeHtml(promo.code)}">
+            ${escapeHtml(promo.code)} ↗
+          </strong>
+        </td>
+        <td>${categoryHtml}</td>
         <td>${escapeHtml(discountText)}</td>
         <td>${escapeHtml(scopeText)}</td>
-        <td><code class="phone-code">${escapeHtml(phonesText)}</code></td>
         <td>${escapeHtml(usageText)}</td>
         <td><small>${escapeHtml(stackText)}</small></td>
         <td>${statusBadge}</td>
         <td>
-          <button type="button" class="button button-outline button-small btn-toggle-promo" data-promo="${escapeHtml(promo.code)}" data-active="${promo.is_active ? 'true' : 'false'}">
-            ${promo.is_active ? 'Disable' : 'Enable'}
-          </button>
+          <div class="promo-actions-cell">
+            <button type="button" class="button button-outline button-small btn-edit-promo" data-promo="${escapeHtml(promo.code)}" title="Edit promo code">
+              Edit
+            </button>
+            <button type="button" class="button button-outline button-small btn-toggle-promo" data-promo="${escapeHtml(promo.code)}" data-active="${promo.is_active ? 'true' : 'false'}">
+              ${promo.is_active ? 'Disable' : 'Enable'}
+            </button>
+            <button type="button" class="button button-danger button-small btn-delete-promo" data-promo="${escapeHtml(promo.code)}" title="Delete promo code">
+              Delete
+            </button>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
+
+  updateBulkDeleteToolbar();
 }
 
 // Main Tab Navigation
@@ -1186,38 +1306,231 @@ $('package-pricing-cards')?.addEventListener('click', async event => {
   }
 });
 
-// Toggle Promo Status (Enable/Disable)
-$('promo-table')?.addEventListener('click', async event => {
-  const btn = event.target.closest('.btn-toggle-promo');
-  if (!btn) return;
-  const code = btn.dataset.promo;
-  const currentActive = btn.dataset.active === 'true';
-  const nextActive = !currentActive;
+// Save Referral Settings Action
+$('referral-settings-form')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const isEnabled = form.elements.referral_is_enabled?.checked ?? true;
+  const isStackable = form.elements.referral_is_stackable?.checked ?? true;
+  const type = form.elements.referral_discount_type?.value || 'FLAT';
+  const valNum = Number(form.elements.referral_discount_value?.value || 0);
+  const capNum = form.elements.referral_max_cap?.value ? Number(form.elements.referral_max_cap.value) : null;
 
-  btn.disabled = true;
+  if (valNum <= 0) {
+    return showError('Referral discount value must be greater than zero.');
+  }
+  if (type === 'PERCENTAGE' && valNum > 100) {
+    return showError('Percentage discount cannot exceed 100%.');
+  }
+
+  const btn = $('btn-save-referral-settings');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  showError('');
+
   try {
-    await callAdmin('toggle_promo_status', {
-      code,
-      is_active: nextActive
+    await callAdmin('update_referral_settings', {
+      is_enabled: isEnabled,
+      discount_type: type,
+      discount_value_paise: type === 'FLAT' ? Math.round(valNum * 100) : valNum,
+      max_discount_cap_paise: capNum ? Math.round(capNum * 100) : null,
+      is_stackable: isStackable
     });
-    toast(`Promo code ${code} is now ${nextActive ? 'Active' : 'Disabled'}.`);
+    toast('Global Couple Referral rule saved successfully!');
     await loadPricingConfig();
   } catch (err) {
     showError(err.message);
-    btn.disabled = false;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Referral Rule'; }
   }
 });
 
-// Create Promo Code Form Submit
+// Referral Discount Type Switch Indicator
+document.querySelector('[name="referral_discount_type"]')?.addEventListener('change', event => {
+  const indicator = document.getElementById('ref-val-indicator');
+  const valInput = document.querySelector('[name="referral_discount_value"]');
+  if (event.target.value === 'PERCENTAGE') {
+    if (indicator) indicator.textContent = '%';
+    if (valInput) valInput.placeholder = 'e.g. 10 (for 10%)';
+  } else {
+    if (indicator) indicator.textContent = '₹';
+    if (valInput) valInput.placeholder = 'e.g. 500';
+  }
+});
+
+// Promo Table Actions (Toggle, Edit, Delete, Clickable Code Filter)
+$('promo-table')?.addEventListener('click', async event => {
+  // Toggle Status
+  const toggleBtn = event.target.closest('.btn-toggle-promo');
+  if (toggleBtn) {
+    const code = toggleBtn.dataset.promo;
+    const currentActive = toggleBtn.dataset.active === 'true';
+    const nextActive = !currentActive;
+
+    toggleBtn.disabled = true;
+    try {
+      await callAdmin('toggle_promo_status', {
+        code,
+        is_active: nextActive
+      });
+      toast(`Promo code ${code} is now ${nextActive ? 'Active' : 'Disabled'}.`);
+      await loadPricingConfig();
+    } catch (err) {
+      showError(err.message);
+      toggleBtn.disabled = false;
+    }
+    return;
+  }
+
+  // Edit Promo Code
+  const editBtn = event.target.closest('.btn-edit-promo');
+  if (editBtn) {
+    const code = editBtn.dataset.promo;
+    const promo = adminPromos.find(p => p.code === code);
+    if (!promo) return;
+
+    const form = $('promo-create-form');
+    if (!form) return;
+
+    form.elements.editing_code.value = promo.code;
+    form.elements.code.value = promo.code;
+    form.elements.code.readOnly = true;
+    form.elements.discount_type.value = promo.discount_type;
+    form.elements.discount_value.value = promo.discount_type === 'FLAT' 
+      ? (Number(promo.discount_value_paise || 0) / 100).toFixed(0) 
+      : promo.discount_value_paise;
+    form.elements.category.value = promo.category || 'Campaign';
+    form.elements.partner_name.value = promo.partner_name || '';
+    form.elements.max_cap.value = promo.max_discount_cap_paise 
+      ? (Number(promo.max_discount_cap_paise) / 100).toFixed(0) 
+      : '';
+    form.elements.applicable_package.value = promo.applicable_package_code || '';
+    form.elements.usage_limit.value = promo.usage_limit != null ? promo.usage_limit : '';
+    form.elements.is_stackable.checked = Boolean(promo.is_stackable);
+
+    const indicator = document.getElementById('val-type-indicator');
+    if (indicator) indicator.textContent = promo.discount_type === 'PERCENTAGE' ? '%' : '₹';
+
+    const submitBtn = $('btn-create-promo');
+    if (submitBtn) submitBtn.textContent = 'Update Promo Code';
+    const cancelBtn = $('btn-cancel-edit-promo');
+    if (cancelBtn) cancelBtn.hidden = false;
+
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Delete Single Promo Code
+  const delBtn = event.target.closest('.btn-delete-promo');
+  if (delBtn) {
+    const code = delBtn.dataset.promo;
+    const ok = await confirmAction('Delete Promo Code', `Delete promo code "${code}"? Historical orders will retain their applied promo record.`);
+    if (!ok) return;
+
+    delBtn.disabled = true;
+    try {
+      await callAdmin('delete_promo_codes', { codes: [code] });
+      selectedPromoCodes.delete(code);
+      toast(`Promo code ${code} deleted.`);
+      await loadPricingConfig();
+    } catch (err) {
+      showError(err.message);
+      delBtn.disabled = false;
+    }
+    return;
+  }
+
+  // Click on Code -> Filter Orders in Payments tab to audit bookings
+  const codeTag = event.target.closest('.promo-code-clickable');
+  if (codeTag) {
+    const code = codeTag.dataset.filterCode;
+    if (!code) return;
+    document.querySelectorAll('#admin-main-tabs .chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('[data-tab="payments"]')?.classList.add('active');
+    $('tab-section-payments').hidden = false;
+    $('tab-section-pricing').hidden = true;
+    const searchInput = $('search-input');
+    if (searchInput) {
+      searchInput.value = code;
+      searchQuery = code.toLowerCase();
+      filterAndRender();
+    }
+  }
+});
+
+// Checkbox selection in Promo Table
+$('promo-table')?.addEventListener('change', event => {
+  if (event.target.id === 'promo-select-all') {
+    const checked = event.target.checked;
+    if (checked) {
+      adminPromos.forEach(p => selectedPromoCodes.add(p.code));
+    } else {
+      selectedPromoCodes.clear();
+    }
+    renderPromoCodesTable();
+    return;
+  }
+
+  const rowCb = event.target.closest('.cb-promo-select');
+  if (rowCb) {
+    const code = rowCb.dataset.code;
+    if (rowCb.checked) {
+      selectedPromoCodes.add(code);
+    } else {
+      selectedPromoCodes.delete(code);
+    }
+    updateBulkDeleteToolbar();
+  }
+});
+
+// Bulk Delete Promo Codes
+$('btn-bulk-delete-promos')?.addEventListener('click', async () => {
+  if (selectedPromoCodes.size === 0) return;
+  const count = selectedPromoCodes.size;
+  const ok = await confirmAction('Bulk Delete Promo Codes', `Delete ${count} selected promo code(s)? Historical orders will retain their applied promo record.`);
+  if (!ok) return;
+
+  const btn = $('btn-bulk-delete-promos');
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    await callAdmin('delete_promo_codes', { codes: Array.from(selectedPromoCodes) });
+    toast(`${count} promo code(s) deleted successfully.`);
+    selectedPromoCodes.clear();
+    await loadPricingConfig();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    btn.disabled = false;
+    updateBulkDeleteToolbar();
+  }
+});
+
+// Cancel Edit Promo Form
+$('btn-cancel-edit-promo')?.addEventListener('click', () => {
+  const form = $('promo-create-form');
+  if (form) {
+    form.reset();
+    form.elements.editing_code.value = '';
+    form.elements.code.readOnly = false;
+  }
+  const submitBtn = $('btn-create-promo');
+  if (submitBtn) submitBtn.textContent = 'Create Promo Code';
+  const cancelBtn = $('btn-cancel-edit-promo');
+  if (cancelBtn) cancelBtn.hidden = true;
+});
+
+// Create / Update Promo Code Form Submit
 $('promo-create-form')?.addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.target;
+  const editingCode = form.elements.editing_code?.value || '';
   const code = (form.elements.code?.value || '').trim().toUpperCase();
   const type = form.elements.discount_type?.value || 'FLAT';
   const valNum = Number(form.elements.discount_value?.value || 0);
+  const category = form.elements.category?.value || 'Campaign';
+  const partnerName = (form.elements.partner_name?.value || '').trim() || null;
   const capNum = form.elements.max_cap?.value ? Number(form.elements.max_cap.value) : null;
   const pkgCode = (form.elements.applicable_package?.value || '').trim() || null;
-  const phone = (form.elements.allowed_phone?.value || '').replace(/\D/g, '').slice(-10) || null;
   const limit = form.elements.usage_limit?.value ? parseInt(form.elements.usage_limit.value, 10) : null;
   const isStackable = form.elements.is_stackable?.checked ?? false;
 
@@ -1232,7 +1545,7 @@ $('promo-create-form')?.addEventListener('submit', async event => {
   }
 
   const submitBtn = document.getElementById('btn-create-promo');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Creating…'; }
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
   showError('');
 
   try {
@@ -1242,7 +1555,8 @@ $('promo-create-form')?.addEventListener('submit', async event => {
       discount_value_paise: type === 'FLAT' ? Math.round(valNum * 100) : valNum,
       max_discount_cap_paise: capNum ? Math.round(capNum * 100) : null,
       applicable_package_code: pkgCode,
-      allowed_phones: phone ? [phone] : null,
+      category,
+      partner_name: partnerName,
       is_stackable: isStackable,
       usage_limit: limit,
       is_active: true
@@ -1251,11 +1565,16 @@ $('promo-create-form')?.addEventListener('submit', async event => {
     await callAdmin('upsert_promo_code', payload);
     toast(`Promo code ${code} saved successfully!`);
     form.reset();
+    form.elements.editing_code.value = '';
+    form.elements.code.readOnly = false;
+    if (submitBtn) submitBtn.textContent = 'Create Promo Code';
+    const cancelBtn = $('btn-cancel-edit-promo');
+    if (cancelBtn) cancelBtn.hidden = true;
     await loadPricingConfig();
   } catch (err) {
     showError(err.message);
   } finally {
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Promo Code'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = editingCode ? 'Update Promo Code' : 'Create Promo Code'; }
   }
 });
 

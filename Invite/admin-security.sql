@@ -375,7 +375,9 @@ begin
     'activated_at', coalesce(o.activated_at, p.verified_at),
     'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
     'template_style', w.template_style,
-    'template_number', w.template_style
+    'template_number', w.template_style,
+    'applied_promo_code', o.applied_promo_code,
+    'promo_discount_paise', coalesce(o.promo_discount_paise, 0)
   ) order by p.submitted_at desc), '[]'::jsonb)
   into v_queue
   from public.onboarding_payments p
