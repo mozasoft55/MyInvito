@@ -44,6 +44,8 @@ const setStoredInt = (k, val) => {
 
 let payments = [];
 let cashRequests = [];
+let adminPackages = [];
+let adminPromos = [];
 let enrollFactorId = '';
 let passwordFails = getStoredInt('wedding-admin-pwd-fails', 0);
 let codeFails = getStoredInt('wedding-admin-code-fails', 0);
@@ -100,9 +102,13 @@ function showError(message) {
 function wipeConsole() {
   payments = [];
   cashRequests = [];
+  adminPackages = [];
+  adminPromos = [];
   $('payment-queue').replaceChildren();
   $('cash-request-queue').replaceChildren();
   $('stats').replaceChildren();
+  $('package-pricing-cards')?.replaceChildren();
+  $('promo-table-body')?.replaceChildren();
   showError('');
 }
 
@@ -354,7 +360,12 @@ function confirmAction({ title, body, confirmLabel, danger = false }) {
 
 async function openConsole() {
   showView('console');
-  try { await renderQueue(); } catch (error) { showError(error.message); }
+  try {
+    await Promise.allSettled([
+      renderQueue(),
+      loadPricingConfig()
+    ]);
+  } catch (error) { showError(error.message); }
 }
 
 async function renderQueue() {
@@ -801,6 +812,330 @@ $('refresh').addEventListener('click', async event => {
   button.disabled = true;
   try { await renderQueue(); toast('Queue refreshed'); } catch (error) { showError(error.message); }
   button.disabled = false;
+});
+
+/* ───────────── Package Pricing & Promo Code Manager ───────────── */
+
+async function loadPricingConfig() {
+  const pError = $('pricing-error');
+  if (pError) pError.hidden = true;
+  try {
+    const res = await callAdmin('get_pricing_config');
+    adminPackages = (res && res.packages) || [];
+    adminPromos = (res && res.promo_codes) || [];
+  } catch (err) {
+    console.warn('Live pricing config load failed, using fallback:', err);
+    if (!adminPackages.length) {
+      adminPackages = [
+        {
+          package_code: 'standard',
+          display_name: 'Standard Package',
+          list_price_paise: 400000,
+          discount_paise: 100000,
+          advance_paise: 150000,
+          active: true
+        },
+        {
+          package_code: 'premium',
+          display_name: 'Royal Arch Premium',
+          list_price_paise: 600000,
+          discount_paise: 0,
+          advance_paise: 300000,
+          active: true
+        }
+      ];
+    }
+    if (!adminPromos.length) {
+      adminPromos = [
+        {
+          code: 'NIKAH500',
+          discount_type: 'FLAT',
+          discount_value_paise: 50000,
+          max_discount_cap_paise: null,
+          applicable_package_code: null,
+          allowed_phones: null,
+          is_stackable: false,
+          usage_limit: 100,
+          used_count: 0,
+          is_active: true
+        }
+      ];
+    }
+  }
+  renderPackagePricingCards();
+  renderPromoCodesTable();
+}
+
+function renderPackagePricingCards() {
+  const host = $('package-pricing-cards');
+  if (!host) return;
+  if (!adminPackages.length) {
+    host.innerHTML = '<p class="empty">No packages found.</p>';
+    return;
+  }
+
+  host.innerHTML = adminPackages.map(pkg => {
+    const listRupees = (Number(pkg.list_price_paise || 0) / 100).toFixed(0);
+    const discRupees = (Number(pkg.discount_paise || 0) / 100).toFixed(0);
+    const advRupees = (Number(pkg.advance_paise || 0) / 100).toFixed(0);
+    const netRupees = Math.max(0, Number(listRupees) - Number(discRupees));
+
+    return `
+      <article class="package-pricing-card ${pkg.active ? 'is-active' : ''}" data-package="${escapeHtml(pkg.package_code)}">
+        <div class="package-pricing-head">
+          <div>
+            <h3>${escapeHtml(pkg.display_name || pkg.package_code)}</h3>
+            <span class="code-tag">${escapeHtml(pkg.package_code)}</span>
+          </div>
+          <span class="badge ${pkg.active ? 'badge-verified' : 'badge-rejected'}">${pkg.active ? 'Active on Site' : 'Inactive'}</span>
+        </div>
+
+        <div class="pricing-field-grid">
+          <label class="field">List Price (₹)
+            <input type="number" name="list_rupees" min="0" step="1" value="${listRupees}" required>
+          </label>
+          <label class="field">Global Discount (₹)
+            <input type="number" name="discount_rupees" min="0" step="1" value="${discRupees}" required>
+          </label>
+        </div>
+
+        <div class="pricing-field-grid">
+          <label class="field">Advance Expected (₹)
+            <input type="number" name="advance_rupees" min="0" step="1" value="${advRupees}" required>
+          </label>
+          <div class="package-net-summary" style="display:flex; flex-direction:column; justify-content:center;">
+            <span style="font-size:11px; color:var(--muted); text-transform:uppercase;">Net Payable</span>
+            <strong class="net-display" style="font-size:18px; color:var(--wine);">₹${netRupees.toLocaleString('en-IN')}</strong>
+          </div>
+        </div>
+
+        <label class="checkbox-field">
+          <input type="checkbox" name="is_active" ${pkg.active ? 'checked' : ''}>
+          <span><b>Active</b> (Enable on customer checkout)</span>
+        </label>
+
+        <button type="button" class="button button-primary button-small btn-save-package" style="margin-top:auto;">
+          Save Package Pricing
+        </button>
+      </article>
+    `;
+  }).join('');
+}
+
+function renderPromoCodesTable() {
+  const tbody = $('promo-table-body');
+  if (!tbody) return;
+  if (!adminPromos.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No promo codes created yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = adminPromos.map(promo => {
+    const discountText = promo.discount_type === 'FLAT'
+      ? formatINR(promo.discount_value_paise) + ' Flat'
+      : `${promo.discount_value_paise}%` + (promo.max_discount_cap_paise ? ` (Cap: ${formatINR(promo.max_discount_cap_paise)})` : '');
+
+    const scopeText = promo.applicable_package_code
+      ? (promo.applicable_package_code === 'standard' ? 'Standard' : (promo.applicable_package_code === 'premium' ? 'Premium' : promo.applicable_package_code))
+      : 'All Packages';
+
+    const phonesText = (promo.allowed_phones && promo.allowed_phones.length)
+      ? promo.allowed_phones.join(', ')
+      : 'All Customers';
+
+    const usageText = `${promo.used_count || 0} / ${promo.usage_limit != null ? promo.usage_limit : '∞'}`;
+    const stackText = promo.is_stackable ? '✓ Stackable' : 'Override';
+    const statusBadge = promo.is_active
+      ? '<span class="badge-active">Active</span>'
+      : '<span class="badge-inactive">Disabled</span>';
+
+    return `
+      <tr data-promo-row="${escapeHtml(promo.code)}">
+        <td><strong>${escapeHtml(promo.code)}</strong></td>
+        <td>${escapeHtml(discountText)}</td>
+        <td>${escapeHtml(scopeText)}</td>
+        <td><code style="font-size:12px;">${escapeHtml(phonesText)}</code></td>
+        <td>${escapeHtml(usageText)}</td>
+        <td><small>${escapeHtml(stackText)}</small></td>
+        <td>${statusBadge}</td>
+        <td>
+          <button type="button" class="button button-outline button-small btn-toggle-promo" data-promo="${escapeHtml(promo.code)}" data-active="${promo.is_active ? 'true' : 'false'}">
+            ${promo.is_active ? 'Disable' : 'Enable'}
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Main Tab Navigation
+$('admin-main-tabs')?.addEventListener('click', event => {
+  const chip = event.target.closest('[data-tab]');
+  if (!chip) return;
+  document.querySelectorAll('#admin-main-tabs .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  const target = chip.dataset.tab;
+  $('tab-section-payments').hidden = target !== 'payments';
+  $('tab-section-pricing').hidden = target !== 'pricing';
+  if (target === 'pricing') {
+    loadPricingConfig();
+  }
+});
+
+// Live Net Payable calculation on card input
+$('package-pricing-cards')?.addEventListener('input', event => {
+  const card = event.target.closest('.package-pricing-card');
+  if (!card) return;
+  const list = Number(card.querySelector('[name="list_rupees"]')?.value || 0);
+  const disc = Number(card.querySelector('[name="discount_rupees"]')?.value || 0);
+  const net = Math.max(0, list - disc);
+  const netDisplay = card.querySelector('.net-display');
+  if (netDisplay) netDisplay.textContent = `₹${net.toLocaleString('en-IN')}`;
+});
+
+// Save Package Pricing Action
+$('package-pricing-cards')?.addEventListener('click', async event => {
+  const btn = event.target.closest('.btn-save-package');
+  if (!btn) return;
+  const card = btn.closest('.package-pricing-card');
+  if (!card) return;
+
+  const pkgCode = card.dataset.package;
+  const listRupees = Number(card.querySelector('[name="list_rupees"]')?.value || 0);
+  const discRupees = Number(card.querySelector('[name="discount_rupees"]')?.value || 0);
+  const advRupees = Number(card.querySelector('[name="advance_rupees"]')?.value || 0);
+  const isActive = card.querySelector('[name="is_active"]')?.checked ?? false;
+
+  if (listRupees < 0 || discRupees < 0 || advRupees < 0) {
+    return showError('Values cannot be negative.');
+  }
+  if (discRupees > listRupees) {
+    return showError('Global discount cannot exceed list price.');
+  }
+  if (advRupees > (listRupees - discRupees)) {
+    return showError('Advance amount cannot exceed net payable.');
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  showError('');
+
+  try {
+    await callAdmin('update_package_pricing', {
+      package_code: pkgCode,
+      list_price_paise: Math.round(listRupees * 100),
+      discount_paise: Math.round(discRupees * 100),
+      advance_paise: Math.round(advRupees * 100),
+      active: isActive
+    });
+    toast(`Package ${pkgCode} updated successfully!`);
+    await loadPricingConfig();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Package Pricing';
+  }
+});
+
+// Toggle Promo Status (Enable/Disable)
+$('promo-table')?.addEventListener('click', async event => {
+  const btn = event.target.closest('.btn-toggle-promo');
+  if (!btn) return;
+  const code = btn.dataset.promo;
+  const currentActive = btn.dataset.active === 'true';
+  const nextActive = !currentActive;
+
+  btn.disabled = true;
+  try {
+    await callAdmin('toggle_promo_status', {
+      code,
+      is_active: nextActive
+    });
+    toast(`Promo code ${code} is now ${nextActive ? 'Active' : 'Disabled'}.`);
+    await loadPricingConfig();
+  } catch (err) {
+    showError(err.message);
+    btn.disabled = false;
+  }
+});
+
+// Create Promo Code Form Submit
+$('promo-create-form')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const code = (form.elements.code?.value || '').trim().toUpperCase();
+  const type = form.elements.discount_type?.value || 'FLAT';
+  const valNum = Number(form.elements.discount_value?.value || 0);
+  const capNum = form.elements.max_cap?.value ? Number(form.elements.max_cap.value) : null;
+  const pkgCode = (form.elements.applicable_package?.value || '').trim() || null;
+  const phone = (form.elements.allowed_phone?.value || '').replace(/\D/g, '').slice(-10) || null;
+  const limit = form.elements.usage_limit?.value ? parseInt(form.elements.usage_limit.value, 10) : null;
+  const isStackable = form.elements.is_stackable?.checked ?? false;
+
+  if (!code || code.length < 3) {
+    return showError('Promo code must be at least 3 characters.');
+  }
+  if (valNum <= 0) {
+    return showError('Discount value must be greater than zero.');
+  }
+  if (type === 'PERCENTAGE' && valNum > 100) {
+    return showError('Percentage discount cannot exceed 100%.');
+  }
+
+  const submitBtn = document.getElementById('btn-create-promo');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Creating…'; }
+  showError('');
+
+  try {
+    const payload = {
+      code,
+      discount_type: type,
+      discount_value_paise: type === 'FLAT' ? Math.round(valNum * 100) : valNum,
+      max_discount_cap_paise: capNum ? Math.round(capNum * 100) : null,
+      applicable_package_code: pkgCode,
+      allowed_phones: phone ? [phone] : null,
+      is_stackable: isStackable,
+      usage_limit: limit,
+      is_active: true
+    };
+
+    await callAdmin('upsert_promo_code', payload);
+    toast(`Promo code ${code} saved successfully!`);
+    form.reset();
+    await loadPricingConfig();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Create Promo Code'; }
+  }
+});
+
+// Discount Type Switch Indicator
+document.querySelector('[name="discount_type"]')?.addEventListener('change', event => {
+  const indicator = document.getElementById('val-type-indicator');
+  const valInput = document.querySelector('[name="discount_value"]');
+  if (event.target.value === 'PERCENTAGE') {
+    if (indicator) indicator.textContent = '%';
+    if (valInput) valInput.placeholder = 'e.g. 10 (for 10%)';
+  } else {
+    if (indicator) indicator.textContent = '₹';
+    if (valInput) valInput.placeholder = 'e.g. 500';
+  }
+});
+
+// Refresh Pricing Button
+$('refresh-pricing')?.addEventListener('click', async event => {
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  try {
+    await loadPricingConfig();
+    toast('Pricing and promo codes refreshed.');
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 route();
