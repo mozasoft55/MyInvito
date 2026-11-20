@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#200810">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'">
   <title>Payment review | Royal Wedding Cards</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,7 +100,7 @@
       </section>
 
       <!-- Main Navigation Tabs -->
-      <div class="filter-tabs admin-main-tabs" id="admin-main-tabs" style="margin-top: 20px; margin-bottom: 4px;">
+      <div class="filter-tabs admin-main-tabs" id="admin-main-tabs">
         <button type="button" class="chip active" data-tab="payments">
           💳 Payments &amp; Cash Quotes
         </button>
@@ -196,7 +196,7 @@
           <form id="promo-create-form" class="promo-creator-card" novalidate>
             <div class="form-grid-3">
               <label class="field">Promo Code
-                <input name="code" type="text" placeholder="e.g. NIKAH500" required maxlength="30" style="text-transform:uppercase; font-weight:600;">
+                <input name="code" type="text" placeholder="e.g. NIKAH500" required maxlength="30" class="code-uppercase">
               </label>
               <label class="field">Discount Type
                 <select name="discount_type" required>
@@ -229,19 +229,19 @@
               <label class="field">Usage Limit <span class="optional">blank = unlimited</span>
                 <input name="usage_limit" type="number" min="1" placeholder="e.g. 1 or 50">
               </label>
-              <label class="field checkbox-field" style="margin-top:28px;">
+              <label class="field checkbox-field checkbox-field-mt">
                 <input name="is_stackable" type="checkbox">
                 <span><b>Stackable</b> (Adds on top of global discount)</span>
               </label>
-              <div style="display:flex; align-items:flex-end;">
+              <div class="btn-align-end-wrap">
                 <button type="submit" id="btn-create-promo" class="button button-gold button-block">Create Promo Code</button>
               </div>
             </div>
             <p id="promo-form-message" class="msg" role="alert" hidden></p>
           </form>
 
-          <div class="table-responsive" style="margin-top: 24px; overflow-x: auto;">
-            <table class="admin-data-table" id="promo-table">
+          <div class="table-responsive table-scroll-wrap">
+            <table class="admin-data-table promo-table" id="promo-table">
               <thead>
                 <tr>
                   <th>Code</th>

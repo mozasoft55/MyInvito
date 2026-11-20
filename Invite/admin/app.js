@@ -234,7 +234,7 @@ $('view-mfa').addEventListener('submit', async event => {
     if (listError) throw listError;
     const factor = factors && factors.totp && factors.totp[0];
     if (!factor) { setMsg('mfa-message', ''); return await route(); }
-    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
+    const { data: verifyData, error } = await sb.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
     if (error) {
       codeFails += 1;
       setStoredInt('wedding-admin-code-fails', codeFails);
@@ -245,6 +245,9 @@ $('view-mfa').addEventListener('submit', async event => {
         return await forceSignOut('Too many incorrect codes. Please sign in again.');
       }
       return setMsg('mfa-message', 'That code is incorrect or has expired. Check your app and try again.');
+    }
+    if (verifyData && verifyData.session) {
+      try { await sb.auth.setSession(verifyData.session); } catch (_) {}
     }
     codeFails = 0;
     setStoredInt('wedding-admin-code-fails', 0);
@@ -332,9 +335,19 @@ async function callAdmin(action, payload = {}) {
     throw new Error(error.message || 'Administrator request failed.');
   }
   if (!data || data.success !== true) {
-    if (data && ['unauthenticated', 'not_authorised', 'mfa_required'].includes(data.code)) {
-      route();
-      throw new Error(data.error || 'You do not have access to this action.');
+    if (data && data.code === 'unauthenticated') {
+      await forceSignOut('Your session expired. Please sign in again.');
+      throw new Error('Session expired.');
+    }
+    if (data && data.code === 'not_authorised') {
+      showView('denied');
+      stopIdle();
+      wipeConsole();
+      throw new Error(data.error || 'Administrator access required.');
+    }
+    if (data && data.code === 'mfa_required') {
+      showView('mfa');
+      throw new Error('MFA verification required.');
     }
     throw new Error((data && (data.error || data.message)) || 'Administrator request failed.');
   }
@@ -358,14 +371,21 @@ function confirmAction({ title, body, confirmLabel, danger = false }) {
 
 /* ───────────── console ───────────── */
 
+let isOpeningConsole = false;
 async function openConsole() {
+  if (isOpeningConsole) return;
+  isOpeningConsole = true;
   showView('console');
   try {
     await Promise.allSettled([
       renderQueue(),
       loadPricingConfig()
     ]);
-  } catch (error) { showError(error.message); }
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    isOpeningConsole = false;
+  }
 }
 
 async function renderQueue() {
@@ -461,7 +481,7 @@ function renderPayments() {
         <div class="audit-stamp">
           <b>Action by Admin:</b> ${escapeHtml(payment.verified_by)} <br>
           <small><b>Timestamp:</b> ${escapeHtml(dateStr)}</small>
-          ${payment.rejection_reason ? `<br><small style="color:var(--bad)"><b>Rejection reason:</b> ${escapeHtml(payment.rejection_reason)}</small>` : ''}
+          ${payment.rejection_reason ? `<br><small class="rejection-reason-text"><b>Rejection reason:</b> ${escapeHtml(payment.rejection_reason)}</small>` : ''}
         </div>
       `;
     }
@@ -881,7 +901,7 @@ function renderPackagePricingCards() {
     const netRupees = Math.max(0, Number(listRupees) - Number(discRupees));
 
     return `
-      <article class="package-pricing-card ${pkg.active ? 'is-active' : ''}" data-package="${escapeHtml(pkg.package_code)}">
+      <article class="pkg-edit-box package-pricing-card ${pkg.active ? 'is-active' : ''}" data-package="${escapeHtml(pkg.package_code)}">
         <div class="package-pricing-head">
           <div>
             <h3>${escapeHtml(pkg.display_name || pkg.package_code)}</h3>
@@ -903,18 +923,18 @@ function renderPackagePricingCards() {
           <label class="field">Advance Expected (₹)
             <input type="number" name="advance_rupees" min="0" step="1" value="${advRupees}" required>
           </label>
-          <div class="package-net-summary" style="display:flex; flex-direction:column; justify-content:center;">
-            <span style="font-size:11px; color:var(--muted); text-transform:uppercase;">Net Payable</span>
-            <strong class="net-display" style="font-size:18px; color:var(--wine);">₹${netRupees.toLocaleString('en-IN')}</strong>
+          <div class="package-net-summary">
+            <span class="net-label">Net Payable</span>
+            <strong class="net-display net-val">₹${netRupees.toLocaleString('en-IN')}</strong>
           </div>
         </div>
 
-        <label class="checkbox-field">
+        <label class="checkbox-field checkbox-row">
           <input type="checkbox" name="is_active" ${pkg.active ? 'checked' : ''}>
           <span><b>Active</b> (Enable on customer checkout)</span>
         </label>
 
-        <button type="button" class="button button-primary button-small btn-save-package" style="margin-top:auto;">
+        <button type="button" class="button button-primary button-small btn-save-package">
           Save Package Pricing
         </button>
       </article>
@@ -954,7 +974,7 @@ function renderPromoCodesTable() {
         <td><strong>${escapeHtml(promo.code)}</strong></td>
         <td>${escapeHtml(discountText)}</td>
         <td>${escapeHtml(scopeText)}</td>
-        <td><code style="font-size:12px;">${escapeHtml(phonesText)}</code></td>
+        <td><code class="phone-code">${escapeHtml(phonesText)}</code></td>
         <td>${escapeHtml(usageText)}</td>
         <td><small>${escapeHtml(stackText)}</small></td>
         <td>${statusBadge}</td>

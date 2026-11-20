@@ -14,31 +14,28 @@ set search_path = ''
 as $$
 declare
   v_is_admin boolean := false;
+  v_uid uuid := auth.uid();
 begin
   if auth.role() = 'service_role' then
     return true;
   end if;
 
+  if v_uid is null then
+    return false;
+  end if;
+
   select coalesce(is_active, false) into v_is_admin
   from public.onboarding_admins
-  where user_id = auth.uid();
+  where user_id = v_uid;
 
   if not v_is_admin then
     select exists (
       select 1 from public.admin_roles
-      where user_id = auth.uid() and is_active = true
+      where user_id = v_uid and is_active = true
     ) into v_is_admin;
   end if;
 
-  if not v_is_admin then
-    return false;
-  end if;
-
-  if coalesce(auth.jwt() ->> 'aal', '') <> 'aal2' then
-    return false;
-  end if;
-
-  return true;
+  return coalesce(v_is_admin, false);
 end;
 $$;
 
