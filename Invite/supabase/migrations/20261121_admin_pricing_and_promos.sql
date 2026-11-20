@@ -346,7 +346,10 @@ begin
       where g.wedding_id = p.wedding_id
       order by g.created_at asc limit 1
     ),
-    'submitted_at', p.submitted_at
+    'submitted_at', p.submitted_at,
+    'payment_submitted_at', p.submitted_at,
+    'order_created_at', o.created_at,
+    'template_style', w.template_style
   ) order by p.submitted_at desc), '[]'::jsonb)
   into v_queue
   from public.onboarding_payments p
@@ -582,7 +585,10 @@ begin
           where g.wedding_id = p.wedding_id
           order by g.created_at asc limit 1
         ),
-        'submitted_at', p.submitted_at
+        'submitted_at', p.submitted_at,
+        'payment_submitted_at', p.submitted_at,
+        'order_created_at', o.created_at,
+        'template_style', w.template_style
       ) order by p.submitted_at desc), '[]'::jsonb)
       into v_res
       from public.onboarding_payments p
@@ -676,5 +682,175 @@ $$;
 
 revoke all on function public.manage_admin_portal(text, jsonb) from public;
 grant execute on function public.manage_admin_portal(text, jsonb) to authenticated, service_role;
+
+-- 11. Updated manage_customer_dashboard with template_style & payment_submitted_at
+create or replace function public.manage_customer_dashboard(
+  p_order_reference text,
+  p_action text,
+  p_extra jsonb default '{}'::jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_ref text := upper(btrim(coalesce(p_order_reference, '')));
+  v_order public.onboarding_orders%rowtype;
+  v_package public.onboarding_packages%rowtype;
+  v_action text := lower(btrim(coalesce(p_action, 'load')));
+  v_result jsonb;
+  v_guest_id uuid;
+  v_guest_id_text text;
+begin
+  if v_ref = '' then
+    raise exception using errcode = '22023', message = 'Order reference is required.';
+  end if;
+
+  select * into v_order
+  from public.onboarding_orders
+  where order_reference = v_ref;
+
+  if not found then
+    raise exception using errcode = 'P0002', message = 'Order not found.';
+  end if;
+
+  select * into v_package
+  from public.onboarding_packages
+  where package_code = v_order.package_code;
+
+  if v_action = 'load' then
+    select jsonb_build_object(
+      'order_reference', v_order.order_reference,
+      'order_status', v_order.order_status,
+      'payment_status', v_order.payment_status,
+      'package_code', v_order.package_code,
+      'package_name', coalesce(v_package.display_name, 'Standard Package'),
+      'created_at', v_order.created_at,
+      'payment_submitted_at', (
+        select p.submitted_at from public.onboarding_payments p
+        where p.order_reference = v_order.order_reference
+        order by p.submitted_at desc limit 1
+      ),
+      'template_style', (
+        select w.template_style from public.weddings w
+        where w.id = v_order.wedding_id
+      ),
+      -- Financial Snapshot
+      'list_price_paise', coalesce(v_order.list_price_paise, v_package.list_price_paise, 400000),
+      'discount_paise', coalesce(v_order.global_discount_paise + v_order.promo_discount_paise, 0),
+      'applied_promo_code', v_order.applied_promo_code,
+      'promo_discount_paise', coalesce(v_order.promo_discount_paise, 0),
+      'payable_total_paise', v_order.payable_total_paise,
+      'advance_expected_paise', v_order.advance_expected_paise,
+      'advance_verified_paise', v_order.advance_verified_paise,
+      'balance_paise', greatest(0, v_order.payable_total_paise - v_order.advance_verified_paise),
+      'wedding', (
+        select jsonb_build_object(
+          'id', w.id,
+          'couple_name', w.couple_name,
+          'bride_name', w.bride_name,
+          'groom_name', w.groom_name,
+          'event_date', w.event_date,
+          'template_style', w.template_style,
+          'theme_name', w.theme_name,
+          'venue', wd.venue,
+          'venue_title', wd.venue_title,
+          'address', wd.address,
+          'map_url', wd.map_url
+        )
+        from public.weddings w
+        left join public.wedding_details wd on wd.wedding_id = w.id
+        where w.id = v_order.wedding_id
+      ),
+      'events', (
+        select coalesce(jsonb_agg(jsonb_build_object(
+          'id', e.id,
+          'event_name', e.event_name,
+          'event_date', e.event_date,
+          'event_time', e.event_time,
+          'note', e.note
+        ) order by e.sort_order), '[]'::jsonb)
+        from public.events e
+        where e.wedding_id = v_order.wedding_id
+      ),
+      'guests', (
+        select coalesce(jsonb_agg(jsonb_build_object(
+          'id', g.id,
+          'guest_name', g.guest_name,
+          'invite_code', g.invite_code,
+          'family_members', g.family_members,
+          'phone', g.phone,
+          'category', g.category,
+          'city_address', g.city_address,
+          'with_family', g.with_family,
+          'first_opened_at', g.first_opened_at,
+          'last_opened_at', g.last_opened_at,
+          'open_count', coalesce(g.open_count, 0)
+        ) order by g.created_at), '[]'::jsonb)
+        from public.guests g
+        where g.wedding_id = v_order.wedding_id
+      ),
+      'rsvps', (
+        select coalesce(jsonb_agg(jsonb_build_object(
+          'id', r.id,
+          'invite_code', r.invite_code,
+          'status', r.status,
+          'attending_count', r.attending_count,
+          'wishes_message', r.wishes_message,
+          'submitted_at', r.submitted_at
+        ) order by r.submitted_at desc), '[]'::jsonb)
+        from public.rsvps r
+        where r.wedding_id = v_order.wedding_id
+      )
+    ) into v_result;
+
+    return jsonb_build_object('success', true, 'dashboard', v_result);
+
+  elsif v_action = 'delete_guest' then
+    v_guest_id := (p_extra ->> 'guest_id')::uuid;
+    if v_guest_id is null then
+      raise exception using errcode = '22023', message = 'Guest ID required for deletion.';
+    end if;
+
+    delete from public.guests
+    where id = v_guest_id and wedding_id = v_order.wedding_id;
+
+    return jsonb_build_object('success', true, 'deleted_guest_id', v_guest_id);
+
+  elsif v_action = 'update_guest' then
+    v_guest_id_text := btrim(coalesce(p_extra ->> 'guest_id', ''));
+    if v_guest_id_text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+      v_guest_id := v_guest_id_text::uuid;
+    else
+      v_guest_id := null;
+    end if;
+
+    update public.guests
+    set guest_name = coalesce(nullif(btrim(p_extra->'guest'->>'guest_name'), ''), guest_name),
+        phone = coalesce(p_extra->'guest'->>'phone', phone),
+        family_members = coalesce(
+          (p_extra->'guest'->>'family_members')::integer,
+          (p_extra->'guest'->>'persons')::integer,
+          family_members
+        ),
+        category = coalesce(nullif(btrim(p_extra->'guest'->>'category'), ''), category),
+        city_address = coalesce(p_extra->'guest'->>'city_address', city_address),
+        with_family = coalesce((p_extra->'guest'->>'with_family')::boolean, with_family)
+    where (
+      (v_guest_id is not null and id = v_guest_id)
+      or (nullif(btrim(p_extra->'guest'->>'invite_code'), '') is not null and lower(btrim(invite_code)) = lower(btrim(p_extra->'guest'->>'invite_code')))
+    ) and wedding_id = v_order.wedding_id;
+
+    return jsonb_build_object('success', true);
+
+  else
+    raise exception using errcode = '22023', message = 'Unsupported dashboard action: %', v_action;
+  end if;
+end;
+$$;
+
+revoke all on function public.manage_customer_dashboard(text, text, jsonb) from public;
+grant execute on function public.manage_customer_dashboard(text, text, jsonb) to anon, authenticated, service_role;
 
 commit;

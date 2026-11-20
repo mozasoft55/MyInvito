@@ -32,6 +32,36 @@ const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const digitsOnly = value => String(value || '').replace(/\D/g, '').slice(0, 6);
 
+function formatISTDateTime(isoString) {
+  if (!isoString) return '—';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '—';
+    return new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(d);
+  } catch (_) {
+    return '—';
+  }
+}
+
+function formatTemplateLabel(styleCode) {
+  if (!styleCode) return 'Standard Design';
+  const raw = String(styleCode).trim();
+  const match = raw.match(/(\d+)/);
+  if (match) {
+    const num = match[1].padStart(2, '0');
+    return `Template ${num}`;
+  }
+  return raw.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 const getStoredInt = (k, def = 0) => {
   try {
     const val = Number(sessionStorage.getItem(k));
@@ -500,6 +530,9 @@ function renderPayments() {
     const hasCity = Boolean(payment.city && payment.city !== '—' && payment.city.trim() !== '');
     const coupleText = [payment.couple_name, payment.event_date].filter(Boolean).join(' · ');
     const customerText = [payment.customer_name, payment.customer_phone].filter(Boolean).join(' · ');
+    const templateText = formatTemplateLabel(payment.template_style || payment.template_id || payment.template_number);
+    const bookedAtText = formatISTDateTime(payment.order_created_at || payment.created_at);
+    const paymentAtText = formatISTDateTime(payment.payment_submitted_at || payment.submitted_at);
 
     return `
       <article class="payment-card" data-payment="${escapeHtml(payment.payment_id)}">
@@ -538,8 +571,23 @@ function renderPayments() {
           </div>
 
           <div class="grid-cell">
+            <span class="cell-label">Selected Template</span>
+            <span class="cell-value"><strong class="template-pill-tag">${escapeHtml(templateText)}</strong></span>
+          </div>
+
+          <div class="grid-cell">
             <span class="cell-label">Customer</span>
             <span class="cell-value">${escapeHtml(customerText || '—')}</span>
+          </div>
+
+          <div class="grid-cell">
+            <span class="cell-label">Booked At</span>
+            <span class="cell-value">${escapeHtml(bookedAtText)}</span>
+          </div>
+
+          <div class="grid-cell">
+            <span class="cell-label">Payment Claim Time</span>
+            <span class="cell-value">${escapeHtml(paymentAtText)}</span>
           </div>
 
           ${hasCity ? `

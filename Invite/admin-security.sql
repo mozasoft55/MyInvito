@@ -367,7 +367,10 @@ begin
       where g.wedding_id = p.wedding_id
       order by g.created_at asc limit 1
     ),
-    'submitted_at', p.submitted_at
+    'submitted_at', p.submitted_at,
+    'payment_submitted_at', p.submitted_at,
+    'order_created_at', o.created_at,
+    'template_style', w.template_style
   ) order by p.submitted_at desc), '[]'::jsonb)
   into v_queue
   from public.onboarding_payments p

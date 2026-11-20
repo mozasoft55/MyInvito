@@ -677,6 +677,15 @@ begin
       'package_code', v_order.package_code,
       'package_name', coalesce(v_package.display_name, 'Standard Package'),
       'created_at', v_order.created_at,
+      'payment_submitted_at', (
+        select p.submitted_at from public.onboarding_payments p
+        where p.order_reference = v_order.order_reference
+        order by p.submitted_at desc limit 1
+      ),
+      'template_style', (
+        select w.template_style from public.weddings w
+        where w.id = v_order.wedding_id
+      ),
       -- Financial Snapshot
       'list_price_paise', coalesce(v_order.list_price_paise, v_package.list_price_paise, 400000),
       'discount_paise', coalesce(v_order.global_discount_paise + v_order.promo_discount_paise, 0),

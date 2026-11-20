@@ -85,6 +85,36 @@ function formatDate(value) {
     .format(new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])));
 }
 
+function formatISTDateTime(isoString) {
+  if (!isoString) return '—';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return '—';
+    return new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(d);
+  } catch (_) {
+    return '—';
+  }
+}
+
+function formatTemplateLabel(styleCode) {
+  if (!styleCode) return 'Standard Design';
+  const raw = String(styleCode).trim();
+  const match = raw.match(/(\d+)/);
+  if (match) {
+    const num = match[1].padStart(2, '0');
+    return `Template ${num}`;
+  }
+  return raw.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 function timeAgo(value) {
   const t = typeof value === 'number' ? value : Date.parse(value);
   if (!Number.isFinite(t) || !t) return '';
@@ -629,6 +659,17 @@ function renderDashboard(data) {
       || 'template-12';
     previewLink.href = `../?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(chosenTemplate)}`;
   }
+
+  // 3. Populate Template Identifier & Timestamps
+  const templateName = formatTemplateLabel(chosenTemplate);
+  setTxt('template-name', templateName);
+  setTxt('welcome-template-title', templateName);
+
+  const bookedAt = formatISTDateTime(data?.created_at || orderObj?.created_at);
+  const paymentAt = formatISTDateTime(data?.payment_submitted_at || data?.submitted_at || orderObj?.submitted_at || orderObj?.paid_at);
+  setTxt('booking-placed-at', bookedAt);
+  setTxt('payment-submitted-at', paymentAt);
+
   const guestLinks = $('generate-guest-links');
   if (guestLinks) guestLinks.href = '../guest-list.html?w=' + encodeURIComponent((data && data.wedding_id) ? data.wedding_id : '');
 

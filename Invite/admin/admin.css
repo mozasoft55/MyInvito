@@ -1026,5 +1026,16 @@ button, input { font: inherit; }
 .rejection-reason-text {
   color: var(--bad);
 }
+.template-pill-tag {
+  display: inline-block;
+  background: #fdf5e6;
+  color: #7b1828;
+  border: 1px solid #d4af37;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
 
 @media(prefers-reduced-motion:reduce) { *, *:before, *:after { animation: none !important; } }

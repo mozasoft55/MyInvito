@@ -57,3 +57,52 @@ test('admin promo code validation enforces uppercase code, bounds and phone norm
   const res2 = validatePromoInput('promo', 'PERCENTAGE', 150, null);
   assert.equal(res2.valid, false);
 });
+
+test('formatTemplateLabel parses template code into human readable label', () => {
+  const formatTemplateLabel = (styleCode) => {
+    if (!styleCode) return 'Standard Design';
+    const raw = String(styleCode).trim();
+    const match = raw.match(/(\d+)/);
+    if (match) {
+      const num = match[1].padStart(2, '0');
+      return `Template ${num}`;
+    }
+    return raw.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  assert.equal(formatTemplateLabel('template-02'), 'Template 02');
+  assert.equal(formatTemplateLabel('template-06'), 'Template 06');
+  assert.equal(formatTemplateLabel('template-14'), 'Template 14');
+  assert.equal(formatTemplateLabel('template-15'), 'Template 15');
+  assert.equal(formatTemplateLabel('TPL-3'), 'Template 03');
+  assert.equal(formatTemplateLabel(''), 'Standard Design');
+  assert.equal(formatTemplateLabel(null), 'Standard Design');
+});
+
+test('formatISTDateTime formats UTC timestamp into Asia/Kolkata date and time', () => {
+  const formatISTDateTime = (isoString) => {
+    if (!isoString) return '—';
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return '—';
+      return new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(d);
+    } catch (_) {
+      return '—';
+    }
+  };
+
+  // 2026-11-20T18:30:00Z is 2026-11-21 00:00 (midnight IST)
+  const formatted = formatISTDateTime('2026-11-20T18:30:00Z');
+  assert.ok(formatted.includes('2026'));
+  assert.ok(formatted.includes('Nov'));
+  assert.equal(formatISTDateTime(null), '—');
+  assert.equal(formatISTDateTime('invalid-date'), '—');
+});
