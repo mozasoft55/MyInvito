@@ -9,6 +9,18 @@ test('Admin Order Card HTML structure & layout', () => {
     const isPending = !isVerified && !isRejected;
     const isCardSuspended = (payment.card_status || 'Active') === 'Suspended';
     const mismatch = Number(payment.claimed_amount_paise) !== Number(payment.expected_amount_paise);
+    const templateText = (() => {
+      const raw = String(payment.template_style || payment.template_id || 'template-01').trim();
+      const match = raw.match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        return `Template #${num < 10 ? '0' + num : num}`;
+      }
+      return `Template #${raw}`;
+    })();
+
+    const activatedTimestamp = payment.activated_at || (isVerified ? payment.verified_at : null);
+    const bookingDateTimeText = activatedTimestamp ? '21 Nov 2026, 01:15 AM' : 'Pending Verification';
     const hasCity = Boolean(payment.city && payment.city !== '—' && payment.city.trim() !== '');
     const coupleText = [payment.couple_name, payment.event_date].filter(Boolean).join(' · ');
     const customerText = [payment.customer_name, payment.customer_phone].filter(Boolean).join(' · ');
@@ -42,8 +54,23 @@ test('Admin Order Card HTML structure & layout', () => {
           </div>
 
           <div class="grid-cell">
+            <span class="cell-label">Selected Template</span>
+            <span class="cell-value"><strong class="template-pill-tag">${templateText}</strong></span>
+          </div>
+
+          <div class="grid-cell">
             <span class="cell-label">Customer</span>
             <span class="cell-value">${customerText || '—'}</span>
+          </div>
+
+          <div class="grid-cell">
+            <span class="cell-label">Booking Date &amp; Time</span>
+            <span class="cell-value">${activatedTimestamp ? bookingDateTimeText : '<span class="text-muted">Pending Verification</span>'}</span>
+          </div>
+
+          <div class="grid-cell">
+            <span class="cell-label">Card Expiry (90 Days)</span>
+            <span class="cell-value">${activatedTimestamp ? '19 Feb 2027 <span class="badge-expiry-active">90 days left</span>' : '<span class="text-muted">Starts upon activation</span>'}</span>
           </div>
 
           ${hasCity ? `
@@ -127,7 +154,8 @@ test('Admin Order Card HTML structure & layout', () => {
     city: 'Howrah',
     claimed_amount_paise: 150000,
     expected_amount_paise: 150000,
-    preview_guest_code: 'GUEST-123'
+    preview_guest_code: 'GUEST-123',
+    template_style: 'template-15'
   });
 
   // Verify Header Row
@@ -143,6 +171,12 @@ test('Admin Order Card HTML structure & layout', () => {
   assert.ok(htmlWithCity.includes('Standard'));
   assert.ok(htmlWithCity.includes('Customer'));
   assert.ok(htmlWithCity.includes('kolkata · 987654321'));
+  assert.ok(htmlWithCity.includes('Selected Template'));
+  assert.ok(htmlWithCity.includes('Template #15'));
+  assert.ok(htmlWithCity.includes('Booking Date &amp; Time'));
+  assert.ok(htmlWithCity.includes('Pending Verification'));
+  assert.ok(htmlWithCity.includes('Card Expiry (90 Days)'));
+  assert.ok(htmlWithCity.includes('Starts upon activation'));
   assert.ok(htmlWithCity.includes('City'));
   assert.ok(htmlWithCity.includes('Howrah'));
   assert.ok(htmlWithCity.includes('Claimed / Expected'));
@@ -188,4 +222,30 @@ test('Admin Order Card HTML structure & layout', () => {
   // Status must be Suspended
   assert.ok(htmlNoCity.includes('is-suspended'));
   assert.ok(htmlNoCity.includes('Suspended'));
+
+  // Test 3: Verified and activated order
+  const htmlVerified = renderOrderCard({
+    payment_id: 'p3',
+    order_reference: 'ORD-VERIF888',
+    payment_status: 'Verified',
+    payment_mode: 'UPI',
+    card_status: 'Active',
+    couple_name: 'Zaid & Sara',
+    event_date: '15 Jan 2027',
+    package: 'Standard',
+    customer_name: 'Zaid',
+    customer_phone: '9876501234',
+    city: 'Mumbai',
+    claimed_amount_paise: 150000,
+    expected_amount_paise: 150000,
+    preview_guest_code: 'GUEST-789',
+    template_style: 'template-06',
+    activated_at: '2026-11-21T01:15:00Z',
+    verified_at: '2026-11-21T01:15:00Z'
+  });
+
+  assert.ok(htmlVerified.includes('Template #06'));
+  assert.ok(htmlVerified.includes('21 Nov 2026, 01:15 AM'));
+  assert.ok(htmlVerified.includes('19 Feb 2027'));
+  assert.ok(htmlVerified.includes('90 days left'));
 });

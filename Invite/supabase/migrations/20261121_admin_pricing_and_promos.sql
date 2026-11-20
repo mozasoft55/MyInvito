@@ -42,6 +42,11 @@ $$;
 revoke all on function public.check_is_mfa_admin() from public;
 grant execute on function public.check_is_mfa_admin() to authenticated, service_role;
 
+-- Ensure timestamp and validity columns exist on onboarding_orders
+alter table if exists public.onboarding_orders
+  add column if not exists activated_at timestamptz,
+  add column if not exists expires_at timestamptz;
+
 -- 1. admin_get_pricing_config
 create or replace function public.admin_get_pricing_config()
 returns jsonb
@@ -349,7 +354,10 @@ begin
     'submitted_at', p.submitted_at,
     'payment_submitted_at', p.submitted_at,
     'order_created_at', o.created_at,
-    'template_style', w.template_style
+    'activated_at', coalesce(o.activated_at, p.verified_at),
+    'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
+    'template_style', w.template_style,
+    'template_number', w.template_style
   ) order by p.submitted_at desc), '[]'::jsonb)
   into v_queue
   from public.onboarding_payments p
@@ -513,6 +521,8 @@ begin
         when v_verified_total > 0 then 'Partially Paid'
         else payment_status
       end,
+      activated_at = case when p_decision = 'verify' then coalesce(activated_at, now()) else activated_at end,
+      expires_at = case when p_decision = 'verify' then coalesce(expires_at, now() + interval '90 days') else expires_at end,
       updated_at = now()
   where order_reference = v_payment.order_reference;
 
@@ -588,7 +598,10 @@ begin
         'submitted_at', p.submitted_at,
         'payment_submitted_at', p.submitted_at,
         'order_created_at', o.created_at,
-        'template_style', w.template_style
+        'activated_at', coalesce(o.activated_at, p.verified_at),
+        'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
+        'template_style', w.template_style,
+        'template_number', w.template_style
       ) order by p.submitted_at desc), '[]'::jsonb)
       into v_res
       from public.onboarding_payments p

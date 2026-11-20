@@ -51,15 +51,85 @@ function formatISTDateTime(isoString) {
   }
 }
 
-function formatTemplateLabel(styleCode) {
-  if (!styleCode) return 'Standard Design';
+function formatTemplateNumber(styleCode) {
+  if (!styleCode) return 'Template #01';
   const raw = String(styleCode).trim();
   const match = raw.match(/(\d+)/);
   if (match) {
-    const num = match[1].padStart(2, '0');
-    return `Template ${num}`;
+    const num = parseInt(match[1], 10);
+    return `Template #${num < 10 ? '0' + num : num}`;
   }
-  return raw.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  return `Template #${raw}`;
+}
+
+const formatTemplateLabel = formatTemplateNumber;
+
+function calculateExpiryInfo(activatedIso, expiresIso) {
+  if (!activatedIso && !expiresIso) {
+    return {
+      isActivated: false,
+      formattedDate: '',
+      daysLeft: 0,
+      isExpired: false,
+      badgeHtml: ''
+    };
+  }
+
+  try {
+    const activatedDate = activatedIso ? new Date(activatedIso) : null;
+    let expiresDate = expiresIso ? new Date(expiresIso) : null;
+
+    if (!expiresDate && activatedDate && !isNaN(activatedDate.getTime())) {
+      expiresDate = new Date(activatedDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+    }
+
+    if (!expiresDate || isNaN(expiresDate.getTime())) {
+      return {
+        isActivated: false,
+        formattedDate: '',
+        daysLeft: 0,
+        isExpired: false,
+        badgeHtml: ''
+      };
+    }
+
+    const formattedDate = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(expiresDate);
+
+    const now = new Date();
+    const diffMs = expiresDate.getTime() - now.getTime();
+    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (daysLeft <= 0) {
+      return {
+        isActivated: true,
+        formattedDate,
+        daysLeft: 0,
+        isExpired: true,
+        badgeHtml: '<span class="badge-expiry-expired">Expired</span>'
+      };
+    }
+
+    return {
+      isActivated: true,
+      formattedDate,
+      daysLeft,
+      isExpired: false,
+      badgeHtml: `<span class="badge-expiry-active">${daysLeft} days left</span>`
+    };
+  } catch (_) {
+    return {
+      isActivated: false,
+      formattedDate: '',
+      daysLeft: 0,
+      isExpired: false,
+      badgeHtml: ''
+    };
+  }
 }
 
 const getStoredInt = (k, def = 0) => {
@@ -530,9 +600,10 @@ function renderPayments() {
     const hasCity = Boolean(payment.city && payment.city !== '—' && payment.city.trim() !== '');
     const coupleText = [payment.couple_name, payment.event_date].filter(Boolean).join(' · ');
     const customerText = [payment.customer_name, payment.customer_phone].filter(Boolean).join(' · ');
-    const templateText = formatTemplateLabel(payment.template_style || payment.template_id || payment.template_number);
-    const bookedAtText = formatISTDateTime(payment.order_created_at || payment.created_at);
-    const paymentAtText = formatISTDateTime(payment.payment_submitted_at || payment.submitted_at);
+    const templateText = formatTemplateNumber(payment.template_style || payment.template_id || payment.template_number);
+    const activatedTimestamp = payment.activated_at || (isVerified ? payment.verified_at : null);
+    const bookingDateTimeText = activatedTimestamp ? formatISTDateTime(activatedTimestamp) : 'Pending Verification';
+    const expiryInfo = calculateExpiryInfo(activatedTimestamp, payment.expires_at);
 
     return `
       <article class="payment-card" data-payment="${escapeHtml(payment.payment_id)}">
@@ -581,13 +652,13 @@ function renderPayments() {
           </div>
 
           <div class="grid-cell">
-            <span class="cell-label">Booked At</span>
-            <span class="cell-value">${escapeHtml(bookedAtText)}</span>
+            <span class="cell-label">Booking Date &amp; Time</span>
+            <span class="cell-value">${activatedTimestamp ? escapeHtml(bookingDateTimeText) : '<span class="text-muted">Pending Verification</span>'}</span>
           </div>
 
           <div class="grid-cell">
-            <span class="cell-label">Payment Claim Time</span>
-            <span class="cell-value">${escapeHtml(paymentAtText)}</span>
+            <span class="cell-label">Card Expiry (90 Days)</span>
+            <span class="cell-value">${expiryInfo.isActivated ? `${escapeHtml(expiryInfo.formattedDate)} ${expiryInfo.badgeHtml}` : '<span class="text-muted">Starts upon activation</span>'}</span>
           </div>
 
           ${hasCity ? `

@@ -58,25 +58,116 @@ test('admin promo code validation enforces uppercase code, bounds and phone norm
   assert.equal(res2.valid, false);
 });
 
-test('formatTemplateLabel parses template code into human readable label', () => {
-  const formatTemplateLabel = (styleCode) => {
-    if (!styleCode) return 'Standard Design';
+test('formatTemplateNumber parses template code into Template #<number> format', () => {
+  const formatTemplateNumber = (styleCode) => {
+    if (!styleCode) return 'Template #01';
     const raw = String(styleCode).trim();
     const match = raw.match(/(\d+)/);
     if (match) {
-      const num = match[1].padStart(2, '0');
-      return `Template ${num}`;
+      const num = parseInt(match[1], 10);
+      return `Template #${num < 10 ? '0' + num : num}`;
     }
-    return raw.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return `Template #${raw}`;
   };
 
-  assert.equal(formatTemplateLabel('template-02'), 'Template 02');
-  assert.equal(formatTemplateLabel('template-06'), 'Template 06');
-  assert.equal(formatTemplateLabel('template-14'), 'Template 14');
-  assert.equal(formatTemplateLabel('template-15'), 'Template 15');
-  assert.equal(formatTemplateLabel('TPL-3'), 'Template 03');
-  assert.equal(formatTemplateLabel(''), 'Standard Design');
-  assert.equal(formatTemplateLabel(null), 'Standard Design');
+  assert.equal(formatTemplateNumber('template-02'), 'Template #02');
+  assert.equal(formatTemplateNumber('template-06'), 'Template #06');
+  assert.equal(formatTemplateNumber('template-14'), 'Template #14');
+  assert.equal(formatTemplateNumber('template-15'), 'Template #15');
+  assert.equal(formatTemplateNumber('15'), 'Template #15');
+  assert.equal(formatTemplateNumber('TPL-3'), 'Template #03');
+  assert.equal(formatTemplateNumber(''), 'Template #01');
+  assert.equal(formatTemplateNumber(null), 'Template #01');
+});
+
+test('calculateExpiryInfo calculates 90 days validity, remaining days, and status badge', () => {
+  const calculateExpiryInfo = (activatedIso, expiresIso) => {
+    if (!activatedIso && !expiresIso) {
+      return {
+        isActivated: false,
+        formattedDate: '',
+        daysLeft: 0,
+        isExpired: false,
+        badgeHtml: ''
+      };
+    }
+
+    try {
+      const activatedDate = activatedIso ? new Date(activatedIso) : null;
+      let expiresDate = expiresIso ? new Date(expiresIso) : null;
+
+      if (!expiresDate && activatedDate && !isNaN(activatedDate.getTime())) {
+        expiresDate = new Date(activatedDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+      }
+
+      if (!expiresDate || isNaN(expiresDate.getTime())) {
+        return {
+          isActivated: false,
+          formattedDate: '',
+          daysLeft: 0,
+          isExpired: false,
+          badgeHtml: ''
+        };
+      }
+
+      const formattedDate = new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).format(expiresDate);
+
+      const now = new Date();
+      const diffMs = expiresDate.getTime() - now.getTime();
+      const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      if (daysLeft <= 0) {
+        return {
+          isActivated: true,
+          formattedDate,
+          daysLeft: 0,
+          isExpired: true,
+          badgeHtml: '<span class="badge-expiry-expired">Expired</span>'
+        };
+      }
+
+      return {
+        isActivated: true,
+        formattedDate,
+        daysLeft,
+        isExpired: false,
+        badgeHtml: `<span class="badge-expiry-active">${daysLeft} days left</span>`
+      };
+    } catch (_) {
+      return {
+        isActivated: false,
+        formattedDate: '',
+        daysLeft: 0,
+        isExpired: false,
+        badgeHtml: ''
+      };
+    }
+  };
+
+  // Pending / Not activated
+  const pending = calculateExpiryInfo(null, null);
+  assert.equal(pending.isActivated, false);
+
+  // Activated today -> 90 days left
+  const nowIso = new Date().toISOString();
+  const activeRes = calculateExpiryInfo(nowIso, null);
+  assert.equal(activeRes.isActivated, true);
+  assert.ok(activeRes.daysLeft >= 89 && activeRes.daysLeft <= 91);
+  assert.ok(activeRes.badgeHtml.includes('days left'));
+  assert.ok(activeRes.badgeHtml.includes('badge-expiry-active'));
+
+  // Expired 100 days ago
+  const pastDate = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+  const expiredRes = calculateExpiryInfo(pastDate, null);
+  assert.equal(expiredRes.isActivated, true);
+  assert.equal(expiredRes.isExpired, true);
+  assert.ok(expiredRes.badgeHtml.includes('Expired'));
+  assert.ok(expiredRes.badgeHtml.includes('badge-expiry-expired'));
 });
 
 test('formatISTDateTime formats UTC timestamp into Asia/Kolkata date and time', () => {

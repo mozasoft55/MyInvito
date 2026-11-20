@@ -1037,5 +1037,30 @@ button, input { font: inherit; }
   font-size: 13px;
   letter-spacing: 0.04em;
 }
+.badge-expiry-active {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e5f7ed;
+  color: #196137;
+  font: 700 11px Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+.badge-expiry-expired {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f5ebeb;
+  color: #842336;
+  font: 700 11px Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+.text-muted {
+  color: var(--muted);
+}
 
 @media(prefers-reduced-motion:reduce) { *, *:before, *:after { animation: none !important; } }

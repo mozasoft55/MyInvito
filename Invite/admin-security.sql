@@ -321,7 +321,9 @@ grant execute on function public.submit_customer_onboarding(jsonb) to anon, auth
 
 -- 6. Enhanced get_admin_payment_queue with card_status and preview_guest_code
 alter table if exists public.onboarding_orders
-  add column if not exists card_status text not null default 'Active';
+  add column if not exists card_status text not null default 'Active',
+  add column if not exists activated_at timestamptz,
+  add column if not exists expires_at timestamptz;
 
 create or replace function public.get_admin_payment_queue()
 returns jsonb
@@ -370,7 +372,10 @@ begin
     'submitted_at', p.submitted_at,
     'payment_submitted_at', p.submitted_at,
     'order_created_at', o.created_at,
-    'template_style', w.template_style
+    'activated_at', coalesce(o.activated_at, p.verified_at),
+    'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
+    'template_style', w.template_style,
+    'template_number', w.template_style
   ) order by p.submitted_at desc), '[]'::jsonb)
   into v_queue
   from public.onboarding_payments p

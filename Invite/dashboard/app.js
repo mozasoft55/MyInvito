@@ -104,15 +104,85 @@ function formatISTDateTime(isoString) {
   }
 }
 
-function formatTemplateLabel(styleCode) {
-  if (!styleCode) return 'Standard Design';
+function formatTemplateNumber(styleCode) {
+  if (!styleCode) return 'Template #01';
   const raw = String(styleCode).trim();
   const match = raw.match(/(\d+)/);
   if (match) {
-    const num = match[1].padStart(2, '0');
-    return `Template ${num}`;
+    const num = parseInt(match[1], 10);
+    return `Template #${num < 10 ? '0' + num : num}`;
   }
-  return raw.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  return `Template #${raw}`;
+}
+
+const formatTemplateLabel = formatTemplateNumber;
+
+function calculateExpiryInfo(activatedIso, expiresIso) {
+  if (!activatedIso && !expiresIso) {
+    return {
+      isActivated: false,
+      formattedDate: '',
+      daysLeft: 0,
+      isExpired: false,
+      badgeHtml: ''
+    };
+  }
+
+  try {
+    const activatedDate = activatedIso ? new Date(activatedIso) : null;
+    let expiresDate = expiresIso ? new Date(expiresIso) : null;
+
+    if (!expiresDate && activatedDate && !isNaN(activatedDate.getTime())) {
+      expiresDate = new Date(activatedDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+    }
+
+    if (!expiresDate || isNaN(expiresDate.getTime())) {
+      return {
+        isActivated: false,
+        formattedDate: '',
+        daysLeft: 0,
+        isExpired: false,
+        badgeHtml: ''
+      };
+    }
+
+    const formattedDate = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(expiresDate);
+
+    const now = new Date();
+    const diffMs = expiresDate.getTime() - now.getTime();
+    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (daysLeft <= 0) {
+      return {
+        isActivated: true,
+        formattedDate,
+        daysLeft: 0,
+        isExpired: true,
+        badgeHtml: '<span class="badge-expiry-expired">Expired</span>'
+      };
+    }
+
+    return {
+      isActivated: true,
+      formattedDate,
+      daysLeft,
+      isExpired: false,
+      badgeHtml: `<span class="badge-expiry-active">${daysLeft} days left</span>`
+    };
+  } catch (_) {
+    return {
+      isActivated: false,
+      formattedDate: '',
+      daysLeft: 0,
+      isExpired: false,
+      badgeHtml: ''
+    };
+  }
 }
 
 function timeAgo(value) {
@@ -665,10 +735,20 @@ function renderDashboard(data) {
   setTxt('template-name', templateName);
   setTxt('welcome-template-title', templateName);
 
-  const bookedAt = formatISTDateTime(data?.created_at || orderObj?.created_at);
-  const paymentAt = formatISTDateTime(data?.payment_submitted_at || data?.submitted_at || orderObj?.submitted_at || orderObj?.paid_at);
-  setTxt('booking-placed-at', bookedAt);
-  setTxt('payment-submitted-at', paymentAt);
+  const isConfirmed = (data?.order_status === 'Confirmed' || (data?.advance_verified_paise || 0) > 0 || (orderObj?.order_status === 'Confirmed'));
+  const activatedTimestamp = data?.activated_at || orderObj?.activated_at || (isConfirmed ? (data?.verified_at || orderObj?.verified_at) : null);
+  const bookingPlacedAt = activatedTimestamp ? formatISTDateTime(activatedTimestamp) : 'Pending Verification';
+  setTxt('booking-placed-at', bookingPlacedAt);
+
+  const expiryInfo = calculateExpiryInfo(activatedTimestamp, data?.expires_at || orderObj?.expires_at);
+  const expiryEl = $('card-expiry-display');
+  if (expiryEl) {
+    if (expiryInfo.isActivated) {
+      expiryEl.innerHTML = `${escapeHtml(expiryInfo.formattedDate)} ${expiryInfo.badgeHtml}`;
+    } else {
+      expiryEl.innerHTML = '<span class="text-muted">Starts upon activation</span>';
+    }
+  }
 
   const guestLinks = $('generate-guest-links');
   if (guestLinks) guestLinks.href = '../guest-list.html?w=' + encodeURIComponent((data && data.wedding_id) ? data.wedding_id : '');

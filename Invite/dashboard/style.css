@@ -281,4 +281,30 @@ button,input,select{font:inherit}
   .dialog-actions .button{flex:1}
   input, select, textarea{font-size:16px!important}
 }
+.badge-expiry-active {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e5f7ed;
+  color: #196137;
+  font: 700 11px Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+.badge-expiry-expired {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f5ebeb;
+  color: #842336;
+  font: 700 11px Arial, sans-serif;
+  letter-spacing: 0.02em;
+}
+.text-muted {
+  color: #7b7367;
+}
+
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
