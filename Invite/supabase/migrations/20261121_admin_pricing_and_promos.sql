@@ -49,6 +49,23 @@ alter table if exists public.onboarding_orders
   add column if not exists applied_promo_code text,
   add column if not exists promo_discount_paise bigint default 0;
 
+-- Ensure bride and groom parent details and addresses exist on weddings and wedding_details
+alter table if exists public.weddings
+  add column if not exists bride_parents text,
+  add column if not exists groom_parents text,
+  add column if not exists bride_father text,
+  add column if not exists groom_father text,
+  add column if not exists bride_address text,
+  add column if not exists groom_address text;
+
+alter table if exists public.wedding_details
+  add column if not exists bride_parents text,
+  add column if not exists groom_parents text,
+  add column if not exists bride_father text,
+  add column if not exists groom_father text,
+  add column if not exists bride_address text,
+  add column if not exists groom_address text;
+
 -- Drop foreign key constraint on applied_promo_code if present (so ORD-XXXX referral codes can be saved and promo deletion doesn't fail)
 alter table if exists public.onboarding_orders
   drop constraint if exists onboarding_orders_applied_promo_code_fkey;
@@ -939,6 +956,12 @@ begin
           'couple_name', w.couple_name,
           'bride_name', w.bride_name,
           'groom_name', w.groom_name,
+          'bride_parents', coalesce(wd.bride_parents, wd.bride_father, w.bride_parents, w.bride_father, ''),
+          'groom_parents', coalesce(wd.groom_parents, wd.groom_father, w.groom_parents, w.groom_father, ''),
+          'bride_father', coalesce(wd.bride_parents, wd.bride_father, w.bride_parents, w.bride_father, ''),
+          'groom_father', coalesce(wd.groom_parents, wd.groom_father, w.groom_parents, w.groom_father, ''),
+          'bride_address', coalesce(wd.bride_address, w.bride_address, ''),
+          'groom_address', coalesce(wd.groom_address, w.groom_address, ''),
           'event_date', w.event_date,
           'template_style', w.template_style,
           'theme_name', w.theme_name,

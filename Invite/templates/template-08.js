@@ -302,6 +302,11 @@ const STYLE = `
 @keyframes t8-gloss{0%{background-position:150% 0}60%,100%{background-position:-60% 0}}
 .t8-names{font:400 clamp(54px,15vw,112px)/1 var(--f-script);margin:clamp(14px,2.4vh,26px) 0 0;padding:0 .1em .12em;filter:drop-shadow(0 6px 18px rgba(var(--g-rgb),.25))}
 .t8-names span{display:block;font:400 .3em var(--f-cinzel);letter-spacing:.3em;margin:2px 0}
+.t8-parents-line{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.6em;margin:clamp(4px,1vh,10px) auto clamp(4px,1vh,12px);font:400 clamp(13px,1.8vw,16px) var(--f-serif);color:#e2d4b7}
+.t8-parents-line small{font-style:italic;color:#caa969;margin-right:.25em}
+.t8-parents-line strong{font-weight:600;color:#fff}
+.t8-parents-line em{font-style:normal;font-size:.9em;color:#caa969;opacity:.85}
+.t8-parents-sep{color:var(--g);opacity:.7}
 .t8-hero-copy{max-width:420px;margin:10px auto 0;font:italic 500 17px/1.6 var(--f-serif);color:rgba(246,239,224,.82)}
 .t8-datebar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;max-width:430px;margin:clamp(16px,3vh,26px) auto 0}
 .t8-datebar>div{font:500 11px var(--f-cinzel);letter-spacing:.28em;text-transform:uppercase;color:var(--gl);border-top:1px solid var(--g);border-bottom:1px solid var(--g);padding:9px 0}
@@ -466,6 +471,10 @@ export default function render({ guest, wedding, events = [] } = {}) {
   const brideFirst = clean(w.name_order) === 'bride_first';
   const [rawFirst, rawSecond] = brideFirst ? [rawBride, rawGroom] : [rawGroom, rawBride];
   const first = esc(rawFirst), second = esc(rawSecond);
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || '');
+  const groomAddr = clean(w.groom_address || '');
   const monoInit = `${esc(rawFirst.charAt(0).toUpperCase())}&amp;${esc(rawSecond.charAt(0).toUpperCase())}`;
   const guestName = esc(clean(guest?.name) || 'Respected Guest');
   const guestLine = guest?.with_family ? `${guestName} &amp; Family` : guestName;
@@ -564,6 +573,18 @@ export default function render({ guest, wedding, events = [] } = {}) {
         <div class="t8-arch" style="--i:2"><i class="t8-orbit"></i><i class="t8-orbit t8-o2"></i>
           <div class="t8-arch-tilt t8-shine" data-tilt="12" data-arch><div class="t8-arch-img t8-ph"><i class="t8-hero-img"></i></div></div></div>
         <h1 class="t8-names" style="--i:3">${first} <span class="t8-silvertx">&amp;</span> ${second}</h1>
+        ${(brideParents || groomParents) ? `
+          <div class="t8-parents-line" style="--i:3.5">
+            ${brideFirst ? `
+              ${brideParents ? `<span class="t8-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t8-parents-sep">•</span>` : ''}
+              ${groomParents ? `<span class="t8-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+            ` : `
+              ${groomParents ? `<span class="t8-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t8-parents-sep">•</span>` : ''}
+              ${brideParents ? `<span class="t8-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+            `}
+          </div>` : ''}
         <p class="t8-hero-copy" style="--i:4">${inviteText}</p>
         <div class="t8-datebar" style="--i:5" aria-label="Wedding date">
           <div>${esc(dayName || 'Save the date')}</div>

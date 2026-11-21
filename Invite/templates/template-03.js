@@ -487,6 +487,11 @@ const STYLE = `
 .t9-end h3{font:400 clamp(34px,7vw,48px)/1.2 var(--f-script);margin:0 0 8px;padding-bottom:.08em}
 .t9-end p{font:500 10px var(--f-sans);letter-spacing:.3em;color:rgba(247,239,220,.62);margin:8px 0 0;text-transform:uppercase}
 .t9-end .t9-tag{font:italic 500 18px var(--f-serif);letter-spacing:.02em;text-transform:none;color:var(--gl)}
+.t9-parents-line{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.6em;margin:.4em auto .8em;font:400 clamp(13px,1.8vw,16px) var(--f-serif);color:#f5deb3;text-shadow:0 1px 4px rgba(0,0,0,.7);animation:t9-rise .8s cubic-bezier(.2,0,0,1) calc(var(--i,3.5)*80ms) both}
+.t9-parents-line small{font-style:italic;color:#e8c37d;margin-right:.25em}
+.t9-parents-line strong{font-weight:600;color:#fff}
+.t9-parents-line em{font-style:normal;font-size:.9em;color:#e8c37d;opacity:.85}
+.t9-parents-sep{color:var(--gold);opacity:.7}
 .t9-music{display:none;position:fixed;z-index:60;right:16px;bottom:16px;width:46px;height:46px;border-radius:50%;border:1px solid var(--g);background:rgba(var(--bg-rgb),.9);color:var(--gl);font-size:17px;box-shadow:0 8px 22px rgba(0,0,0,.5)}
 .t9-js .t9-music.t9-has{display:block}
 .t9-music[aria-pressed="true"]{background:var(--gold);color:#1d1304}
@@ -527,6 +532,10 @@ export default function render({ guest, wedding, events = [] } = {}) {
   const brideFirst = clean(w.name_order) === 'bride_first';
   const [rawFirst, rawSecond] = brideFirst ? [rawBride, rawGroom] : [rawGroom, rawBride];
   const first = esc(rawFirst), second = esc(rawSecond);
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || '');
+  const groomAddr = clean(w.groom_address || '');
   const monoInit = `${esc(rawFirst.charAt(0).toUpperCase())}&amp;${esc(rawSecond.charAt(0).toUpperCase())}`;
   const guestName = esc(clean(guest?.name) || 'Respected Guest');
   const guestLine = guest?.with_family ? `${guestName} &amp; Family` : guestName;
@@ -644,6 +653,18 @@ export default function render({ guest, wedding, events = [] } = {}) {
           <i class="t9-floor" aria-hidden="true"></i>
         </div>
         <h1 class="t9-names" style="--i:3"><span class="t9-n t9-gt">${first}</span><span class="t9-amp">&amp;</span><span class="t9-n t9-gt">${second}</span></h1>
+        ${(brideParents || groomParents) ? `
+          <div class="t9-parents-line" style="--i:3.5">
+            ${brideFirst ? `
+              ${brideParents ? `<span class="t9-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t9-parents-sep">•</span>` : ''}
+              ${groomParents ? `<span class="t9-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+            ` : `
+              ${groomParents ? `<span class="t9-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t9-parents-sep">•</span>` : ''}
+              ${brideParents ? `<span class="t9-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+            `}
+          </div>` : ''}
         <p class="t9-hero-copy" style="--i:4">${inviteText}</p>
         <div class="t9-datebar" style="--i:5" aria-label="Wedding date">
           <div>${esc(dayName || 'Save the date')}</div>

@@ -633,6 +633,11 @@ const STYLE = `
 .t9[data-lang="bn"] .t9-sub{letter-spacing:.06em;text-transform:none;font-size:15px}
 .t9-names{font:700 clamp(28px,4.8vh,44px)/1.15 var(--f-head);color:var(--p);margin:0}
 .t9-names i{display:inline-block;font:italic 500 .62em var(--f-head);color:var(--a);margin:0 5px}
+.t9-parents-line{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.6em;margin:clamp(3px,0.8vh,8px) auto clamp(4px,1vh,10px);font:500 clamp(12.5px,1.8vh,15.5px) var(--f-head);color:#5d1522}
+.t9-parents-line small{font-style:italic;color:#8f2d3e;margin-right:.25em}
+.t9-parents-line strong{font-weight:700;color:#3b1016}
+.t9-parents-line em{font-style:normal;font-size:.9em;color:#8f2d3e;opacity:.85}
+.t9-parents-sep{color:var(--a);opacity:.7}
 .t9-hero-copy{max-width:520px;margin:0 auto;font:italic 500 clamp(13px,1.9vh,16.5px)/1.45 var(--f-head);color:var(--muted)}
 
 /* Hero Royal Person & Family Invited Box (matching Template 2) */
@@ -933,6 +938,10 @@ export default function render({ guest, wedding, events = [] } = {}) {
   const brideFirst = clean(w.name_order) === 'bride_first';
   const [fEn, sEn] = brideFirst ? [rb, rg] : [rg, rb];
   const [fBn, sBn] = brideFirst ? [rbBn, rgBn] : [rgBn, rbBn];
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || '');
+  const groomAddr = clean(w.groom_address || '');
   const namesLine = LH(`${esc(fEn)} <i>&amp;</i> ${esc(sEn)}`, `${esc(fBn)} <i>ও</i> ${esc(sBn)}`);
   const namesPlain = L(`${fEn} & ${sEn}`, `${fBn} ও ${sBn}`);
   const initEn = `${fEn.charAt(0).toUpperCase()}&${sEn.charAt(0).toUpperCase()}`;
@@ -1256,6 +1265,18 @@ export default function render({ guest, wedding, events = [] } = {}) {
         </div>
         <p class="t9-sub">${t('weddingOf')}</p>
         <h2 class="t9-names">${namesLine}</h2>
+        ${(brideParents || groomParents) ? `
+          <div class="t9-parents-line t9-rv">
+            ${brideFirst ? `
+              ${brideParents ? `<span class="t9-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t9-parents-sep">•</span>` : ''}
+              ${groomParents ? `<span class="t9-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+            ` : `
+              ${groomParents ? `<span class="t9-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t9-parents-sep">•</span>` : ''}
+              ${brideParents ? `<span class="t9-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+            `}
+          </div>` : ''}
         <p class="t9-hero-copy">${inviteText}</p>
         
         <!-- Person & Family Invited Box (matching Template 2) -->

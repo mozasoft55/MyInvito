@@ -398,7 +398,8 @@ begin
 
   insert into public.weddings (
     id, source_id, couple_name, bride_name, groom_name, event_date,
-    template_style, theme_name, theme_color
+    template_style, theme_name, theme_color,
+    bride_parents, groom_parents, bride_father, groom_father, bride_address, groom_address
   )
   values (
     v_wedding_id,
@@ -409,12 +410,19 @@ begin
     (p_input->>'event_date')::date,
     v_template,
     v_theme,
-    v_theme_color
+    v_theme_color,
+    nullif(btrim(coalesce(p_input->>'bride_parents', p_input->>'bride_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'groom_parents', p_input->>'groom_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_parents', p_input->>'bride_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'groom_parents', p_input->>'groom_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_address', '')), ''),
+    nullif(btrim(coalesce(p_input->>'groom_address', '')), '')
   );
 
   insert into public.wedding_details (
     wedding_id, status, host_name, bride_full, groom_full, bride_parents,
-    groom_parents, ceremony_title, invocation, ceremony_time, venue_title,
+    groom_parents, bride_father, groom_father, bride_address, groom_address,
+    ceremony_title, invocation, ceremony_time, venue_title,
     venue, address, map_url, slug, image1, image2, image3, image4, image5, music_url
   )
   values (
@@ -423,8 +431,12 @@ begin
     nullif(btrim(coalesce(p_input->>'host_name', '')), ''),
     v_bride,
     v_groom,
-    nullif(btrim(coalesce(p_input->>'bride_parents', '')), ''),
-    nullif(btrim(coalesce(p_input->>'groom_parents', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_parents', p_input->>'bride_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'groom_parents', p_input->>'groom_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_parents', p_input->>'bride_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'groom_parents', p_input->>'groom_father', '')), ''),
+    nullif(btrim(coalesce(p_input->>'bride_address', '')), ''),
+    nullif(btrim(coalesce(p_input->>'groom_address', '')), ''),
     nullif(btrim(coalesce(p_input->>'ceremony_title', '')), ''),
     nullif(btrim(coalesce(p_input->>'invocation', '')), ''),
     nullif(p_input->>'ceremony_time', '')::time,

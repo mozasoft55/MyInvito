@@ -225,6 +225,11 @@ body{overflow:visible!important;margin:0;padding:0;overscroll-behavior:contain}
 .t10-names{font:700 clamp(30px,9vw,58px)/1.18 "Cinzel Decorative",serif;margin:0 0 12px;filter:drop-shadow(0 0 22px rgba(255,200,150,.45)) drop-shadow(0 6px 14px rgba(0,0,0,.6))}
 .t10-names .n{display:block}
 .t10-names .and{display:block;font:italic 400 .55em/1.3 Amiri,serif;color:var(--lotus);margin:2px 0}
+.t10-parents-line{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.6em;margin:0 auto 12px;font:400 clamp(13px,1.8vw,16px) "Cormorant Garamond",serif;color:#fcecd2;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.t10-parents-line small{font-style:italic;color:var(--gold);margin-right:.25em}
+.t10-parents-line strong{font-weight:600;color:#fff}
+.t10-parents-line em{font-style:normal;font-size:.9em;color:var(--champ);opacity:.85}
+.t10-parents-sep{color:var(--lotus);opacity:.7}
 .t10-ch{display:inline-block;background:linear-gradient(180deg,#fff6d0,#f3c969 55%,#ffb38a);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .t10-sp{display:inline-block;width:.35em}
 .t10-js:not(.t10-live) .t10-ch{opacity:0}
@@ -412,8 +417,13 @@ export default function render({ guest, wedding, events = [] } = {}) {
 
   const brideRaw = clean(w.bride_name) || 'Bride';
   const groomRaw = clean(w.groom_name) || 'Groom';
-  const [firstRaw, secondRaw] = clean(w.name_order) === 'bride_first' ? [brideRaw, groomRaw] : [groomRaw, brideRaw];
+  const brideFirst = clean(w.name_order) === 'bride_first';
+  const [firstRaw, secondRaw] = brideFirst ? [brideRaw, groomRaw] : [groomRaw, brideRaw];
   const first = esc(firstRaw), second = esc(secondRaw);
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || '');
+  const groomAddr = clean(w.groom_address || '');
   const init1 = esc(firstRaw.charAt(0) || 'R').toUpperCase();
   const init2 = esc(secondRaw.charAt(0) || 'A').toUpperCase();
 
@@ -520,6 +530,18 @@ export default function render({ guest, wedding, events = [] } = {}) {
         <div class="t10-invoc">${invocation}</div>
         <span class="t10-lab">Together with their families</span>
         <h1 class="t10-names" aria-label="${first} and ${second}"><span class="n" aria-hidden="true">${splitName(firstRaw)}</span><span class="and" aria-hidden="true">&amp;</span><span class="n" aria-hidden="true">${splitName(secondRaw)}</span></h1>
+        ${(brideParents || groomParents) ? `
+          <div class="t10-parents-line">
+            ${brideFirst ? `
+              ${brideParents ? `<span class="t10-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t10-parents-sep">•</span>` : ''}
+              ${groomParents ? `<span class="t10-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+            ` : `
+              ${groomParents ? `<span class="t10-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t10-parents-sep">•</span>` : ''}
+              ${brideParents ? `<span class="t10-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+            `}
+          </div>` : ''}
         <p class="t10-sub">invite you to step into their garden of forever</p>
         <div class="t10-gpill" id="t10-pill">Invited: ${guestLine}</div><br>
         <div class="t10-gboxes" id="t10-gboxes" data-family="${isFamily ? 'true' : 'false'}" data-base="${esc(baseGuest)}" data-count="${personsCount}" role="group" aria-label="Guest invite category">

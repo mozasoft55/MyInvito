@@ -234,6 +234,10 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
   const bride = esc(rawB), groom = esc(rawG);
   const ini = ((rawB[0] || 'B') + (rawG[0] || 'G')).toUpperCase();
   const brideFull = esc(wedding.bride_full || rawB), groomFull = esc(wedding.groom_full || rawG);
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || '');
+  const groomAddr = clean(w.groom_address || '');
   const gName = esc(g.name || 'Respected Guest');
 
   // Mutual Exclusive Guest Rules:
@@ -291,6 +295,7 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
 .sc{font-family:'Great Vibes',cursive;color:var(--ox);line-height:1.1;font-weight:400}.amp{font-family:'Lora',serif;font-size:.5em;font-style:italic;vertical-align:middle}
 .nm{font-family:'Playfair Display',serif;font-weight:700;color:var(--ox);line-height:1.2}
 .tx{font-weight:500;line-height:1.5}.it{font-style:italic}small{display:block;font-size:.86em;opacity:.85}
+.t02-parents{font-size:.92em;color:#4a3215;margin-top:.15em;letter-spacing:.02em}.t02-parents strong{font-weight:600;color:#2c1808}.t02-parents .it{font-style:italic;color:#8b6818}.t02-addr{font-size:.88em;color:#6b5030}
 .btn{flex-shrink:0;margin-top:.5em;width:100%;max-width:19em;min-height:3em;border:1.5px solid var(--gold);border-radius:99px;background:linear-gradient(135deg,var(--ox),var(--ox2));color:var(--gl);font:700 .78em 'Cinzel',serif;letter-spacing:.16em;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:.7em;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.35)}
 .btn:active{transform:scale(.97)}.btn svg{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:2}
 .deck{display:flex;align-items:center;justify-content:center;gap:.8em}.deck .l{font:700 .78em/1.35 'Cinzel',serif;letter-spacing:.08em;color:var(--ink)}.deck .v{width:1.5px;height:2.6em;background:var(--gold)}
@@ -327,9 +332,11 @@ ${P(1, `<div>${crest(ini, 4.6)}<div class="cap" style="font-size:1.1em;margin-to
    <div class="tx" style="font-size:1.02em">${esc(w.host_address || w.address || '')}</div>${contacts.map(c => `<div class="tx" style="font-weight:600;font-size:1.02em">${esc(c)}</div>`).join('')}</div>`, next(2, 'The Ceremony'))}
 ${P(2, `<div><div class="it tx" style="font-size:1.02em;max-width:85%;margin:0 auto">${esc(w.invocation || 'In the name of Allah the most beneficent & merciful')}</div>${fl(10)}<div class="cap" style="font-size:1.25em">${esc(w.ceremony_title || 'Marriage Ceremony')}</div></div>
   <div><div class="it tx" style="font-size:1.05em">has great pleasure to invite you to attend the wedding of their daughter</div>
-   <div class="nm" style="font-size:1.95em;margin-top:.2em">${brideFull}</div><small>${esc(w.bride_parents || '')}</small>
+   <div class="nm" style="font-size:1.95em;margin-top:.2em">${brideFull}</div>
+   ${brideParents ? `<div class="t02-parents"><small class="it">Daughter of </small><strong>${esc(brideParents)}</strong>${brideAddr ? `<span class="t02-addr">, ${esc(brideAddr)}</span>` : ''}</div>` : ''}
    <div class="sc" style="font-size:2.6em">Weds</div>
-   <div class="nm" style="font-size:1.95em">${groomFull}</div><small>${esc(w.groom_parents || '')}</small></div>
+   <div class="nm" style="font-size:1.95em">${groomFull}</div>
+   ${groomParents ? `<div class="t02-parents"><small class="it">Son of </small><strong>${esc(groomParents)}</strong>${groomAddr ? `<span class="t02-addr">, ${esc(groomAddr)}</span>` : ''}</div>` : ''}</div>
   <div style="border-top:1px solid rgba(183,138,47,.45);width:92%;padding-top:.6em"><div class="cap" style="font-size:.72em">With Best Compliments From</div>
    <div class="nm" style="font-size:1.3em">${esc(w.compliments || '')}</div><div class="cap" style="font-size:.72em;margin-top:.5em">R.S.V.P.</div>${contacts.map(c => `<div class="tx" style="font-weight:600">${esc(c)}</div>`).join('')}</div>`, next(3, 'View Programme'), 't')}
 ${P(3, `<div><div class="it tx">Insha Allah, to be solemnised as per the programme</div><div class="cap" style="font-size:1.2em;margin-top:.2em">Wedding Programme</div></div>

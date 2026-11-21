@@ -2241,6 +2241,12 @@
               venue_address: localOrder?.address || localOrder?.venue_address || localOrder?.location || '',
               city: localOrder?.city || '',
               map_url: localOrder?.map_url || '',
+              bride_parents: localOrder?.bride_parents || localOrder?.bride_father || '',
+              groom_parents: localOrder?.groom_parents || localOrder?.groom_father || '',
+              bride_father: localOrder?.bride_parents || localOrder?.bride_father || '',
+              groom_father: localOrder?.groom_parents || localOrder?.groom_father || '',
+              bride_address: localOrder?.bride_address || '',
+              groom_address: localOrder?.groom_address || '',
               rsvp_phone: phone,
               phone: phone,
               bride_photo: localOrder?.bride_photo || '',
@@ -2399,6 +2405,12 @@
         wedding.venue_address = (wedding.venue_address || wedding.address || orderMetadata?.venue_address || orderMetadata?.address || '').trim();
         wedding.city = (wedding.city || orderMetadata?.city || '').trim();
         wedding.map_url = (wedding.map_url || orderMetadata?.map_url || '').trim();
+        wedding.bride_parents = (wedding.bride_parents || wedding.bride_father || orderMetadata?.bride_parents || orderMetadata?.bride_father || (orderRef ? getStored('wedding_bride_parents_' + orderRef) : '') || '').trim();
+        wedding.groom_parents = (wedding.groom_parents || wedding.groom_father || orderMetadata?.groom_parents || orderMetadata?.groom_father || (orderRef ? getStored('wedding_groom_parents_' + orderRef) : '') || '').trim();
+        wedding.bride_father = wedding.bride_parents;
+        wedding.groom_father = wedding.groom_parents;
+        wedding.bride_address = (wedding.bride_address || orderMetadata?.bride_address || '').trim();
+        wedding.groom_address = (wedding.groom_address || orderMetadata?.groom_address || '').trim();
 
         const landingBg = wedding.landing_background
           || wedding.landingBackground

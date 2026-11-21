@@ -425,8 +425,10 @@ function findLocalInvitation(code) {
 
           if (!wedding.bride_parents && (order.bride_parents || order.bride_father)) wedding.bride_parents = order.bride_parents || order.bride_father;
           if (!wedding.groom_parents && (order.groom_parents || order.groom_father)) wedding.groom_parents = order.groom_parents || order.groom_father;
-          if (!wedding.bride_father && (order.bride_parents || order.bride_father)) wedding.bride_father = order.bride_parents || order.bride_father;
-          if (!wedding.groom_father && (order.groom_parents || order.groom_father)) wedding.groom_father = order.groom_parents || order.groom_father;
+          if (!wedding.bride_parents && ref && typeof localStorage !== 'undefined') wedding.bride_parents = localStorage.getItem('wedding_bride_parents_' + ref) || '';
+          if (!wedding.groom_parents && ref && typeof localStorage !== 'undefined') wedding.groom_parents = localStorage.getItem('wedding_groom_parents_' + ref) || '';
+          if (!wedding.bride_father && (wedding.bride_parents || order.bride_parents || order.bride_father)) wedding.bride_father = wedding.bride_parents || order.bride_parents || order.bride_father;
+          if (!wedding.groom_father && (wedding.groom_parents || order.groom_parents || order.groom_father)) wedding.groom_father = wedding.groom_parents || order.groom_parents || order.groom_father;
           if (!wedding.bride_address && order.bride_address) wedding.bride_address = order.bride_address;
           if (!wedding.groom_address && order.groom_address) wedding.groom_address = order.groom_address;
           if (!wedding.map_url && order.map_url) wedding.map_url = order.map_url;

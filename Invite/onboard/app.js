@@ -1734,11 +1734,14 @@ form.addEventListener('submit', async event => {
       music_id: selectedMusic?.id || '',
       created_at: new Date().toISOString()
     };
+    orderMetadata.wedding = { ...orderMetadata };
     try {
       localStorage.setItem('customer-dashboard-order', currentOrderReference);
       localStorage.setItem('customer-dashboard-token', currentDashboardToken);
       localStorage.setItem('primeecard_last_order', JSON.stringify(orderMetadata));
       localStorage.setItem('primeecard_order_' + currentOrderReference, JSON.stringify(orderMetadata));
+      safeStorageSet(localStorage, 'wedding_bride_parents_' + currentOrderReference, rawFormData.bride_parents || rawFormData.bride_father || '');
+      safeStorageSet(localStorage, 'wedding_groom_parents_' + currentOrderReference, rawFormData.groom_parents || rawFormData.groom_father || '');
       if (rawFormData.template_style) {
         localStorage.setItem('customer-dashboard-template-' + currentOrderReference, rawFormData.template_style);
         localStorage.setItem('customer-dashboard-template-default', rawFormData.template_style);

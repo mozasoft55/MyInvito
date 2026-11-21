@@ -234,6 +234,11 @@ body{overflow:visible!important;margin:0;padding:0;overscroll-behavior:contain}
 .t9-hero .t9-lab{display:inline-block;margin:0 auto clamp(14px,3vh,30px);--z:20px}
 .t9-hero h1{font:clamp(54px,14vw,140px)/1.18 "Pinyon Script",cursive;margin:0 0 clamp(8px,2vh,16px);filter:drop-shadow(0 0 24px rgba(232,185,160,.5)) drop-shadow(0 10px 20px rgba(0,0,0,.65));--z:80px}
 .t9-hero h1 span{display:block;font-size:.4em;line-height:1.4;margin:2px 0}
+.t9-parents-line{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.6em;margin:clamp(4px,1vh,10px) auto 0;font:400 clamp(13px,1.8vw,16px) "Cormorant Garamond",serif;color:#f4e8e0;text-shadow:0 1px 4px rgba(0,0,0,.7);--z:40px}
+.t9-parents-line small{font-style:italic;color:var(--rose);margin-right:.25em}
+.t9-parents-line strong{font-weight:600;color:#fff}
+.t9-parents-line em{font-style:normal;font-size:.9em;color:var(--champ);opacity:.85}
+.t9-parents-sep{color:var(--rose);opacity:.7}
 .t9-hero-copy{max-width:420px;margin:clamp(8px,2vh,16px) auto 0;font:italic 400 18px/1.55 "Cormorant Garamond",serif;color:#f4e8e0;text-shadow:0 2px 12px rgba(0,0,0,.7);--z:40px}
 .t9-guest-pill{display:inline-block;margin-top:clamp(12px,2vh,18px);padding:8px 18px;border-radius:30px;border:1px solid rgba(232,185,160,.5);background:rgba(18,6,28,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font:400 10.5px Marcellus,serif;letter-spacing:.2em;text-transform:uppercase;color:var(--champ);--z:30px}
 .t9-gboxes{display:inline-flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,14px);margin:clamp(8px,1.5vh,14px) auto 0;padding:6px 16px;border-radius:14px;background:rgba(18,6,28,.55);border:1px solid rgba(232,185,160,.4);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);cursor:pointer;transition:transform .2s;--z:30px}
@@ -409,7 +414,12 @@ export default function render({ guest, wedding, events = [] } = {}) {
 
   const bride = esc(clean(w.bride_name) || 'Bride');
   const groom = esc(clean(w.groom_name) || 'Groom');
-  const [first, second] = clean(w.name_order) === 'bride_first' ? [bride, groom] : [groom, bride];
+  const brideFirst = clean(w.name_order) === 'bride_first';
+  const [first, second] = brideFirst ? [bride, groom] : [groom, bride];
+  const brideParents = clean(w.bride_parents || w.bride_father || '');
+  const groomParents = clean(w.groom_parents || w.groom_father || '');
+  const brideAddr = clean(w.bride_address || '');
+  const groomAddr = clean(w.groom_address || '');
   const init1 = esc(first.replace(/&[^;]+;/g, '').trim().charAt(0) || 'R').toUpperCase();
   const init2 = esc(second.replace(/&[^;]+;/g, '').trim().charAt(0) || 'A').toUpperCase();
   const initials = `${init1} &amp; ${init2}`;
@@ -540,6 +550,18 @@ export default function render({ guest, wedding, events = [] } = {}) {
         <div class="t9-invoc">${invocation}</div>
         <div class="t9-lab">Together with their families</div>
         <h1 class="t9-rg">${first} <span>&amp;</span> ${second}</h1>
+        ${(brideParents || groomParents) ? `
+          <div class="t9-parents-line">
+            ${brideFirst ? `
+              ${brideParents ? `<span class="t9-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t9-parents-sep">•</span>` : ''}
+              ${groomParents ? `<span class="t9-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+            ` : `
+              ${groomParents ? `<span class="t9-par-item"><small>Son of</small> <strong>${esc(groomParents)}</strong>${groomAddr ? `<em>, ${esc(groomAddr)}</em>` : ''}</span>` : ''}
+              ${(brideParents && groomParents) ? `<span class="t9-parents-sep">•</span>` : ''}
+              ${brideParents ? `<span class="t9-par-item"><small>Daughter of</small> <strong>${esc(brideParents)}</strong>${brideAddr ? `<em>, ${esc(brideAddr)}</em>` : ''}</span>` : ''}
+            `}
+          </div>` : ''}
         <p class="t9-hero-copy">Request the pleasure of your company as they begin their beautiful journey together.</p>
         <div class="t9-guest-pill" id="t9-pill">Invited: ${guestLine}</div><br>
         <div class="t9-gboxes" id="t9-gboxes" data-family="${isFamily ? 'true' : 'false'}" data-base="${esc(baseGuest)}" data-count="${personsCount}" role="group" aria-label="Guest invite category">
