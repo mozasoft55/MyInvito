@@ -240,3 +240,55 @@ test('Defect 3: Event comment/note reflects across all 15 templates when provide
     );
   }
 });
+
+test('Admin CSP: allows inline style attributes safely with style-src-attr', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const adminHtml = fs.readFileSync(path.resolve('admin/index.html'), 'utf8');
+  assert.match(
+    adminHtml,
+    /style-src-attr\s+'self'\s+'unsafe-inline'/,
+    'admin/index.html CSP must contain style-src-attr to avoid blocking inline style attributes'
+  );
+});
+
+test('Dashboard Architecture: chosenTemplate is scoped outside previewLink and real token check avoids 401', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const dashCode = fs.readFileSync(path.resolve('dashboard/app.js'), 'utf8');
+
+  // Verify chosenTemplate is defined before previewLink
+  const chosenIndex = dashCode.indexOf('const chosenTemplate =');
+  const previewIndex = dashCode.indexOf('const previewLink =');
+  const templateNameIndex = dashCode.indexOf('const templateName = formatTemplateLabel(chosenTemplate);');
+
+  assert.ok(chosenIndex > 0, 'chosenTemplate must be declared');
+  assert.ok(previewIndex > chosenIndex, 'chosenTemplate must be declared before previewLink block');
+  assert.ok(templateNameIndex > previewIndex, 'templateName must be formatted using in-scope chosenTemplate');
+
+  // Verify demo-token or short token skips Edge Function to avoid 401 Unauthorized
+  assert.match(
+    dashCode,
+    /hasRealToken\s*=\s*dashboardToken\s*&&\s*dashboardToken\s*!==\s*['"]demo-token['"]\s*&&\s*dashboardToken\.length\s*>=\s*32/,
+    'dashboardRequest must skip Edge function on demo-token or invalid tokens to prevent 401 HTTP errors'
+  );
+});
+
+test('Admin Verification & Status: checkIsPaymentVerified recognizes Paid and Partially Paid', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const adminCode = fs.readFileSync(path.resolve('admin/app.js'), 'utf8');
+
+  assert.match(adminCode, /function checkIsPaymentVerified/, 'checkIsPaymentVerified helper must exist');
+  assert.match(adminCode, /pStatus === 'paid' \|\| pStatus === 'partially paid'/, 'Paid and Partially Paid must be recognized as verified');
+  assert.match(adminCode, /error\.code === '42501' \|\| error\.status === 401/, '401 Unauthorized / permission denied errors must be handled as session expiry');
+});
+
+test('Onboarding: payment status polling and auto-redirect to dashboard', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const onboardCode = fs.readFileSync(path.resolve('onboard/app.js'), 'utf8');
+
+  assert.match(onboardCode, /function startPaymentStatusPolling/, 'startPaymentStatusPolling must exist');
+  assert.match(onboardCode, /location\.href = `\.\.\/dashboard\/\?order=/, 'verified order must redirect to dashboard');
+});

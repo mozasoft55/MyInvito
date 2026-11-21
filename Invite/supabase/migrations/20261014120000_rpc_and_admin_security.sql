@@ -174,6 +174,27 @@ begin
       'package_name', v_order.package_code,
       'wedding_date', (select w.event_date from public.weddings w where w.id = v_order.wedding_id),
       'created_at', v_order.created_at,
+      'customer_phone', (select c.phone from public.customers c where c.customer_id = v_order.customer_id),
+      'customer_email', (select c.email from public.customers c where c.customer_id = v_order.customer_id),
+      'customer_name', (select c.customer_name from public.customers c where c.customer_id = v_order.customer_id),
+      'advance_verified_paise', coalesce(v_order.advance_verified_paise, 0),
+      'activated_at', v_order.activated_at,
+      'expires_at', v_order.expires_at,
+      'card_status', coalesce(v_order.card_status, 'Active'),
+      'is_verified', (
+        v_order.order_status = 'Confirmed'
+        or v_order.payment_status in ('Paid', 'Partially Paid')
+        or exists (
+          select 1 from public.onboarding_payments p
+          where p.order_reference = v_ref
+            and (p.payment_status in ('Paid', 'Partially Paid') or p.verified_at is not null)
+        )
+      ),
+      'preview_guest_code', (
+        select g.invite_code from public.guests g
+        where g.wedding_id = v_order.wedding_id
+        order by g.created_at asc limit 1
+      ),
       'wedding', (
         select jsonb_build_object(
           'id', w.id,
@@ -182,6 +203,7 @@ begin
           'groom_name', w.groom_name,
           'event_date', w.event_date,
           'template_style', w.template_style,
+          'template_id', w.template_style,
           'theme_name', w.theme_name,
           'venue', wd.venue,
           'venue_title', wd.venue_title,
@@ -412,7 +434,44 @@ begin
   end if;
 
   if p_action = 'list' then
-    v_res := public.get_admin_payment_queue();
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'payment_id', p.payment_id,
+      'order_reference', p.order_reference,
+      'customer_id', p.customer_id,
+      'wedding_id', p.wedding_id,
+      'customer_name', c.customer_name,
+      'customer_email', c.email,
+      'customer_phone', c.phone,
+      'city', c.city,
+      'couple_name', w.couple_name,
+      'event_date', w.event_date,
+      'package', c.package,
+      'payment_mode', p.payment_mode,
+      'expected_amount_paise', p.expected_amount_paise,
+      'claimed_amount_paise', p.claimed_amount_paise,
+      'verified_amount_paise', p.verified_amount_paise,
+      'external_reference', p.external_reference,
+      'proof_storage_path', p.proof_storage_path,
+      'payment_status', p.payment_status,
+      'card_status', coalesce(o.card_status, 'Active'),
+      'verified_by', p.verified_by,
+      'verified_at', p.verified_at,
+      'rejection_reason', p.rejection_reason,
+      'preview_guest_code', (
+        select g.invite_code from public.guests g
+        where g.wedding_id = p.wedding_id
+        order by g.created_at asc limit 1
+      ),
+      'submitted_at', p.submitted_at,
+      'expires_at', o.expires_at,
+      'template_id', coalesce(w.template_style, '12')
+    )), '[]'::jsonb) into v_res
+    from public.onboarding_payments p
+    join public.customers c on c.customer_id = p.customer_id
+    join public.weddings w on w.wedding_id = p.wedding_id
+    left join public.onboarding_orders o on o.customer_id = p.customer_id
+    order by p.submitted_at desc;
+
     return jsonb_build_object('success', true, 'payments', coalesce(v_res, '[]'::jsonb));
 
   elsif p_action = 'list_cash_requests' then

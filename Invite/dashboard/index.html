@@ -18,7 +18,7 @@
     <section id="error-state" class="state-card" hidden>
       <h1>Open your private dashboard</h1>
       <p id="error-message" role="status"></p>
-      <button id="error-retry-button" class="button button-primary" type="button" style="margin-bottom: 1rem;" hidden>Retry loading dashboard</button>
+      <button id="error-retry-button" class="button button-primary btn-mb-1rem" type="button" hidden>Retry loading dashboard</button>
 
       <div id="dashboard-auth-container" class="dashboard-auth-container">
         <!-- Dual Factor Authentication: Order Reference + Registered Mobile -->
@@ -29,13 +29,13 @@
           <label for="dash-phone-input">Registered Mobile / WhatsApp (10 digits)</label>
           <input id="dash-phone-input" type="tel" placeholder="e.g. 9876543210" required maxlength="20" autocomplete="tel">
           
-          <div id="dash-auth-error" class="form-error" style="color:#b30000;font-size:0.85rem;background:#fff1f0;padding:8px 12px;border-radius:6px;border:1px solid #ffa39e;display:none;"></div>
+          <div id="dash-auth-error" class="form-error dash-auth-error-box"></div>
           <button class="button button-primary" type="submit" id="dash-auth-submit">Authenticate &amp; Open Dashboard ➔</button>
         </form>
 
-        <details class="link-paste-details" style="margin-top:1rem;border-top:1px dashed #d8cfc4;padding-top:1rem;text-align:left;">
-          <summary style="cursor:pointer;font-size:0.85rem;color:#6e1429;font-weight:600;">Or paste direct dashboard email link</summary>
-          <form id="dashboard-link-form" class="access-form" style="margin-top:0.75rem;">
+        <details class="link-paste-details link-paste-details-box">
+          <summary class="link-paste-summary">Or paste direct dashboard email link</summary>
+          <form id="dashboard-link-form" class="access-form form-mt-075">
             <label for="dashboard-link-input">Paste the full secure dashboard link from your order email</label>
             <input id="dashboard-link-input" type="url" autocomplete="url" placeholder="https://your-site.example/dashboard/?order=…&amp;token=…">
             <button class="button button-outline button-small" type="submit">Open link</button>
@@ -43,8 +43,8 @@
         </details>
       </div>
 
-      <p class="helper" style="margin-top:1.2rem;">Dual-factor authentication (Reference ID + Registered Mobile Number) protects your guest list and RSVP responses from unauthorized access.</p>
-      <div style="display:flex;gap:10px;justify-content:center;margin-top:1rem;flex-wrap:wrap;">
+      <p class="helper helper-mt-12">Dual-factor authentication (Reference ID + Registered Mobile Number) protects your guest list and RSVP responses from unauthorized access.</p>
+      <div class="dash-nav-links-row">
         <a href="../onboard/" class="button button-outline">Track / Resume on Onboarding</a>
         <a href="../" class="button button-outline">Return to invitation site</a>
       </div>
@@ -56,10 +56,10 @@
           <p class="eyebrow">Your celebration, organized</p>
           <h1 id="couple-title"></h1>
           <p id="wedding-date"></p>
-          <div id="dashboard-soundtrack" style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:4px 12px;border-radius:20px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);font-size:13px;color:#f5e1a4;">
+          <div id="dashboard-soundtrack" class="pill-gold-badge">
             <span>🎵 Selected Soundtrack:</span> <strong id="soundtrack-title">Ambient Instrumental</strong>
           </div>
-          <div id="dashboard-template" style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;margin-left:6px;padding:4px 12px;border-radius:20px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);font-size:13px;color:#f5e1a4;">
+          <div id="dashboard-template" class="pill-gold-badge pill-gold-badge-ml">
             <span>🎨 Design:</span> <strong id="welcome-template-title">Standard Design</strong>
           </div>
         </div>
@@ -127,15 +127,15 @@
   <dialog id="guest-dialog" class="edit-dialog">
     <form id="guest-form" method="dialog" novalidate>
       <h2 id="guest-dialog-title">Add guest</h2>
-      <div class="field-type-wrap" style="margin-bottom: 10px;">
-        <label style="font-size: 13px; font-weight: 600; color: #5a2835; margin-bottom: 6px; display: block;">Invitation Type</label>
-        <div class="type-pill-row" style="display: flex; gap: 8px;">
-          <label class="type-pill-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid #c7a35f; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: #fffdf9;">
-            <input type="radio" name="invite_type" value="personal" checked style="accent-color: var(--wine);">
+      <div class="field-type-wrap mb-10">
+        <label class="field-type-label">Invitation Type</label>
+        <div class="type-pill-row type-pill-row-flex">
+          <label class="type-pill-btn type-pill-btn-styled">
+            <input type="radio" name="invite_type" value="personal" checked class="type-pill-btn-input">
             <span>👤 Personal</span>
           </label>
-          <label class="type-pill-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid #c7a35f; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: #fffdf9;">
-            <input type="radio" name="invite_type" value="family" style="accent-color: var(--wine);">
+          <label class="type-pill-btn type-pill-btn-styled">
+            <input type="radio" name="invite_type" value="family" class="type-pill-btn-input">
             <span>👨‍👩‍👧‍👦 Family</span>
           </label>
         </div>
@@ -160,12 +160,12 @@
   <!-- View reply message -->
   <dialog id="reply-dialog" class="edit-dialog">
     <h2 id="reply-dialog-name">Guest Response</h2>
-    <div id="reply-dialog-body" style="display: grid; gap: 12px; margin: 16px 0;">
-      <div><small style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;">Status</small><p id="reply-dialog-status" style="margin: 2px 0 0; font-weight: 700;"></p></div>
-      <div><small style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;">People Attending</small><p id="reply-dialog-attending" style="margin: 2px 0 0; font-size: 18px; font-weight: 600;"></p></div>
-      <div><small style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;">Events / Ceremonies Attending</small><p id="reply-dialog-events" style="margin: 2px 0 0; font-size: 14px; font-weight: 600; color: #7a1426;"></p></div>
-      <div><small style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;">Wishes / Message</small><blockquote id="reply-dialog-message" style="margin: 6px 0 0; padding: 12px 14px; background: #fff8eb; border-left: 3px solid var(--gold); border-radius: 6px; font: italic 16px/1.45 Georgia, serif; color: #5a3825; white-space: pre-wrap;"></blockquote></div>
-      <div><small style="color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em;">Submitted</small><p id="reply-dialog-time" style="margin: 2px 0 0; color: var(--muted); font-size: 13px;"></p></div>
+    <div id="reply-dialog-body" class="reply-dialog-body">
+      <div><small class="reply-dialog-muted-label">Status</small><p id="reply-dialog-status" class="reply-dialog-status-val"></p></div>
+      <div><small class="reply-dialog-muted-label">People Attending</small><p id="reply-dialog-attending" class="reply-dialog-attending-val"></p></div>
+      <div><small class="reply-dialog-muted-label">Events / Ceremonies Attending</small><p id="reply-dialog-events" class="reply-dialog-events-val"></p></div>
+      <div><small class="reply-dialog-muted-label">Wishes / Message</small><blockquote id="reply-dialog-message" class="reply-dialog-quote"></blockquote></div>
+      <div><small class="reply-dialog-muted-label">Submitted</small><p id="reply-dialog-time" class="reply-dialog-time-val"></p></div>
     </div>
     <div class="dialog-actions">
       <button class="button button-outline" id="close-reply-dialog" type="button">Close</button>

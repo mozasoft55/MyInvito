@@ -430,8 +430,8 @@ sb.auth.onAuthStateChange(event => {
 async function callAdmin(action, payload = {}) {
   const { data, error } = await sb.rpc('manage_admin_portal', { p_action: action, p_payload: payload });
   if (error) {
-    if (error.code === 'PGRST301' || /jwt/i.test(error.message || '')) {
-      await forceSignOut('Your session expired. Please sign in again.');
+    if (error.code === 'PGRST301' || error.code === '42501' || error.status === 401 || /jwt|permission denied/i.test(error.message || '')) {
+      await forceSignOut('Your session expired or administrator access is required. Please sign in again.');
       throw new Error('Session expired.');
     }
     throw new Error(error.message || 'Administrator request failed.');
@@ -504,7 +504,34 @@ async function renderQueue() {
       if (!error && Array.isArray(data)) {
         queuePayments = data;
       } else {
-        queueError = err.message || error?.message || 'Failed to load payment queue.';
+        // Fallback: direct select from onboarding_payments with related customer and wedding details
+        const { data: directData, error: directErr } = await sb
+          .from('onboarding_payments')
+          .select(`
+            payment_id, order_reference, customer_id, wedding_id,
+            payment_mode, expected_amount_paise, claimed_amount_paise, verified_amount_paise,
+            external_reference, proof_storage_path, payment_status, verified_by, verified_at,
+            rejection_reason, submitted_at,
+            customers ( customer_name, email, phone, city, package ),
+            weddings ( couple_name, event_date )
+          `)
+          .order('submitted_at', { ascending: false });
+
+        if (!directErr && Array.isArray(directData)) {
+          queuePayments = directData.map(p => ({
+            ...p,
+            customer_name: p.customers?.customer_name,
+            customer_email: p.customers?.email,
+            customer_phone: p.customers?.phone,
+            city: p.customers?.city,
+            package: p.customers?.package,
+            couple_name: p.weddings?.couple_name,
+            event_date: p.weddings?.event_date,
+            card_status: 'Active'
+          }));
+        } else {
+          queueError = err.message || error?.message || 'Failed to load payment queue.';
+        }
       }
     } catch (_) {
       queueError = err.message || 'Failed to load payment queue.';
@@ -549,6 +576,27 @@ function renderStats() {
   $('stats').innerHTML = tiles.map(t => '<article class="stat ' + t[3] + '"><small>' + escapeHtml(t[0]) + '</small><strong>' + escapeHtml(t[1]) + '</strong><span>' + escapeHtml(t[2]) + '</span></article>').join('');
 }
 
+function checkIsPaymentVerified(payment) {
+  if (!payment) return false;
+  const pStatus = (payment.payment_status || '').toLowerCase();
+  if (pStatus.includes('reject')) return false;
+  return pStatus.includes('verified') || pStatus === 'paid' || pStatus === 'partially paid' || Boolean(payment.verified_at);
+}
+
+function checkIsPaymentPending(payment) {
+  if (!payment) return false;
+  if (checkIsPaymentVerified(payment)) return false;
+  const pStatus = (payment.payment_status || '').toLowerCase();
+  if (pStatus.includes('reject')) return false;
+  return pStatus.includes('pending') || (!payment.verified_at && pStatus !== 'paid');
+}
+
+function checkIsPaymentRejected(payment) {
+  if (!payment) return false;
+  const pStatus = (payment.payment_status || '').toLowerCase();
+  return pStatus.includes('reject');
+}
+
 function renderPayments() {
   const host = $('payment-queue');
   if (!host) return;
@@ -562,13 +610,12 @@ function renderPayments() {
   };
 
   payments.forEach(p => {
-    const pStatus = (p.payment_status || '').toLowerCase();
     const cStatus = (p.card_status || 'Active').toLowerCase();
 
     if (cStatus === 'suspended') counts.suspended++;
-    if (pStatus.includes('pending')) counts.pending++;
-    else if (pStatus.includes('verified')) counts.verified++;
-    else if (pStatus.includes('rejected')) counts.rejected++;
+    if (checkIsPaymentPending(p)) counts.pending++;
+    else if (checkIsPaymentVerified(p)) counts.verified++;
+    else if (checkIsPaymentRejected(p)) counts.rejected++;
   });
 
   if ($('count-pending')) $('count-pending').textContent = counts.pending;
@@ -578,13 +625,12 @@ function renderPayments() {
   if ($('count-all')) $('count-all').textContent = counts.all;
 
   const filtered = payments.filter(payment => {
-    const pStatus = (payment.payment_status || '').toLowerCase();
     const cStatus = (payment.card_status || 'Active').toLowerCase();
 
     let tabMatch = true;
-    if (currentFilter === 'pending') tabMatch = pStatus.includes('pending');
-    else if (currentFilter === 'verified') tabMatch = pStatus.includes('verified');
-    else if (currentFilter === 'rejected') tabMatch = pStatus.includes('rejected');
+    if (currentFilter === 'pending') tabMatch = checkIsPaymentPending(payment);
+    else if (currentFilter === 'verified') tabMatch = checkIsPaymentVerified(payment);
+    else if (currentFilter === 'rejected') tabMatch = checkIsPaymentRejected(payment);
     else if (currentFilter === 'suspended') tabMatch = (cStatus === 'suspended');
 
     if (!tabMatch) return false;
@@ -603,9 +649,9 @@ function renderPayments() {
   }
 
   host.innerHTML = filtered.map(payment => {
-    const isVerified = (payment.payment_status || '').toLowerCase().includes('verified');
-    const isRejected = (payment.payment_status || '').toLowerCase().includes('rejected');
-    const isPending = !isVerified && !isRejected;
+    const isVerified = checkIsPaymentVerified(payment);
+    const isRejected = checkIsPaymentRejected(payment);
+    const isPending = checkIsPaymentPending(payment);
     const isCardSuspended = (payment.card_status || 'Active') === 'Suspended';
     const mismatch = Number(payment.claimed_amount_paise) !== Number(payment.expected_amount_paise);
 

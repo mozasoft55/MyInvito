@@ -652,18 +652,19 @@ function buildTimePicker12h(value, prefix, eventIndex) {
 }
 
 
-function checkIsPaymentVerified(paymentStatus, advanceVerifiedPaise = 0, orderStatus = '') {
+function checkIsPaymentVerified(paymentStatus, advanceVerifiedPaise = 0, orderStatus = '', isVerifiedFlag = false) {
+  if (isVerifiedFlag === true) return true;
   const p = String(paymentStatus || '').trim().toLowerCase();
   const o = String(orderStatus || '').trim().toLowerCase();
-  if (p.includes('pending') || p.includes('reject') || p === '') return false;
-  if (['paid', 'partially paid', 'verified', 'settled', 'confirmed', 'active'].includes(p)) return true;
   if (['confirmed', 'active', 'delivered'].includes(o)) return true;
   if (Number(advanceVerifiedPaise) > 0) return true;
+  if (p.includes('reject')) return false;
+  if (['paid', 'partially paid', 'verified', 'settled'].includes(p)) return true;
   return false;
 }
 
-function applyPaymentStatusState(paymentStatus, advanceVerifiedPaise = 0, orderStatus = '') {
-  const isVerified = checkIsPaymentVerified(paymentStatus, advanceVerifiedPaise, orderStatus);
+function applyPaymentStatusState(paymentStatus, advanceVerifiedPaise = 0, orderStatus = '', isVerifiedFlag = false) {
+  const isVerified = checkIsPaymentVerified(paymentStatus, advanceVerifiedPaise, orderStatus, isVerifiedFlag);
   const paymentEl = document.getElementById('success-payment');
   const dashboardLink = document.getElementById('dashboard-link');
   const previewLink = document.getElementById('preview-invitation-link');
@@ -1879,6 +1880,7 @@ form.addEventListener('submit', async event => {
     });
 
     applyPaymentStatusState(result.payment_status || 'Pending Verification', 0, '');
+    startPaymentStatusPolling();
   } catch (error) {
     showError(error.message || 'Could not connect to service. Please retry.');
   } finally {
@@ -1893,89 +1895,117 @@ renderStep({ focus: false });
 loadConfiguration();
 
 // ── Refresh Status & Dashboard Link Controls ──────────────────────────
-const refreshStatusBtn = document.getElementById('refresh-status-btn');
-if (refreshStatusBtn) {
-  refreshStatusBtn.addEventListener('click', async () => {
-    if (!currentOrderReference) return;
-    const refreshIcon = document.getElementById('refresh-icon');
-    const refreshBtnText = document.getElementById('refresh-btn-text');
-    const refreshMsg = document.getElementById('refresh-status-msg');
+let statusPollingInterval = null;
 
-    refreshStatusBtn.disabled = true;
+async function checkPaymentStatus({ silent = false } = {}) {
+  if (!currentOrderReference) return;
+  const refreshStatusBtn = document.getElementById('refresh-status-btn');
+  const refreshIcon = document.getElementById('refresh-icon');
+  const refreshBtnText = document.getElementById('refresh-btn-text');
+  const refreshMsg = document.getElementById('refresh-status-msg');
+
+  if (!silent) {
+    if (refreshStatusBtn) refreshStatusBtn.disabled = true;
     if (refreshIcon) refreshIcon.classList.add('spinning');
     if (refreshBtnText) refreshBtnText.textContent = 'Checking...';
     if (refreshMsg) {
       refreshMsg.className = 'refresh-status-msg';
       refreshMsg.textContent = 'Connecting to server to check payment status...';
     }
+  }
 
-    try {
-      const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
-        || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
-      const rpcUrl = `${supabaseBase}/rest/v1/rpc/manage_customer_dashboard`;
+  try {
+    const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
+      || (ONBOARDING_CONFIG.dashboardEndpoint ? ONBOARDING_CONFIG.dashboardEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
+    const rpcUrl = `${supabaseBase}/rest/v1/rpc/manage_customer_dashboard`;
 
-      const response = await fetch(rpcUrl, {
-        method: 'POST',
-        headers: {
-          'apikey': ONBOARDING_CONFIG.publishableKey,
-          'Authorization': 'Bearer ' + ONBOARDING_CONFIG.publishableKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          p_order_reference: currentOrderReference,
-          p_action: 'load'
-        }),
-        cache: 'no-store'
-      });
+    const response = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: {
+        'apikey': ONBOARDING_CONFIG.publishableKey,
+        'Authorization': 'Bearer ' + ONBOARDING_CONFIG.publishableKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_order_reference: currentOrderReference,
+        p_action: 'load'
+      }),
+      cache: 'no-store'
+    });
 
-      const res = await response.json();
-      const dash = res.dashboard || res;
-      const latestPaymentStatus = dash.payment_status || (res.success ? 'Pending Verification' : '');
-      const advanceVerified = dash.advance_verified_paise || 0;
-      const orderStatus = dash.order_status || '';
+    const res = await response.json();
+    const dash = res.dashboard || res;
+    const latestPaymentStatus = dash.payment_status || (res.success ? 'Pending Verification' : '');
+    const advanceVerified = dash.advance_verified_paise || 0;
+    const orderStatus = dash.order_status || '';
+    const isVerifiedFlag = Boolean(dash.is_verified);
 
-      const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-      applyPaymentStatusState(latestPaymentStatus, advanceVerified, orderStatus);
+    applyPaymentStatusState(latestPaymentStatus, advanceVerified, orderStatus, isVerifiedFlag);
 
-      if (currentOrderReference) {
-        try {
-          const raw = localStorage.getItem('primeecard_order_' + currentOrderReference);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            parsed.payment_status = latestPaymentStatus;
-            parsed.order_status = orderStatus || parsed.order_status;
-            localStorage.setItem('primeecard_order_' + currentOrderReference, JSON.stringify(parsed));
-            localStorage.setItem('primeecard_last_order', JSON.stringify(parsed));
-          }
-        } catch (_) {}
-      }
-
-      if (checkIsPaymentVerified(latestPaymentStatus, advanceVerified, orderStatus)) {
-        if (refreshMsg) {
-          refreshMsg.className = 'refresh-status-msg msg-success';
-          refreshMsg.textContent = `✓ Payment verified at ${nowTime}! Your card is activated. Redirecting to dashboard...`;
+    if (currentOrderReference) {
+      try {
+        const raw = localStorage.getItem('primeecard_order_' + currentOrderReference);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          parsed.payment_status = latestPaymentStatus;
+          parsed.order_status = orderStatus || parsed.order_status;
+          parsed.advance_verified_paise = advanceVerified;
+          localStorage.setItem('primeecard_order_' + currentOrderReference, JSON.stringify(parsed));
+          localStorage.setItem('primeecard_last_order', JSON.stringify(parsed));
         }
-        setTimeout(() => {
-          location.href = `../dashboard/?order=${encodeURIComponent(currentOrderReference)}&token=${encodeURIComponent(currentDashboardToken)}`;
-        }, 1200);
-      } else {
-        if (refreshMsg) {
-          refreshMsg.className = 'refresh-status-msg msg-pending';
-          refreshMsg.textContent = `Status: ${latestPaymentStatus || 'Pending Verification'} (checked at ${nowTime}). Verification still in progress.`;
-        }
+      } catch (_) {}
+    }
+
+    if (checkIsPaymentVerified(latestPaymentStatus, advanceVerified, orderStatus, isVerifiedFlag)) {
+      if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+        statusPollingInterval = null;
       }
-    } catch (err) {
       if (refreshMsg) {
-        refreshMsg.className = 'refresh-status-msg msg-error';
-        refreshMsg.textContent = 'Could not check status right now. Please try again in a moment.';
+        refreshMsg.className = 'refresh-status-msg msg-success';
+        refreshMsg.textContent = `✓ Payment verified at ${nowTime}! Your card is activated. Redirecting to dashboard...`;
       }
-    } finally {
+      setTimeout(() => {
+        location.href = `../dashboard/?order=${encodeURIComponent(currentOrderReference)}&token=${encodeURIComponent(currentDashboardToken)}`;
+      }, 1200);
+    } else if (!silent) {
+      if (refreshMsg) {
+        refreshMsg.className = 'refresh-status-msg msg-pending';
+        refreshMsg.textContent = `Status: ${latestPaymentStatus || 'Pending Verification'} (checked at ${nowTime}). Verification still in progress.`;
+      }
+    }
+  } catch (err) {
+    if (!silent && refreshMsg) {
+      refreshMsg.className = 'refresh-status-msg msg-error';
+      refreshMsg.textContent = 'Could not check status right now. Please try again in a moment.';
+    }
+  } finally {
+    if (!silent && refreshStatusBtn) {
       refreshStatusBtn.disabled = false;
       if (refreshIcon) refreshIcon.classList.remove('spinning');
       if (refreshBtnText) refreshBtnText.textContent = 'Refresh Status';
     }
-  });
+  }
+}
+
+function startPaymentStatusPolling() {
+  if (statusPollingInterval) clearInterval(statusPollingInterval);
+  statusPollingInterval = setInterval(() => {
+    const successView = document.getElementById('success-view');
+    if (successView && !successView.hidden && currentOrderReference) {
+      checkPaymentStatus({ silent: true });
+    } else if (statusPollingInterval) {
+      clearInterval(statusPollingInterval);
+      statusPollingInterval = null;
+    }
+  }, 4000);
+}
+
+const refreshStatusBtn = document.getElementById('refresh-status-btn');
+if (refreshStatusBtn) {
+  refreshStatusBtn.addEventListener('click', () => checkPaymentStatus({ silent: false }));
 }
 
 const dashboardLinkEl = document.getElementById('dashboard-link');
@@ -1983,11 +2013,7 @@ if (dashboardLinkEl) {
   dashboardLinkEl.addEventListener('click', (event) => {
     if (dashboardLinkEl.classList.contains('is-disabled') || dashboardLinkEl.getAttribute('aria-disabled') === 'true') {
       event.preventDefault();
-      const refreshMsg = document.getElementById('refresh-status-msg');
-      if (refreshMsg) {
-        refreshMsg.className = 'refresh-status-msg msg-pending';
-        refreshMsg.textContent = 'Dashboard is locked until payment is verified by our team. Click "Refresh Status" to check if it has been activated.';
-      }
+      checkPaymentStatus({ silent: false });
     }
   });
 }
@@ -2036,7 +2062,8 @@ function resumeOrderView(savedOrder) {
 
   applyPaymentStatusState(savedOrder.payment_status || 'Pending Verification', 0, savedOrder.order_status || '');
 
-  // Automatically refresh status from server
+  // Automatically refresh status from server and begin polling
+  startPaymentStatusPolling();
   const refreshBtn = document.getElementById('refresh-status-btn');
   if (refreshBtn) refreshBtn.click();
 }

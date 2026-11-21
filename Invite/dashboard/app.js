@@ -290,8 +290,9 @@ async function callRpc(name, body) {
 }
 
 async function dashboardRequest(action, extra = {}) {
-  // 1. Try Edge Function if configured and token exists
-  if (dashboardToken && ONBOARDING_CONFIG.dashboardEndpoint) {
+  // 1. Try Edge Function ONLY if configured and a genuine cryptographic token (>= 32 chars) exists
+  const hasRealToken = dashboardToken && dashboardToken !== 'demo-token' && dashboardToken.length >= 32;
+  if (hasRealToken && ONBOARDING_CONFIG.dashboardEndpoint) {
     try {
       const efRes = await fetch(ONBOARDING_CONFIG.dashboardEndpoint, {
         method: 'POST',
@@ -446,9 +447,9 @@ function renderTracker() {
       '<small>' + (s.confirmedFamilies ? s.confirmedFamilies + ' ' + (s.confirmedFamilies === 1 ? 'family' : 'families') + ' · ' + s.confirmedPersonal + ' personal' : (s.goal ? s.confirmedPctOfGoal + '% of your ' + s.goal + ' guest goal' : 'Set a guest goal to track your progress')) + '</small></div>' +
     '<dl class="hero-facts">' +
       '<div><dt>Guest goal</dt><dd>' + (s.goal || '—') + ' <button type="button" class="link-btn" data-edit-goal>' + (s.goal ? 'Edit' : 'Set') + '</button></dd></div>' +
-      '<div><dt>Invited so far</dt><dd>' + s.invitedPeople + ' <small style="font-size:12px;color:var(--muted)">people</small></dd><dd class="sub">' + s.totalFamilies + ' ' + (s.totalFamilies === 1 ? 'family' : 'families') + ' · ' + s.totalPersonal + ' personal</dd></div>' +
-      '<div><dt>Family Invites</dt><dd>' + s.totalFamilies + ' <small style="font-size:12px;color:var(--muted)">(' + s.confirmedFamilies + ' confirmed)</small></dd><dd class="sub">' + s.familySeats + ' total family seats</dd></div>' +
-      '<div><dt>Personal Invites</dt><dd>' + s.totalPersonal + ' <small style="font-size:12px;color:var(--muted)">(' + s.confirmedPersonal + ' confirmed)</small></dd><dd class="sub">' + s.personalSeats + ' total personal seats</dd></div>' +
+      '<div><dt>Invited so far</dt><dd>' + s.invitedPeople + ' <small class="text-muted-12">people</small></dd><dd class="sub">' + s.totalFamilies + ' ' + (s.totalFamilies === 1 ? 'family' : 'families') + ' · ' + s.totalPersonal + ' personal</dd></div>' +
+      '<div><dt>Family Invites</dt><dd>' + s.totalFamilies + ' <small class="text-muted-12">(' + s.confirmedFamilies + ' confirmed)</small></dd><dd class="sub">' + s.familySeats + ' total family seats</dd></div>' +
+      '<div><dt>Personal Invites</dt><dd>' + s.totalPersonal + ' <small class="text-muted-12">(' + s.confirmedPersonal + ' confirmed)</small></dd><dd class="sub">' + s.personalSeats + ' total personal seats</dd></div>' +
     '</dl></div>';
 
   // 2. Goal form (always when no goal yet, or while editing)
@@ -488,14 +489,14 @@ function renderTracker() {
 
   // 6. Recent replies with wishes
   const replies = s.states.filter(st => st.reply && st.replyAt).sort((a, b) => b.replyAt - a.replyAt);
-  html += '<div class="subpanel"><div class="panel-head" style="margin-bottom: 8px;"><h3>Recent replies <span class="count">' + replies.length + '</span></h3>' +
+  html += '<div class="subpanel"><div class="panel-head panel-head-mb"><h3>Recent replies <span class="count">' + replies.length + '</span></h3>' +
     (replies.length ? '<button type="button" class="link-btn" data-filter="replies">View all in guest list ↓</button>' : '') + '</div>' +
     (replies.length
       ? '<ul class="reply-list">' + replies.map(st => '<li><div class="reply-top">' + badge(st.status) +
           '<strong>' + escapeHtml(st.guest.guest_name) + '</strong>' +
           (st.status === 'attending' ? '<span class="muted">' + plural(st.attendingPeople, 'person', 'people') + '</span>' : '') +
           '<time>' + escapeHtml(timeAgo(st.replyAt)) + '</time></div>' +
-          (st.reply.wishes_message ? '<p class="reply-wish" data-view-reply="' + escapeHtml(st.guest.id) + '" style="cursor: pointer;" title="Click to view full message">“' + escapeHtml(st.reply.wishes_message) + '”</p>' : '') + '</li>').join('') + '</ul>'
+          (st.reply.wishes_message ? '<p class="reply-wish reply-wish-clickable" data-view-reply="' + escapeHtml(st.guest.id) + '" title="Click to view full message">“' + escapeHtml(st.reply.wishes_message) + '”</p>' : '') + '</li>').join('') + '</ul>'
       : '<p class="helper">No replies yet. They will appear here, with any wishes, as guests respond.</p>') + '</div>';
 
   trackerBody.innerHTML = html;
@@ -534,7 +535,7 @@ function guestRow(state, index = 0) {
   const sub = [typeTag, g.category && g.category !== typeTag ? g.category : null, g.phone].filter(Boolean).join(' · ');
   const peopleCell = (state.status === 'attending' && state.attendingPeople < state.invitedPeople)
     ? state.attendingPeople + '<span> of ' + state.invitedPeople + '</span>'
-    : (isFam ? state.invitedPeople + '<small style="display:block;font-size:11px;color:var(--muted)">Family</small>' : state.invitedPeople + '<small style="display:block;font-size:11px;color:var(--muted)">Personal</small>');
+    : (isFam ? state.invitedPeople + '<small class="text-muted-11-block">Family</small>' : state.invitedPeople + '<small class="text-muted-11-block">Personal</small>');
 
   let peopleMobileBadge = '';
   if (state.status === 'attending' && state.attendingPeople < state.invitedPeople) {
@@ -618,7 +619,7 @@ function renderGuestList() {
 
   if (!stats.invitations) {
     guestWrap.innerHTML = '<div class="empty"><p>No guests yet. Add your first guest, or import a whole list from Excel.</p>' +
-      '<button type="button" class="button button-outline button-small" data-add-personal style="margin-right:8px">👤＋ Personal Invite</button>' +
+      '<button type="button" class="button button-outline button-small btn-mr-8" data-add-personal>👤＋ Personal Invite</button>' +
       '<button type="button" class="button button-primary button-small" data-add-family>👨‍👩‍👧‍👦＋ Family Invitation</button></div>';
     return;
   }
@@ -711,22 +712,23 @@ function renderDashboard(data) {
   setTxt('metric-soundtrack', songTitle);
 
   // 2. Resolve selected template style for preview button
+  const chosenTemplate = (data && data.wedding && (data.wedding.template_id || data.wedding.template_style))
+    || (data && (data.template_id || data.template_style))
+    || orderObj.template_style
+    || orderObj.template_id
+    || (orderObj.wedding && (orderObj.wedding.template_style || orderObj.wedding.template_id))
+    || (typeof localStorage !== 'undefined' && (
+      localStorage.getItem(templateKey(orderReference))
+      || localStorage.getItem('customer-dashboard-template-' + orderReference)
+      || localStorage.getItem('customer-dashboard-template-default')
+      || localStorage.getItem('selected_invitation_template')
+      || localStorage.getItem('selected_template_id')
+    ))
+    || 'template-12';
+
   const previewLink = $('preview-link');
   if (previewLink) {
     const baseCode = (data && data.preview_guest_code) ? data.preview_guest_code : '9D6JGSQY7YD8';
-    const chosenTemplate = (data && data.wedding && (data.wedding.template_id || data.wedding.template_style))
-      || (data && (data.template_id || data.template_style))
-      || orderObj.template_style
-      || orderObj.template_id
-      || (orderObj.wedding && (orderObj.wedding.template_style || orderObj.wedding.template_id))
-      || (typeof localStorage !== 'undefined' && (
-        localStorage.getItem(templateKey(orderReference))
-        || localStorage.getItem('customer-dashboard-template-' + orderReference)
-        || localStorage.getItem('customer-dashboard-template-default')
-        || localStorage.getItem('selected_invitation_template')
-        || localStorage.getItem('selected_template_id')
-      ))
-      || 'template-12';
     previewLink.href = `../?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(chosenTemplate)}`;
   }
 

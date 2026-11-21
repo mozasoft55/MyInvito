@@ -174,6 +174,27 @@ begin
       'package_name', v_order.package_code,
       'wedding_date', (select w.event_date from public.weddings w where w.id = v_order.wedding_id),
       'created_at', v_order.created_at,
+      'customer_phone', (select c.phone from public.customers c where c.customer_id = v_order.customer_id),
+      'customer_email', (select c.email from public.customers c where c.customer_id = v_order.customer_id),
+      'customer_name', (select c.customer_name from public.customers c where c.customer_id = v_order.customer_id),
+      'advance_verified_paise', coalesce(v_order.advance_verified_paise, 0),
+      'activated_at', v_order.activated_at,
+      'expires_at', v_order.expires_at,
+      'card_status', coalesce(v_order.card_status, 'Active'),
+      'is_verified', (
+        v_order.order_status = 'Confirmed'
+        or v_order.payment_status in ('Paid', 'Partially Paid')
+        or exists (
+          select 1 from public.onboarding_payments p
+          where p.order_reference = v_ref
+            and (p.payment_status in ('Paid', 'Partially Paid') or p.verified_at is not null)
+        )
+      ),
+      'preview_guest_code', (
+        select g.invite_code from public.guests g
+        where g.wedding_id = v_order.wedding_id
+        order by g.created_at asc limit 1
+      ),
       'wedding', (
         select jsonb_build_object(
           'id', w.id,
@@ -182,6 +203,7 @@ begin
           'groom_name', w.groom_name,
           'event_date', w.event_date,
           'template_style', w.template_style,
+          'template_id', w.template_style,
           'theme_name', w.theme_name,
           'venue', wd.venue,
           'venue_title', wd.venue_title,
