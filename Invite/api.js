@@ -657,6 +657,11 @@ export async function submitRsvp({ inviteCode, response, attendees, wishesMessag
     throw new Error(`Guest count must be between 1 and ${maxGuests}.`);
   }
 
+  if (code.toUpperCase() === 'PREVIEW' || code.toUpperCase().startsWith('PREVIEW-')) {
+    invitationMemoryCache.delete(code.toUpperCase());
+    return { success: true, offline: true, message: 'Preview RSVP recorded locally.' };
+  }
+
   const result = await supabaseRequest('rpc/submit_invitation_rsvp', {
     method: 'POST',
     body: {

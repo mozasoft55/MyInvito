@@ -1634,16 +1634,18 @@
                   <p class="royal-rsvp-subtitle">Please let the couple know whether you can attend.</p>
                 </div>
 
-                <!-- 1. Guest Name (Locked / Read-only) -->
+                <!-- 1. Guest Name (Locked if personalized, editable if generic / preview) -->
                 <div class="royal-form-group">
                   <div class="royal-label-row">
                     <label class="royal-label" for="royalGuestName">Guest Name</label>
-                    <span class="royal-locked-tag">
-                      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
-                      Auto-filled (Locked)
-                    </span>
+                    ${Boolean(guest.name && guest.name !== 'Respected Guest' && guest.name !== 'Respected Family') ? `
+                      <span class="royal-locked-tag">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
+                        Auto-filled (Locked)
+                      </span>
+                    ` : ''}
                   </div>
-                  <input type="text" class="royal-input royal-input-locked" id="royalGuestName" value="${escapeHtml(guestName)}" readonly disabled>
+                  <input type="text" class="royal-input ${Boolean(guest.name && guest.name !== 'Respected Guest' && guest.name !== 'Respected Family') ? 'royal-input-locked' : ''}" id="royalGuestName" placeholder="Enter guest / family name" value="${escapeHtml(guestName)}" ${Boolean(guest.name && guest.name !== 'Respected Guest' && guest.name !== 'Respected Family') ? 'readonly disabled' : ''}>
                 </div>
 
                 <!-- 2. Your Response (3 Tactile Cards) -->
@@ -2040,6 +2042,8 @@
           const countSelect = document.getElementById('royalComingSelect');
           const phoneInput = document.getElementById('royalPhone');
           const cityInput = document.getElementById('royalCity');
+          const guestNameInput = document.getElementById('royalGuestName');
+          const finalGuestName = (guestNameInput && guestNameInput.value ? guestNameInput.value.trim() : '') || guestName || 'Respected Guest';
           const countVal = isFamily && countSelect ? Number(countSelect.value || 2) : 1;
           const phoneVal = phoneInput ? phoneInput.value.trim() : '';
           const cityVal = cityInput ? cityInput.value.trim() : '';
@@ -2051,13 +2055,14 @@
             unsure: 'Not sure yet'
           };
           const responseText = responseLabels[currentResponse] || 'Gladly accepting';
+          const normalizedStatus = currentResponse === 'accepting' ? 'attending' : (currentResponse === 'unable' ? 'declined' : 'maybe');
           const selectedCeremoniesList = ceremonies.filter(c => c.selected).map(c => c.name);
 
           // 1. Submit through backend API
           try {
             await submitRsvp({
               inviteCode: inviteCode || 'preview',
-              response: currentResponse === 'accepting' ? 'attending' : (currentResponse === 'unable' ? 'declined' : 'tentative'),
+              response: normalizedStatus === 'maybe' ? 'tentative' : normalizedStatus,
               attendees: currentResponse === 'accepting' ? countVal : 0,
               wishesMessage: noteVal,
               capacity: Math.max(Number(guest.persons || 1), countVal, 5)
@@ -2066,27 +2071,76 @@
             console.warn('Backend RSVP warning:', apiErr);
           }
 
-          // 2. Save locally for instant dashboard reflection
+          // 2. Save locally for instant dashboard reflection across all supported keys
           try {
-            const orderRef = wedding.order_reference || (typeof localStorage !== 'undefined' ? localStorage.getItem('onboard-order-reference') : '') || 'default';
-            const rsvpsKey = 'wedding_rsvps_' + orderRef;
-            const existing = JSON.parse(localStorage.getItem(rsvpsKey) || '[]');
-            existing.push({
+            const orderRef = wedding.order_reference || wedding.ref || (typeof localStorage !== 'undefined' ? (localStorage.getItem('customer-dashboard-order') || localStorage.getItem('onboard-order-reference')) : '') || 'default';
+            const rsvpEntry = {
               id: 'rsvp-' + Date.now(),
               guest_id: guest.id,
-              invite_code: inviteCode,
-              guest_name: guestName,
+              invite_code: inviteCode || guest.invite_code || '',
+              guest_name: finalGuestName,
               category: isFamily ? 'Family' : 'Person',
+              status: normalizedStatus,
+              response: responseText,
               attending_count: currentResponse === 'accepting' ? countVal : 0,
+              attendees: currentResponse === 'accepting' ? countVal : 0,
               phone: phoneVal,
               city: cityVal,
-              response: responseText,
               ceremonies: selectedCeremoniesList,
               wishes: noteVal,
-              timestamp: new Date().toISOString()
-            });
-            localStorage.setItem(rsvpsKey, JSON.stringify(existing));
-            localStorage.setItem('guest_list_rsvps', JSON.stringify(existing));
+              wishes_message: noteVal,
+              note: noteVal,
+              timestamp: new Date().toISOString(),
+              submitted_at: new Date().toISOString()
+            };
+
+            const targetKeys = [
+              'wedding_rsvps_' + orderRef,
+              'customer-dashboard-rsvps-' + orderRef,
+              'wedding_rsvps_default',
+              'customer-dashboard-rsvps-default',
+              'guest_list_rsvps'
+            ];
+
+            for (const key of targetKeys) {
+              try {
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                const idx = existing.findIndex(r =>
+                  (r.guest_id && guest.id && r.guest_id === guest.id) ||
+                  (r.invite_code && inviteCode && r.invite_code === inviteCode) ||
+                  (r.guest_name && finalGuestName && r.guest_name.toLowerCase() === finalGuestName.toLowerCase())
+                );
+                if (idx >= 0) {
+                  existing[idx] = { ...existing[idx], ...rsvpEntry };
+                } else {
+                  existing.push(rsvpEntry);
+                }
+                localStorage.setItem(key, JSON.stringify(existing));
+              } catch (_) {}
+            }
+
+            // Also record local open tracking
+            if (inviteCode) {
+              localStorage.setItem('invite-open-' + inviteCode, Date.now());
+            }
+
+            // Sync with local guest list row if present
+            const guestsKey = 'customer-dashboard-guests-' + orderRef;
+            try {
+              const currentGuests = JSON.parse(localStorage.getItem(guestsKey) || '[]');
+              if (Array.isArray(currentGuests) && currentGuests.length) {
+                const gIdx = currentGuests.findIndex(g =>
+                  (g.id && guest.id && g.id === guest.id) ||
+                  (g.invite_code && inviteCode && g.invite_code === inviteCode) ||
+                  (g.guest_name && finalGuestName && g.guest_name.toLowerCase() === finalGuestName.toLowerCase())
+                );
+                if (gIdx >= 0) {
+                  currentGuests[gIdx].rsvp_status_manual = normalizedStatus;
+                  currentGuests[gIdx].invite_sent = true;
+                  localStorage.setItem(guestsKey, JSON.stringify(currentGuests));
+                }
+              }
+            } catch (_) {}
           } catch (localErr) {
             console.warn('Local storage save:', localErr);
           }
@@ -2169,6 +2223,27 @@
         : null;
 
       const isPreviewMode = !inviteCode || inviteCode.toLowerCase() === 'preview' || inviteCode.toLowerCase().startsWith('preview-') || p.get('preview') === 'true';
+
+      if (inviteCode && !isPreviewMode) {
+        try {
+          if (typeof localStorage !== 'undefined') localStorage.setItem('invite-open-' + inviteCode, Date.now());
+          const marker = 'invite-open-session-' + inviteCode;
+          if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem(marker)) {
+            sessionStorage.setItem(marker, '1');
+            const base = (SUPABASE_CONFIG?.url || 'https://skpcxbdrmsnwmggjodkz.supabase.co').replace(/\/+$/, '');
+            fetch(base + '/rest/v1/rpc/track_invite_open', {
+              method: 'POST',
+              headers: {
+                apikey: SUPABASE_CONFIG?.anonKey,
+                Authorization: 'Bearer ' + SUPABASE_CONFIG?.anonKey,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ p_invite_code: inviteCode }),
+              keepalive: true
+            }).catch(() => {});
+          }
+        } catch (_) {}
+      }
 
       try {
         let weddingPayload;

@@ -897,6 +897,7 @@ declare
   v_result jsonb;
   v_guest_id uuid;
   v_guest_id_text text;
+  v_guest_item jsonb;
 begin
   if v_ref = '' then
     raise exception using errcode = '22023', message = 'Order reference is required.';
@@ -1018,6 +1019,44 @@ begin
     where id = v_guest_id and wedding_id = v_order.wedding_id;
 
     return jsonb_build_object('success', true, 'deleted_guest_id', v_guest_id);
+
+  elsif v_action = 'add_guests' then
+    for v_guest_item in select * from jsonb_array_elements(coalesce(p_extra->'guests', '[]'::jsonb))
+    loop
+      insert into public.guests (
+        id,
+        wedding_id,
+        guest_name,
+        phone,
+        family_members,
+        persons,
+        category,
+        city_address,
+        with_family,
+        invite_code
+      ) values (
+        coalesce(nullif(v_guest_item->>'id', '')::uuid, gen_random_uuid()),
+        v_order.wedding_id,
+        coalesce(nullif(btrim(v_guest_item->>'guest_name'), ''), 'Guest'),
+        coalesce(v_guest_item->>'phone', ''),
+        coalesce((v_guest_item->>'family_members')::integer, (v_guest_item->>'persons')::integer, 1),
+        coalesce((v_guest_item->>'persons')::integer, (v_guest_item->>'family_members')::integer, 1),
+        coalesce(nullif(btrim(v_guest_item->>'category'), ''), 'Person'),
+        coalesce(v_guest_item->>'city_address', ''),
+        coalesce((v_guest_item->>'with_family')::boolean, false),
+        coalesce(nullif(btrim(v_guest_item->>'invite_code'), ''), upper(substring(gen_random_uuid()::text, 1, 8)))
+      )
+      on conflict (invite_code) do update
+      set guest_name = excluded.guest_name,
+          phone = excluded.phone,
+          family_members = excluded.family_members,
+          persons = excluded.persons,
+          category = excluded.category,
+          city_address = excluded.city_address,
+          with_family = excluded.with_family;
+    end loop;
+
+    return jsonb_build_object('success', true);
 
   elsif v_action = 'update_guest' then
     v_guest_id_text := btrim(coalesce(p_extra ->> 'guest_id', ''));

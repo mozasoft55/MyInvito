@@ -292,3 +292,114 @@ test('Onboarding: payment status polling and auto-redirect to dashboard', async 
   assert.match(onboardCode, /function startPaymentStatusPolling/, 'startPaymentStatusPolling must exist');
   assert.match(onboardCode, /location\.href = `\.\.\/dashboard\/\?order=/, 'verified order must redirect to dashboard');
 });
+
+test('Defect 1 RSVP Fix: RSVP with response Gladly accepting and wishes reflects in Coming count, removes from nudges, and displays wishes', async () => {
+  const { computeStats, buildGuestStates, classifyResponse } = await import('../dashboard/rsvp-stats.js');
+
+  assert.equal(classifyResponse('Gladly accepting'), 'attending');
+  assert.equal(classifyResponse('accepting'), 'attending');
+  assert.equal(classifyResponse('Unable to attend'), 'declined');
+  assert.equal(classifyResponse('Not sure yet'), 'maybe');
+
+  const guests = [
+    {
+      id: 'g-koa',
+      guest_name: 'koa',
+      family_members: 1,
+      persons: 1,
+      category: 'Person',
+      with_family: false,
+      invite_code: 'KOA101',
+      phone: '9876543210'
+    },
+    {
+      id: 'g-kol',
+      guest_name: 'kol',
+      family_members: 1,
+      persons: 1,
+      category: 'Person',
+      with_family: false,
+      invite_code: 'KOL202',
+      phone: '9876543211'
+    }
+  ];
+
+  // 1. Initially without replies: both guests are not_opened and need a nudge
+  const initialStats = computeStats({ guests });
+  assert.equal(initialStats.people.attending, 0, 'Coming count must initially be 0');
+  assert.equal(initialStats.invites.attending, 0);
+  assert.equal(initialStats.states.length, 2);
+  const initialNudges = initialStats.states.filter(s => ['not_opened', 'seen', 'maybe'].includes(s.status));
+  assert.equal(initialNudges.length, 2, 'Both guests must initially need a nudge');
+
+  // 2. Guest "kol" submits RSVP modal with "Gladly accepting", 1 person, and a wish note
+  const rsvps = [
+    {
+      id: 'rsvp-1795285409',
+      guest_id: 'g-kol',
+      invite_code: 'KOL202',
+      guest_name: 'kol',
+      response: 'Gladly accepting', // note: no status property, response string only
+      attending_count: 1,
+      phone: '9876543211',
+      wishes: 'Thank you for invite', // note: wishes instead of wishes_message
+      timestamp: '2026-11-21T18:23:29.000Z'
+    }
+  ];
+
+  const updatedStats = computeStats({ guests, rsvps });
+
+  // Verify Coming count and people confirmed
+  assert.equal(updatedStats.people.attending, 1, 'Coming count must increase to 1');
+  assert.equal(updatedStats.invites.attending, 1);
+  assert.equal(updatedStats.confirmedPersonal, 1, '1 personal invite confirmed');
+
+  // Verify kol state is now attending and has normalized wish message
+  const kolState = updatedStats.states.find(s => s.guest.guest_name === 'kol');
+  assert.ok(kolState, 'kol state must exist');
+  assert.equal(kolState.status, 'attending', 'kol status must be attending');
+  assert.equal(kolState.attendingPeople, 1);
+  assert.equal(kolState.reply.wishes_message, 'Thank you for invite', 'wishes must be normalized to wishes_message');
+
+  // Verify kol is REMOVED from Needs a nudge
+  const updatedNudges = updatedStats.states.filter(s => ['not_opened', 'seen', 'maybe'].includes(s.status));
+  assert.equal(updatedNudges.length, 1, 'Only koa should remain in needs a nudge');
+  assert.equal(updatedNudges[0].guest.guest_name, 'koa');
+
+  // 3. Unmatched reply (e.g. from preview or open invitation) synthesizes an active state and increments confirmed count
+  const previewRsvps = [
+    {
+      id: 'rsvp-preview-99',
+      guest_name: 'Walk-in Guest',
+      response: 'Gladly accepting',
+      attending_count: 2,
+      wishes: 'So happy for you both!',
+      timestamp: '2026-11-21T19:00:00.000Z'
+    }
+  ];
+
+  const previewStats = computeStats({ guests, rsvps: previewRsvps });
+  assert.equal(previewStats.people.attending, 2, 'Unmatched reply must contribute 2 attending seats');
+  assert.equal(previewStats.invites.attending, 1);
+  const synthState = previewStats.states.find(s => s.guest.guest_name === 'Walk-in Guest');
+  assert.ok(synthState, 'Synthesized guest state must exist');
+  assert.equal(synthState.status, 'attending');
+  assert.equal(synthState.reply.wishes_message, 'So happy for you both!');
+});
+
+test('Dashboard and index.html storage key resilience: verifies multi-key persistence across wedding_rsvps_ and customer-dashboard-rsvps-', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
+  const dashCode = fs.readFileSync(path.resolve('dashboard/app.js'), 'utf8');
+
+  // Verify index.html writes to both wedding_rsvps_ and customer-dashboard-rsvps-
+  assert.match(indexHtml, /'wedding_rsvps_'\s*\+\s*orderRef/, 'index.html must write to wedding_rsvps_ key');
+  assert.match(indexHtml, /'customer-dashboard-rsvps-'\s*\+\s*orderRef/, 'index.html must write to customer-dashboard-rsvps- key');
+  assert.match(indexHtml, /'guest_list_rsvps'/, 'index.html must write to guest_list_rsvps key');
+
+  // Verify dashboard/app.js getStoredLocalRsvps reads from wedding_rsvps_ and customer-dashboard-rsvps-
+  assert.match(dashCode, /rsvpsKey\(ref\)/, 'dashboard must read rsvpsKey(ref)');
+  assert.match(dashCode, /'wedding_rsvps_'\s*\+\s*ref/, 'dashboard must read wedding_rsvps_ key');
+  assert.match(dashCode, /'guest_list_rsvps'/, 'dashboard must read guest_list_rsvps key');
+});

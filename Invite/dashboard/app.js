@@ -350,10 +350,56 @@ function getStoredLocalGuests(ref) {
   return null;
 }
 function getStoredLocalRsvps(ref) {
-  if (!ref) return null;
-  try { const raw = localStorage.getItem(rsvpsKey(ref)); if (raw) return JSON.parse(raw); }
-  catch (e) { console.warn('localStorage read failed:', e); }
-  return null;
+  const keys = [
+    rsvpsKey(ref),
+    rsvpsKey('default'),
+    ref ? 'wedding_rsvps_' + ref : null,
+    'wedding_rsvps_default',
+    'guest_list_rsvps'
+  ].filter(Boolean);
+
+  const merged = [];
+  const seenIds = new Set();
+
+  for (const k of keys) {
+    try {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          for (const item of arr) {
+            if (!item) continue;
+            const dedupeKey = item.id || (item.invite_code ? ('c_' + item.invite_code) : null) || (item.guest_id ? ('g_' + item.guest_id) : null) || ((item.guest_name || item.name) + '_' + (item.phone || ''));
+            if (dedupeKey && seenIds.has(dedupeKey)) continue;
+            if (dedupeKey) seenIds.add(dedupeKey);
+
+            const rawResp = item.status || item.response || 'attending';
+            const normResp = classifyResponse(rawResp) || 'attending';
+            const count = item.attending_count != null ? Number(item.attending_count) : (item.attendees != null ? Number(item.attendees) : 1);
+            const wishes = item.wishes_message || item.wishes || item.note || item.comment || '';
+
+            merged.push({
+              ...item,
+              id: item.id || ('rsvp-' + Math.random().toString(36).slice(2, 9)),
+              status: normResp,
+              response: item.response || item.status || 'Gladly accepting',
+              attending_count: count,
+              attendees: count,
+              guest_name: item.guest_name || item.name || '',
+              wishes_message: wishes,
+              wishes: wishes,
+              submitted_at: item.submitted_at || item.timestamp || item.created_at || new Date().toISOString(),
+              timestamp: item.timestamp || item.submitted_at || item.created_at || new Date().toISOString()
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('localStorage read failed for ' + k + ':', e);
+    }
+  }
+
+  return merged.length ? merged : null;
 }
 function readLocalGoal(ref) {
   try { const raw = localStorage.getItem(goalKey(ref)); if (raw) return JSON.parse(raw); }
@@ -482,7 +528,7 @@ function renderTracker() {
     .sort((a, b) => priority[a.status] - priority[b.status]);
   if (nudges.length) {
     html += '<div class="subpanel"><h3>Needs a nudge <span class="count">' + nudges.length + '</span></h3><ul class="nudge-list">' +
-      nudges.map(st => '<li class="nudge-item"><div>' + badge(st.status) + '<strong>' + escapeHtml(st.guest.guest_name) + '</strong>' +
+      nudges.map(st => '<li class="nudge-item"><div>' + badge(st.status) + '<strong>' + escapeHtml(st.guest.guest_name || st.guest.name || 'Guest') + '</strong>' +
         '<small>' + escapeHtml(nudgeReason(st)) + '</small></div>' + shareAction(st) + '</li>').join('') +
       '</ul></div>';
   }
@@ -492,11 +538,14 @@ function renderTracker() {
   html += '<div class="subpanel"><div class="panel-head panel-head-mb"><h3>Recent replies <span class="count">' + replies.length + '</span></h3>' +
     (replies.length ? '<button type="button" class="link-btn" data-filter="replies">View all in guest list ↓</button>' : '') + '</div>' +
     (replies.length
-      ? '<ul class="reply-list">' + replies.map(st => '<li><div class="reply-top">' + badge(st.status) +
-          '<strong>' + escapeHtml(st.guest.guest_name) + '</strong>' +
-          (st.status === 'attending' ? '<span class="muted">' + plural(st.attendingPeople, 'person', 'people') + '</span>' : '') +
-          '<time>' + escapeHtml(timeAgo(st.replyAt)) + '</time></div>' +
-          (st.reply.wishes_message ? '<p class="reply-wish reply-wish-clickable" data-view-reply="' + escapeHtml(st.guest.id) + '" title="Click to view full message">“' + escapeHtml(st.reply.wishes_message) + '”</p>' : '') + '</li>').join('') + '</ul>'
+      ? '<ul class="reply-list">' + replies.map(st => {
+          const wishText = (st.reply && (st.reply.wishes_message || st.reply.wishes || st.reply.note || '')) || '';
+          return '<li><div class="reply-top">' + badge(st.status) +
+            '<strong>' + escapeHtml(st.guest.guest_name || st.guest.name || 'Guest') + '</strong>' +
+            (st.status === 'attending' ? '<span class="muted">' + plural(st.attendingPeople, 'person', 'people') + '</span>' : '') +
+            '<time>' + escapeHtml(timeAgo(st.replyAt)) + '</time></div>' +
+            (wishText ? '<p class="reply-wish reply-wish-clickable" data-view-reply="' + escapeHtml(st.guest.id) + '" title="Click to view full message">“' + escapeHtml(wishText) + '”</p>' : '') + '</li>';
+        }).join('') + '</ul>'
       : '<p class="helper">No replies yet. They will appear here, with any wishes, as guests respond.</p>') + '</div>';
 
   trackerBody.innerHTML = html;
@@ -549,20 +598,23 @@ function guestRow(state, index = 0) {
   const phoneDetail = [g.category && g.category !== typeTag ? g.category : null, g.phone || 'No phone'].filter(Boolean).join(' · ');
 
   let wishHtml = '';
-  if (state.reply && state.reply.wishes_message) {
-    wishHtml = '<div class="g-wish" data-view-reply="' + id + '" title="Click to view message">“' + escapeHtml(state.reply.wishes_message) + '”</div>';
+  const guestWish = (state.reply && (state.reply.wishes_message || state.reply.wishes || state.reply.note || '')) || '';
+  if (guestWish) {
+    wishHtml = '<div class="g-wish" data-view-reply="' + id + '" title="Click to view message">“' + escapeHtml(guestWish) + '”</div>';
   } else if (filter === 'replies') {
     wishHtml = '<div class="g-no-wish">No message written</div>';
   }
 
-  const replyMenuOption = (state.reply && state.reply.wishes_message)
+  const replyMenuOption = guestWish
     ? '<button type="button" data-view-reply="' + id + '">View reply message</button>'
     : '';
+
+  const displayName = g.guest_name || g.name || 'Guest';
 
   return '<tr>' +
     '<td class="g-idx">' + (index + 1) + '</td>' +
     '<td class="g-name">' +
-      '<div class="g-card-top-left"><span class="g-card-num">#' + (index + 1) + '</span><strong class="g-name-text">' + escapeHtml(g.guest_name) + '</strong></div>' +
+      '<div class="g-card-top-left"><span class="g-card-num">#' + (index + 1) + '</span><strong class="g-name-text">' + escapeHtml(displayName) + '</strong></div>' +
       '<small class="g-desktop-sub">' + escapeHtml(sub || 'No phone added') + '</small>' +
       (wishHtml ? '<div class="g-desktop-wish">' + wishHtml + '</div>' : '') +
     '</td>' +
@@ -576,7 +628,7 @@ function guestRow(state, index = 0) {
     '</td>' +
     '<td class="g-status"><div class="g-status-wrap">' + badge(state.status) + '<small>' + escapeHtml(statusSub(state)) + '</small></div></td>' +
     '<td class="g-actions"><div class="row-actions">' + shareAction(state) +
-      '<details class="menu"><summary class="icon-btn" aria-label="More actions for ' + escapeHtml(g.guest_name) + '">⋯</summary>' +
+      '<details class="menu"><summary class="icon-btn" aria-label="More actions for ' + escapeHtml(displayName) + '">⋯</summary>' +
       '<div class="menu-list">' +
         '<button type="button" data-copy="' + escapeHtml(invitationUrl(g)) + '">Copy invite link</button>' +
         replyMenuOption +
@@ -783,15 +835,41 @@ async function refreshDashboard() {
     for (const item of (tracking && Array.isArray(tracking.opens)) ? tracking.opens : []) {
       if (item && item.invite_code) opens[item.invite_code] = item;
     }
+    // Also include local open markers if guest opened link locally
+    try {
+      if (typeof localStorage !== 'undefined') {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('invite-open-')) {
+            const code = k.replace('invite-open-', '');
+            if (code && !opens[code]) {
+              opens[code] = { open_count: 1, first_opened_at: new Date().toISOString() };
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
     goal = resolveGoal(data, tracking);
 
     const localRsvps = getStoredLocalRsvps(orderReference);
     if (Array.isArray(localRsvps) && localRsvps.length) {
       data.rsvps = Array.isArray(data.rsvps) ? data.rsvps : [];
-      const seen = new Set(data.rsvps.map(r => r.invite_code || r.guest_id));
+      const seen = new Set();
+      for (const r of data.rsvps) {
+        if (r.id) seen.add(String(r.id));
+        if (r.invite_code) seen.add('c_' + r.invite_code);
+        if (r.guest_id) seen.add('g_' + r.guest_id);
+      }
       for (const lr of localRsvps) {
-        if (!seen.has(lr.invite_code) && !seen.has(lr.guest_id)) {
+        const hasId = lr.id && seen.has(String(lr.id));
+        const hasCode = lr.invite_code && seen.has('c_' + lr.invite_code);
+        const hasGid = lr.guest_id && seen.has('g_' + lr.guest_id);
+        if (!hasId && !hasCode && !hasGid) {
           data.rsvps.push(lr);
+          if (lr.id) seen.add(String(lr.id));
+          if (lr.invite_code) seen.add('c_' + lr.invite_code);
+          if (lr.guest_id) seen.add('g_' + lr.guest_id);
         }
       }
     }

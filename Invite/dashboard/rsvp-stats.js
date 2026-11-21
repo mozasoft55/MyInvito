@@ -17,7 +17,7 @@ export const STATUS_ORDER = ['attending', 'maybe', 'declined', 'seen', 'not_open
 export function classifyResponse(raw) {
   const s = norm(raw);
   if (!s || s === 'pending' || s === 'none' || s === 'no response') return null;
-  if (/(declin|not attend|not coming|reject|^no$)/.test(s)) return 'declined';
+  if (/(declin|unable|not attend|not coming|cannot attend|reject|^no$)/.test(s)) return 'declined';
   if (/(tentative|maybe|not sure|unsure|undecided)/.test(s)) return 'maybe';
   if (/(attend|accept|confirm|coming|^yes$)/.test(s)) return 'attending';
   return null;
@@ -39,50 +39,66 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
 
   const nameCounts = new Map();
   for (const g of list) {
-    const key = norm(g.guest_name);
-    nameCounts.set(key, (nameCounts.get(key) || 0) + 1);
+    const key = norm(g.guest_name || g.name);
+    if (key) nameCounts.set(key, (nameCounts.get(key) || 0) + 1);
   }
   const byId = new Map();
   const byCode = new Map();
+  const byPhone = new Map();
   const byUniqueName = new Map();
   for (const g of list) {
     if (g.id != null) byId.set(String(g.id), g);
+    if (g.guest_id != null) byId.set(String(g.guest_id), g);
     if (g.invite_code) byCode.set(norm(g.invite_code), g);
-    const key = norm(g.guest_name);
+    if (g.code) byCode.set(norm(g.code), g);
+    const cleanPhone = String(g.phone || '').replace(/\D/g, '');
+    if (cleanPhone && cleanPhone.length >= 10) byPhone.set(cleanPhone.slice(-10), g);
+    const key = norm(g.guest_name || g.name);
     // A name is only a safe match key when exactly one guest has it.
     if (key && nameCounts.get(key) === 1) byUniqueName.set(key, g);
   }
 
   const latest = new Map();
+  const unmatchedReplies = [];
   for (const reply of replies) {
+    const repTime = toTime(reply.submitted_at || reply.timestamp || reply.created_at);
+    const replyPhone = String(reply.phone || '').replace(/\D/g, '').slice(-10);
     const guest =
       (reply.guest_id != null && byId.get(String(reply.guest_id))) ||
+      (reply.id != null && byId.get(String(reply.id))) ||
       (reply.invite_code && byCode.get(norm(reply.invite_code))) ||
-      byUniqueName.get(norm(reply.guest_name));
-    if (!guest) continue;
-    const previous = latest.get(guest);
-    if (!previous || toTime(reply.submitted_at) >= toTime(previous.submitted_at)) latest.set(guest, reply);
+      (reply.code && byCode.get(norm(reply.code))) ||
+      (replyPhone && byPhone.get(replyPhone)) ||
+      byUniqueName.get(norm(reply.guest_name || reply.name));
+
+    if (guest) {
+      const previous = latest.get(guest);
+      const prevTime = previous ? toTime(previous.submitted_at || previous.timestamp || previous.created_at) : 0;
+      if (!previous || repTime >= prevTime) latest.set(guest, reply);
+    } else {
+      unmatchedReplies.push(reply);
+    }
   }
 
-  return list.map(guest => {
+  const states = list.map(guest => {
     const invited = Math.max(1, toInt(guest.family_members || guest.persons, 1));
     const isFamily = Boolean(guest.with_family === true || norm(guest.category) === 'family');
     const reply = latest.get(guest) || null;
-    const guestCodeKey = norm(guest.invite_code);
+    const guestCodeKey = norm(guest.invite_code || guest.code);
     const open = normalizedOpens.get(guestCodeKey) || (guest.invite_code && opens[guest.invite_code]) || {};
     const openCount = Math.max(toInt(open.open_count), toInt(guest.open_count));
     const firstOpenedAt = open.first_opened_at || guest.first_opened_at || null;
     const lastOpenedAt = open.last_opened_at || guest.last_opened_at || firstOpenedAt;
-    const opened = openCount > 0 || Boolean(firstOpenedAt);
+    const opened = openCount > 0 || Boolean(firstOpenedAt) || Boolean(reply);
 
-    let status = classifyResponse(reply && reply.status);
+    let status = classifyResponse(reply && (reply.status || reply.response));
     let source = status ? 'rsvp' : null;
     if (!status) {
       status = classifyResponse(guest.rsvp_status_manual);
       if (status) source = 'manual';
     }
 
-    const replyCount = reply ? toInt(reply.attending_count, -1) : -1;
+    const replyCount = reply ? toInt(reply.attending_count != null ? reply.attending_count : (reply.attendees != null ? reply.attendees : -1), -1) : -1;
     if (status === 'attending' && source === 'rsvp' && replyCount === 0) status = 'declined';
     if (!status) status = (opened || reply) ? 'seen' : 'not_opened';
 
@@ -98,8 +114,15 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
       people[status] = invited;
     }
 
+    if (reply) {
+      reply.wishes_message = reply.wishes_message || reply.wishes || reply.note || reply.comment || '';
+    }
+
     return {
-      guest,
+      guest: {
+        ...guest,
+        guest_name: guest.guest_name || guest.name || 'Guest'
+      },
       isFamily,
       status,
       source,
@@ -107,7 +130,7 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
       attendingPeople: attendingNow,
       people,
       reply,
-      replyAt: reply ? toTime(reply.submitted_at) : 0,
+      replyAt: reply ? toTime(reply.submitted_at || reply.timestamp || reply.created_at) : 0,
       opened,
       openCount,
       firstOpenedAt,
@@ -115,6 +138,49 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
       sent: Boolean(guest.invite_sent) || opened || Boolean(reply)
     };
   });
+
+  // Synthesize states for unmatched replies (e.g. preview testing or forwarded invitations)
+  for (const reply of unmatchedReplies) {
+    const rawStatus = classifyResponse(reply.status || reply.response);
+    if (!rawStatus) continue;
+    const replyCount = toInt(reply.attending_count != null ? reply.attending_count : (reply.attendees != null ? reply.attendees : 1), 1);
+    const isFamily = Boolean(norm(reply.category) === 'family' || replyCount > 1);
+    let status = rawStatus;
+    if (status === 'attending' && replyCount === 0) status = 'declined';
+    const attendingNow = status === 'attending' ? replyCount : 0;
+    const people = { attending: 0, maybe: 0, declined: 0, seen: 0, not_opened: 0 };
+    people[status] = status === 'attending' ? replyCount : 1;
+
+    reply.wishes_message = reply.wishes_message || reply.wishes || reply.note || reply.comment || '';
+
+    states.push({
+      guest: {
+        id: reply.guest_id || reply.id || ('rsvp-guest-' + Math.random().toString(36).slice(2, 9)),
+        guest_name: reply.guest_name || reply.name || (reply.phone ? ('Guest (' + reply.phone + ')') : 'Respected Guest'),
+        phone: reply.phone || '',
+        category: isFamily ? 'Family' : 'Person',
+        with_family: isFamily,
+        family_members: replyCount,
+        persons: replyCount,
+        invite_code: reply.invite_code || reply.code || ''
+      },
+      isFamily,
+      status,
+      source: 'rsvp',
+      invitedPeople: Math.max(1, replyCount),
+      attendingPeople: attendingNow,
+      people,
+      reply,
+      replyAt: toTime(reply.submitted_at || reply.timestamp || reply.created_at),
+      opened: true,
+      openCount: 1,
+      firstOpenedAt: reply.submitted_at || reply.timestamp || new Date().toISOString(),
+      lastOpenedAt: reply.submitted_at || reply.timestamp || new Date().toISOString(),
+      sent: true
+    });
+  }
+
+  return states;
 }
 
 export function computeStats({ guests = [], rsvps = [], opens = {}, goal = 0 } = {}) {
