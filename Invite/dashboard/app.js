@@ -4,9 +4,10 @@ import {
   parseGuestCsv,
   normalizePhone10,
   OrderSecurityShield,
-  matchOrderCredentials
+  matchOrderCredentials,
+  DEFAULT_STYLES
 } from '../onboarding-core.js';
-import { computeStats, STATUS_ORDER } from './rsvp-stats.js';
+import { computeStats, STATUS_ORDER, classifyResponse } from './rsvp-stats.js';
 
 const params = new URLSearchParams(location.search);
 let orderReference = params.get('order')
@@ -18,6 +19,17 @@ let dashboardToken = params.get('token')
   || sessionStorage.getItem('customer-dashboard-token')
   || localStorage.getItem('customer-dashboard-token')
   || '';
+
+let currentActiveTemplate = 'template-02';
+
+function generateHexInviteCode() {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(6);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+  return Math.random().toString(36).substring(2, 14).toUpperCase();
+}
 
 if (!orderReference) {
   try {
@@ -315,7 +327,7 @@ async function dashboardRequest(action, extra = {}) {
     }
   }
 
-  // 2. Fallback to SQL RPC
+  // 2. Direct SQL RPC manage_customer_dashboard
   const result = await callRpc('manage_customer_dashboard', {
     p_order_reference: orderReference,
     p_action: action,
@@ -374,7 +386,7 @@ function getStoredLocalRsvps(ref) {
             if (dedupeKey) seenIds.add(dedupeKey);
 
             const rawResp = item.status || item.response || 'attending';
-            const normResp = classifyResponse(rawResp) || 'attending';
+            const normResp = (typeof classifyResponse === 'function' ? classifyResponse(rawResp) : null) || 'attending';
             const count = item.attending_count != null ? Number(item.attending_count) : (item.attendees != null ? Number(item.attendees) : 1);
             const wishes = item.wishes_message || item.wishes || item.note || item.comment || '';
 
@@ -426,7 +438,11 @@ function resolveGoal(data, tracking) {
 /* ───────────── sharing ───────────── */
 
 function invitationUrl(guest) {
-  return new URL('?code=' + encodeURIComponent(guest.invite_code || ''), new URL('../', location.href)).href;
+  const u = new URL('?code=' + encodeURIComponent(guest.invite_code || ''), new URL('../', location.href));
+  if (currentActiveTemplate) {
+    u.searchParams.set('template', currentActiveTemplate);
+  }
+  return u.href;
 }
 
 function coupleOwner() {
@@ -534,16 +550,17 @@ function renderTracker() {
   }
 
   // 6. Recent replies with wishes
-  const replies = s.states.filter(st => st.reply && st.replyAt).sort((a, b) => b.replyAt - a.replyAt);
+  const replies = s.states.filter(st => Boolean(st.reply)).sort((a, b) => (b.replyAt || 0) - (a.replyAt || 0));
   html += '<div class="subpanel"><div class="panel-head panel-head-mb"><h3>Recent replies <span class="count">' + replies.length + '</span></h3>' +
     (replies.length ? '<button type="button" class="link-btn" data-filter="replies">View all in guest list ↓</button>' : '') + '</div>' +
     (replies.length
       ? '<ul class="reply-list">' + replies.map(st => {
-          const wishText = (st.reply && (st.reply.wishes_message || st.reply.wishes || st.reply.note || '')) || '';
+          const wishText = (st.reply && (st.reply.wishes_message || st.reply.wishes || st.reply.note || st.reply.comment || '')) || '';
+          const timeText = st.replyAt ? escapeHtml(timeAgo(st.replyAt) || 'recently') : 'recently';
           return '<li><div class="reply-top">' + badge(st.status) +
             '<strong>' + escapeHtml(st.guest.guest_name || st.guest.name || 'Guest') + '</strong>' +
             (st.status === 'attending' ? '<span class="muted">' + plural(st.attendingPeople, 'person', 'people') + '</span>' : '') +
-            '<time>' + escapeHtml(timeAgo(st.replyAt)) + '</time></div>' +
+            '<time>' + timeText + '</time></div>' +
             (wishText ? '<p class="reply-wish reply-wish-clickable" data-view-reply="' + escapeHtml(st.guest.id) + '" title="Click to view full message">“' + escapeHtml(wishText) + '”</p>' : '') + '</li>';
         }).join('') + '</ul>'
       : '<p class="helper">No replies yet. They will appear here, with any wishes, as guests respond.</p>') + '</div>';
@@ -764,19 +781,29 @@ function renderDashboard(data) {
   setTxt('metric-soundtrack', songTitle);
 
   // 2. Resolve selected template style for preview button
-  const chosenTemplate = (data && data.wedding && (data.wedding.template_id || data.wedding.template_style))
+  const localTpl = (typeof localStorage !== 'undefined' && (
+    localStorage.getItem(templateKey(orderReference))
+    || localStorage.getItem('customer-dashboard-template-' + orderReference)
+    || localStorage.getItem('customer-dashboard-template-default')
+    || localStorage.getItem('selected_invitation_template')
+    || localStorage.getItem('selected_template_id')
+  )) || null;
+
+  const dbTpl = (data && data.wedding && (data.wedding.template_id || data.wedding.template_style))
     || (data && (data.template_id || data.template_style))
     || orderObj.template_style
     || orderObj.template_id
     || (orderObj.wedding && (orderObj.wedding.template_style || orderObj.wedding.template_id))
-    || (typeof localStorage !== 'undefined' && (
-      localStorage.getItem(templateKey(orderReference))
-      || localStorage.getItem('customer-dashboard-template-' + orderReference)
-      || localStorage.getItem('customer-dashboard-template-default')
-      || localStorage.getItem('selected_invitation_template')
-      || localStorage.getItem('selected_template_id')
-    ))
-    || 'template-12';
+    || null;
+
+  const chosenTemplate = (localTpl && localTpl !== 'template-02' && (!dbTpl || dbTpl === 'template-02'))
+    ? localTpl
+    : (dbTpl || localTpl || 'template-02');
+
+  currentActiveTemplate = chosenTemplate;
+  if (localTpl && localTpl !== 'template-02' && (!dbTpl || dbTpl === 'template-02')) {
+    dashboardRequest('update_template', { template_style: chosenTemplate }).catch(() => {});
+  }
 
   const previewLink = $('preview-link');
   if (previewLink) {
@@ -817,17 +844,55 @@ async function refreshDashboard() {
   try {
     const [data, tracking] = await Promise.all([dashboardRequest('load'), loadTracking()]);
 
+    const serverGuests = Array.isArray(data.guests) ? data.guests : [];
+    const previewCode = data.preview_guest_code;
+    const cleanServerGuests = serverGuests.filter(g => {
+      if (previewCode && g.invite_code === previewCode && !g._userEdited) return false;
+      if (g.category === 'preview' && !g._userEdited) return false;
+      return true;
+    });
+
     const stored = getStoredLocalGuests(orderReference);
-    if (stored !== null) {
-      data.guests = stored;
-    } else if (Array.isArray(data.guests)) {
-      // First load: drop the auto-created sample guest so the list starts clean.
-      const previewCode = data.preview_guest_code;
-      data.guests = data.guests.filter(g => {
-        if (previewCode && g.invite_code === previewCode && !g._userEdited) return false;
-        if (g.category === 'preview' && !g._userEdited) return false;
-        return true;
-      });
+    if (stored !== null && Array.isArray(stored) && stored.length > 0) {
+      // Merge server guests (source of truth for invite_code and id) with local guests
+      const mergedGuests = [...cleanServerGuests];
+      const unsyncedToPush = [];
+
+      for (const lg of stored) {
+        if (!lg) continue;
+        const normLgName = (lg.guest_name || lg.name || '').trim().toLowerCase();
+        const normLgPhone = normalizePhone10(lg.phone);
+
+        // Find match in server guests
+        const matchIdx = mergedGuests.findIndex(sg =>
+          (sg.id && lg.id && String(sg.id) === String(lg.id)) ||
+          (sg.invite_code && lg.invite_code && sg.invite_code.toUpperCase() === lg.invite_code.toUpperCase()) ||
+          (normLgName && (sg.guest_name || '').trim().toLowerCase() === normLgName && (!normLgPhone || normalizePhone10(sg.phone) === normLgPhone))
+        );
+
+        if (matchIdx !== -1) {
+          // Server guest is source of truth for DB invite_code and id, but retain local user edits
+          mergedGuests[matchIdx] = {
+            ...lg,
+            id: mergedGuests[matchIdx].id || lg.id,
+            invite_code: mergedGuests[matchIdx].invite_code || lg.invite_code,
+            family_members: mergedGuests[matchIdx].family_members || lg.family_members || 1
+          };
+        } else if (lg._userEdited) {
+          // Unsynced guest added offline
+          mergedGuests.push(lg);
+          unsyncedToPush.push(lg);
+        }
+      }
+
+      data.guests = mergedGuests;
+      saveLocalGuests(orderReference, data.guests);
+
+      if (unsyncedToPush.length > 0) {
+        dashboardRequest('add_guests', { guests: unsyncedToPush }).catch(() => {});
+      }
+    } else {
+      data.guests = cleanServerGuests;
       saveLocalGuests(orderReference, data.guests);
     }
 
@@ -861,6 +926,7 @@ async function refreshDashboard() {
         if (r.invite_code) seen.add('c_' + r.invite_code);
         if (r.guest_id) seen.add('g_' + r.guest_id);
       }
+      const toSync = [];
       for (const lr of localRsvps) {
         const hasId = lr.id && seen.has(String(lr.id));
         const hasCode = lr.invite_code && seen.has('c_' + lr.invite_code);
@@ -870,7 +936,11 @@ async function refreshDashboard() {
           if (lr.id) seen.add(String(lr.id));
           if (lr.invite_code) seen.add('c_' + lr.invite_code);
           if (lr.guest_id) seen.add('g_' + lr.guest_id);
+          toSync.push(lr);
         }
+      }
+      if (toSync.length > 0) {
+        dashboardRequest('sync_rsvps', { rsvps: toSync }).catch(() => {});
       }
     }
 
@@ -1056,7 +1126,7 @@ guestForm.addEventListener('submit', async event => {
     id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('g-' + Date.now()),
     ...fields,
     invite_sent: false,
-    invite_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+    invite_code: generateHexInviteCode(),
     _userEdited: true
   };
   dashboard.guests = Array.isArray(dashboard.guests) ? dashboard.guests : [];
@@ -1064,6 +1134,20 @@ guestForm.addEventListener('submit', async event => {
   saveLocalGuests(orderReference, dashboard.guests);
   renderAll();
   dashboardRequest('add_guests', { guests: [newGuest] })
+    .then(res => {
+      if (res && Array.isArray(res.guests) && res.guests.length) {
+        const serverG = res.guests[0];
+        if (serverG && serverG.invite_code) {
+          const idx = dashboard.guests.findIndex(g => g.id === newGuest.id || g.invite_code === newGuest.invite_code);
+          if (idx !== -1) {
+            dashboard.guests[idx].invite_code = serverG.invite_code;
+            if (serverG.id) dashboard.guests[idx].id = serverG.id;
+            saveLocalGuests(orderReference, dashboard.guests);
+            renderAll();
+          }
+        }
+      }
+    })
     .catch(e => console.warn('Server add_guests notice:', e.message));
 
   if (again) {
@@ -1127,7 +1211,7 @@ importButton.addEventListener('click', async () => {
   const newGuests = importedGuests.map(g => ({
     ...g,
     id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('g-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)),
-    invite_code: Math.random().toString(36).substring(2, 10).toUpperCase(),
+    invite_code: generateHexInviteCode(),
     invite_sent: false,
     _userEdited: true
   }));
@@ -1141,6 +1225,19 @@ importButton.addEventListener('click', async () => {
   csvInput.value = '';
   importButton.textContent = 'Import guests';
   dashboardRequest('add_guests', { guests: newGuests })
+    .then(res => {
+      if (res && Array.isArray(res.guests) && res.guests.length) {
+        for (const sg of res.guests) {
+          const idx = dashboard.guests.findIndex(g => g.guest_name === sg.guest_name);
+          if (idx !== -1 && sg.invite_code) {
+            dashboard.guests[idx].invite_code = sg.invite_code;
+            if (sg.id) dashboard.guests[idx].id = sg.id;
+          }
+        }
+        saveLocalGuests(orderReference, dashboard.guests);
+        renderAll();
+      }
+    })
     .catch(e => console.warn('Server add_guests notice:', e.message));
 });
 
@@ -1193,7 +1290,121 @@ function openReplyDialog(state) {
   openDialog(replyDialog);
 }
 
-for (const dialog of [guestDialog, importDialog, replyDialog]) {
+/* ───────────── template switcher dialog ───────────── */
+const templateDialog = $('template-dialog');
+const templatePickerGrid = $('template-picker-grid');
+let selectedPickerTemplate = 'template-02';
+
+function openTemplatePicker() {
+  if (!templateDialog || !templatePickerGrid) return;
+  selectedPickerTemplate = currentActiveTemplate || 'template-02';
+  renderTemplateOptions();
+  openDialog(templateDialog);
+}
+
+function renderTemplateOptions() {
+  if (!templatePickerGrid) return;
+  const styles = Array.isArray(DEFAULT_STYLES) && DEFAULT_STYLES.length ? DEFAULT_STYLES : [
+    { template_id: 'template-01', style_name: 'Classic Frame' },
+    { template_id: 'template-02', style_name: 'Royal Arch' },
+    { template_id: 'template-03', style_name: 'Rajmahal Jharokha' },
+    { template_id: 'template-04', style_name: 'Royal Shadi Card' },
+    { template_id: 'template-05', style_name: 'Rajput Marwari' },
+    { template_id: 'template-06', style_name: 'Cinematic Royal' },
+    { template_id: 'template-07', style_name: 'Envelope & Arch' },
+    { template_id: 'template-08', style_name: 'Celestial Gate' },
+    { template_id: 'template-09', style_name: 'Celestial Palace' },
+    { template_id: 'template-10', style_name: 'Jannat Bagh' },
+    { template_id: 'template-11', style_name: 'Royal Gate & Ivory Arch' },
+    { template_id: 'template-12', style_name: 'Regal Gateway' },
+    { template_id: 'template-13', style_name: 'Temple Palace Sanctuary' },
+    { template_id: 'template-14', style_name: 'Grand Royal Pavilion' },
+    { template_id: 'template-15', style_name: 'Custom Background Design' }
+  ];
+
+  templatePickerGrid.innerHTML = styles.map(s => {
+    const isSel = s.template_id === selectedPickerTemplate;
+    const num = s.template_id.replace('template-', '');
+    return `
+      <div class="template-card-option ${isSel ? 'selected' : ''}" data-template-id="${escapeHtml(s.template_id)}">
+        <span class="template-card-code">Template ${num}</span>
+        <strong class="template-card-title">${escapeHtml(s.style_name)}</strong>
+        <span class="template-card-badge">${isSel ? 'Active Design' : 'Select'}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+templatePickerGrid?.addEventListener('click', (e) => {
+  const card = e.target.closest('.template-card-option');
+  if (!card) return;
+  const tId = card.getAttribute('data-template-id');
+  if (!tId) return;
+  selectedPickerTemplate = tId;
+  templatePickerGrid.querySelectorAll('.template-card-option').forEach(c => {
+    const match = c.getAttribute('data-template-id') === tId;
+    c.classList.toggle('selected', match);
+    const badge = c.querySelector('.template-card-badge');
+    if (badge) badge.textContent = match ? 'Active Design' : 'Select';
+  });
+});
+
+$('open-change-template')?.addEventListener('click', openTemplatePicker);
+$('grid-change-template')?.addEventListener('click', openTemplatePicker);
+$('cancel-template-dialog')?.addEventListener('click', () => closeDialog(templateDialog));
+
+$('save-template-dialog')?.addEventListener('click', async () => {
+  const saveBtn = $('save-template-dialog');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Applying…';
+  }
+  try {
+    currentActiveTemplate = selectedPickerTemplate;
+    const label = formatTemplateLabel(selectedPickerTemplate);
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(templateKey(orderReference), selectedPickerTemplate);
+        localStorage.setItem('customer-dashboard-template-' + orderReference, selectedPickerTemplate);
+        localStorage.setItem('customer-dashboard-template-default', selectedPickerTemplate);
+        localStorage.setItem('selected_invitation_template', selectedPickerTemplate);
+        localStorage.setItem('selected_template_id', selectedPickerTemplate);
+      }
+    } catch (_) {}
+
+    if (dashboard && dashboard.wedding) {
+      dashboard.wedding.template_style = selectedPickerTemplate;
+      dashboard.wedding.template_id = selectedPickerTemplate;
+    }
+
+    await dashboardRequest('update_template', { template_style: selectedPickerTemplate });
+
+    setTxt('template-name', label);
+    setTxt('welcome-template-title', label);
+
+    const previewLink = $('preview-link');
+    if (previewLink) {
+      const baseCode = (dashboard && dashboard.preview_guest_code) ? dashboard.preview_guest_code : '9D6JGSQY7YD8';
+      previewLink.href = `../?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(selectedPickerTemplate)}`;
+    }
+
+    renderAll();
+    closeDialog(templateDialog);
+    toast('Design updated to ' + label);
+  } catch (err) {
+    console.error('Failed to update template:', err);
+    toast('Design updated locally (Server sync failed)');
+    closeDialog(templateDialog);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Apply Selected Design';
+    }
+  }
+});
+
+for (const dialog of [guestDialog, importDialog, replyDialog, templateDialog]) {
   if (!dialog) continue;
   dialog.addEventListener('click', event => {
     if (event.target !== dialog) return;

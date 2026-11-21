@@ -247,17 +247,40 @@ begin
         select coalesce(jsonb_agg(jsonb_build_object(
           'id', r.id,
           'invite_code', r.invite_code,
+          'guest_id', g.id,
+          'guest_name', coalesce(g.guest_name, 'Guest'),
+          'phone', g.phone,
           'status', r.status,
           'attending_count', r.attending_count,
           'wishes_message', r.wishes_message,
           'submitted_at', r.submitted_at
         ) order by r.submitted_at desc), '[]'::jsonb)
         from public.rsvps r
+        left join public.guests g on lower(btrim(g.invite_code)) = lower(btrim(r.invite_code))
+          and g.wedding_id = v_order.wedding_id
         where r.wedding_id = v_order.wedding_id
       )
     ) into v_result;
 
     return jsonb_build_object('success', true, 'dashboard', v_result);
+
+  elsif v_action = 'update_template' then
+    declare
+      v_template_style text := coalesce(
+        nullif(btrim(p_extra ->> 'template_style'), ''),
+        nullif(btrim(p_extra ->> 'template_id'), '')
+      );
+    begin
+      if v_template_style is null then
+        raise exception using errcode = '22023', message = 'Template style is required.';
+      end if;
+
+      update public.weddings
+      set template_style = v_template_style
+      where id = v_order.wedding_id;
+
+      return jsonb_build_object('success', true, 'template_style', v_template_style);
+    end;
 
   elsif v_action = 'delete_guest' then
     v_guest_id := (p_extra ->> 'guest_id')::uuid;
@@ -271,42 +294,105 @@ begin
     return jsonb_build_object('success', true);
 
   elsif v_action = 'add_guests' then
-    for v_guest_item in select * from jsonb_array_elements(coalesce(p_extra->'guests', '[]'::jsonb))
-    loop
-      insert into public.guests (
-        id,
-        wedding_id,
-        guest_name,
-        phone,
-        family_members,
-        persons,
-        category,
-        city_address,
-        with_family,
-        invite_code
-      ) values (
-        coalesce(nullif(v_guest_item->>'id', '')::uuid, gen_random_uuid()),
-        v_order.wedding_id,
-        coalesce(nullif(btrim(v_guest_item->>'guest_name'), ''), 'Guest'),
-        coalesce(v_guest_item->>'phone', ''),
-        coalesce((v_guest_item->>'family_members')::integer, (v_guest_item->>'persons')::integer, 1),
-        coalesce((v_guest_item->>'persons')::integer, (v_guest_item->>'family_members')::integer, 1),
-        coalesce(nullif(btrim(v_guest_item->>'category'), ''), 'Person'),
-        coalesce(v_guest_item->>'city_address', ''),
-        coalesce((v_guest_item->>'with_family')::boolean, false),
-        coalesce(nullif(btrim(v_guest_item->>'invite_code'), ''), upper(substring(gen_random_uuid()::text, 1, 8)))
-      )
-      on conflict (invite_code) do update
-      set guest_name = excluded.guest_name,
-          phone = excluded.phone,
-          family_members = excluded.family_members,
-          persons = excluded.persons,
-          category = excluded.category,
-          city_address = excluded.city_address,
-          with_family = excluded.with_family;
-    end loop;
+    declare
+      v_inserted_guests jsonb := '[]'::jsonb;
+      v_code text;
+      v_gid uuid;
+    begin
+      for v_guest_item in select * from jsonb_array_elements(coalesce(p_extra->'guests', '[]'::jsonb))
+      loop
+        v_code := coalesce(
+          nullif(btrim(v_guest_item->>'invite_code'), ''),
+          upper(substring(replace(gen_random_uuid()::text, '-', ''), 1, 12))
+        );
+        v_gid := coalesce(nullif(v_guest_item->>'id', '')::uuid, gen_random_uuid());
 
-    return jsonb_build_object('success', true);
+        insert into public.guests (
+          id,
+          wedding_id,
+          guest_name,
+          phone,
+          family_members,
+          persons,
+          category,
+          city_address,
+          with_family,
+          invite_code
+        ) values (
+          v_gid,
+          v_order.wedding_id,
+          coalesce(nullif(btrim(v_guest_item->>'guest_name'), ''), 'Guest'),
+          coalesce(v_guest_item->>'phone', ''),
+          coalesce((v_guest_item->>'family_members')::integer, (v_guest_item->>'persons')::integer, 1),
+          coalesce((v_guest_item->>'persons')::integer, (v_guest_item->>'family_members')::integer, 1),
+          coalesce(nullif(btrim(v_guest_item->>'category'), ''), 'Person'),
+          coalesce(v_guest_item->>'city_address', ''),
+          coalesce((v_guest_item->>'with_family')::boolean, false),
+          v_code
+        )
+        on conflict (invite_code) do update
+        set guest_name = excluded.guest_name,
+            phone = excluded.phone,
+            family_members = excluded.family_members,
+            persons = excluded.persons,
+            category = excluded.category,
+            city_address = excluded.city_address,
+            with_family = excluded.with_family
+        returning id, invite_code into v_gid, v_code;
+
+        v_inserted_guests := v_inserted_guests || jsonb_build_array(jsonb_build_object(
+          'id', v_gid,
+          'invite_code', v_code,
+          'guest_name', coalesce(nullif(btrim(v_guest_item->>'guest_name'), ''), 'Guest')
+        ));
+      end loop;
+
+      return jsonb_build_object('success', true, 'guests', v_inserted_guests);
+    end;
+
+  elsif v_action = 'sync_rsvps' then
+    declare
+      v_rsvp_item jsonb;
+      v_rcode text;
+      v_rstatus text;
+      v_rcount int;
+      v_rwishes text;
+    begin
+      for v_rsvp_item in select * from jsonb_array_elements(coalesce(p_extra->'rsvps', '[]'::jsonb))
+      loop
+        v_rcode := nullif(btrim(v_rsvp_item->>'invite_code'), '');
+        if v_rcode is not null then
+          v_rstatus := lower(btrim(coalesce(v_rsvp_item->>'status', v_rsvp_item->>'response', 'attending')));
+          if v_rstatus not in ('attending', 'declined', 'tentative') then
+            v_rstatus := 'attending';
+          end if;
+          v_rcount := coalesce((v_rsvp_item->>'attending_count')::integer, (v_rsvp_item->>'attendees')::integer, 1);
+          v_rwishes := coalesce(v_rsvp_item->>'wishes_message', v_rsvp_item->>'wishes', v_rsvp_item->>'note', v_rsvp_item->>'comment', '');
+
+          insert into public.rsvps (
+            wedding_id,
+            invite_code,
+            status,
+            attending_count,
+            wishes_message
+          ) values (
+            v_order.wedding_id,
+            v_rcode,
+            v_rstatus,
+            case when v_rstatus = 'attending' then v_rcount else 0 end,
+            v_rwishes
+          )
+          on conflict (wedding_id, (lower(btrim(invite_code))))
+          do update set
+            status = excluded.status,
+            attending_count = excluded.attending_count,
+            wishes_message = case when excluded.wishes_message <> '' then excluded.wishes_message else public.rsvps.wishes_message end,
+            updated_at = now();
+        end if;
+      end loop;
+
+      return jsonb_build_object('success', true);
+    end;
 
   elsif v_action = 'update_guest' then
     v_guest_id_text := btrim(coalesce(p_extra ->> 'guest_id', ''));

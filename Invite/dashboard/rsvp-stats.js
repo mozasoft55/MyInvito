@@ -142,16 +142,17 @@ export function buildGuestStates(guests = [], rsvps = [], opens = {}) {
   // Synthesize states for unmatched replies (e.g. preview testing or forwarded invitations)
   for (const reply of unmatchedReplies) {
     const rawStatus = classifyResponse(reply.status || reply.response);
-    if (!rawStatus) continue;
+    const wishText = reply.wishes_message || reply.wishes || reply.note || reply.comment || '';
+    if (!rawStatus && !wishText) continue;
     const replyCount = toInt(reply.attending_count != null ? reply.attending_count : (reply.attendees != null ? reply.attendees : 1), 1);
     const isFamily = Boolean(norm(reply.category) === 'family' || replyCount > 1);
-    let status = rawStatus;
-    if (status === 'attending' && replyCount === 0) status = 'declined';
+    let status = rawStatus || 'attending';
+    if (status === 'attending' && replyCount === 0 && !wishText) status = 'declined';
     const attendingNow = status === 'attending' ? replyCount : 0;
     const people = { attending: 0, maybe: 0, declined: 0, seen: 0, not_opened: 0 };
     people[status] = status === 'attending' ? replyCount : 1;
 
-    reply.wishes_message = reply.wishes_message || reply.wishes || reply.note || reply.comment || '';
+    reply.wishes_message = wishText;
 
     states.push({
       guest: {

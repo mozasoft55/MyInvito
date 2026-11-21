@@ -61,6 +61,7 @@
           </div>
           <div id="dashboard-template" class="pill-gold-badge pill-gold-badge-ml">
             <span>🎨 Design:</span> <strong id="welcome-template-title">Standard Design</strong>
+            <button id="open-change-template" class="link-btn template-change-btn" type="button" title="Change wedding card design">Change ▾</button>
           </div>
         </div>
         <a id="preview-link" class="button button-gold" href="../share.html">Preview invitation</a>
@@ -68,7 +69,7 @@
       <section class="summary-grid" aria-label="Order summary">
         <article class="metric"><small>Order reference</small><strong id="order-reference"></strong></article>
         <article class="metric"><small>Package</small><strong id="package-name"></strong></article>
-        <article class="metric"><small>Design template</small><strong id="template-name">—</strong></article>
+        <article class="metric"><small>Design template</small><strong id="template-name">—</strong><button id="grid-change-template" class="link-btn template-change-link" type="button">Change design ✎</button></article>
         <article class="metric"><small>Order status</small><strong id="order-status"></strong></article>
         <article class="metric"><small>Payment status</small><strong id="payment-status"></strong></article>
         <article class="metric"><small>Booking date &amp; time</small><strong id="booking-placed-at">—</strong></article>
@@ -169,6 +170,21 @@
     </div>
     <div class="dialog-actions">
       <button class="button button-outline" id="close-reply-dialog" type="button">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Change Template Dialog -->
+  <dialog id="template-dialog" class="edit-dialog template-picker-dialog">
+    <div class="template-dialog-head">
+      <h2>Select Invitation Design</h2>
+      <p class="helper">Choose any design template for your wedding invitation. Changes sync immediately to your invitation card and all guest links.</p>
+    </div>
+    <div id="template-picker-grid" class="template-picker-grid">
+      <!-- Populated dynamically by app.js from AVAILABLE_TEMPLATES / DEFAULT_STYLES -->
+    </div>
+    <div class="dialog-actions dialog-actions-mt">
+      <button class="button button-outline" id="cancel-template-dialog" type="button">Cancel</button>
+      <button class="button button-primary" id="save-template-dialog" type="button">Apply Selected Design</button>
     </div>
   </dialog>
 

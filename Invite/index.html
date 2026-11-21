@@ -2343,12 +2343,6 @@
           };
         }
 
-        const guest = weddingPayload.guest;
-        const wedding = weddingPayload.wedding || {};
-        const templateId = String(urlTemplate || wedding.template_id || 'template-02').trim();
-        wedding.template_id = templateId;
-        const isLegacyTemplate = LEGACY_TEMPLATES.has(templateId);
-
         const getStored = (k) => {
           try {
             return (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function' && localStorage.getItem(k))
@@ -2356,6 +2350,22 @@
               || '';
           } catch { return ''; }
         };
+
+        const guest = weddingPayload.guest;
+        const wedding = weddingPayload.wedding || {};
+        const storedTpl = getStored('customer-dashboard-template-' + (wedding.order_reference || p.get('order') || ''))
+          || getStored('selected_invitation_template')
+          || getStored('customer-dashboard-template-default');
+
+        const resolvedTpl = urlTemplate
+          || (wedding.template_id && wedding.template_id !== 'template-02' ? wedding.template_id : null)
+          || storedTpl
+          || wedding.template_id
+          || 'template-02';
+
+        const templateId = String(resolvedTpl).trim();
+        wedding.template_id = templateId;
+        const isLegacyTemplate = LEGACY_TEMPLATES.has(templateId);
 
         let orderRef = wedding.order_reference || wedding.ref || p.get('order') || '';
         if (!orderRef && typeof localStorage !== 'undefined') {

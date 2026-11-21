@@ -450,4 +450,101 @@ button,input,select{font:inherit}
   font-size: 13px;
 }
 
+/* Template Switcher UI */
+.template-change-btn {
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.22);
+  color: #fff;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  font: 600 11px Arial, sans-serif;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.2s ease;
+}
+.template-change-btn:hover {
+  background: rgba(212, 175, 55, 0.45);
+  border-color: #d4af37;
+}
+.template-change-link {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8c5d1e;
+  text-decoration: underline;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.template-change-link:hover {
+  color: #5a3825;
+}
+.template-picker-dialog {
+  width: min(640px, calc(100vw - 24px));
+}
+.template-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 12px;
+  max-height: 390px;
+  overflow-y: auto;
+  margin: 14px 0;
+  padding: 4px;
+}
+.template-card-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border: 2px solid #e2d3be;
+  border-radius: 10px;
+  background: #fffdf8;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+}
+.template-card-option:hover {
+  border-color: #b58d3d;
+  background: #fffaf0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.template-card-option.selected {
+  border-color: #7a1426;
+  background: #fff5f7;
+  box-shadow: 0 0 0 1px #7a1426, 0 4px 12px rgba(122, 20, 38, 0.15);
+}
+.template-card-code {
+  font-weight: 700;
+  font-size: 13px;
+  color: #7a1426;
+}
+.template-card-title {
+  font-size: 12px;
+  color: #4a3423;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+.template-card-badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #f0e6d6;
+  color: #6a492b;
+  align-self: flex-start;
+}
+.template-card-option.selected .template-card-badge {
+  background: #7a1426;
+  color: #fff;
+}
+.dialog-actions-mt {
+  margin-top: 16px;
+}
+
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
