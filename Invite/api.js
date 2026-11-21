@@ -198,7 +198,7 @@ function normalizeEvents(events) {
       event_name: cleanText(event.event_name, 100),
       event_date: normalizeDate(event.event_date),
       event_time: normalizeTime(event.event_time),
-      note: cleanText(event.note, 300)
+      note: cleanText(event.note || event.comment || event.event_comment || event.description, 500)
     }));
 }
 

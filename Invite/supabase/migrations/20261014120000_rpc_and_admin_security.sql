@@ -58,7 +58,7 @@ begin
   -- Fetch active packages
   select coalesce(jsonb_agg(jsonb_build_object(
     'code', package_code,
-    'name', package_name,
+    'name', coalesce(display_name, package_code),
     'list_price_paise', list_price_paise,
     'discount_paise', discount_paise,
     'advance_paise', advance_paise,
@@ -169,10 +169,10 @@ begin
   if v_action = 'load' then
     select jsonb_build_object(
       'order_reference', v_order.order_reference,
-      'order_status', v_order.status,
+      'order_status', v_order.order_status,
       'payment_status', v_order.payment_status,
-      'package_name', v_order.package_name,
-      'wedding_date', v_order.event_date,
+      'package_name', v_order.package_code,
+      'wedding_date', (select w.event_date from public.weddings w where w.id = v_order.wedding_id),
       'created_at', v_order.created_at,
       'wedding', (
         select jsonb_build_object(

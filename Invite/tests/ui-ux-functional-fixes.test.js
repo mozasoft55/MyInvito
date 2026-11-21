@@ -193,3 +193,50 @@ test('api.js normalizeWeddingRecord preserves parents, addresses, map_url and ve
   assert.equal(norm.address, '12 VIP Road');
   assert.equal(norm.map_url, 'https://maps.google.com/?q=Royal+Emerald+Banquet');
 });
+
+test('Defect 3: Event comment/note reflects across all 15 templates when provided', () => {
+  const sampleWedding = {
+    bride_name: 'Zoya',
+    groom_name: 'Faizan',
+    date: '2026-12-15',
+    time: '19:00',
+    venue: 'Royal Palace Banquet'
+  };
+
+  const sampleEvents = [
+    {
+      event_name: 'Nikah Ceremony',
+      event_date: '2026-12-15',
+      event_time: '19:00',
+      venue: 'Royal Palace Banquet',
+      note: 'Dinner served after auspicious vows'
+    }
+  ];
+
+  const all15Templates = [
+    { id: '01', fn: renderT01 },
+    { id: '02', fn: renderT02 },
+    { id: '03', fn: renderT03 },
+    { id: '04', fn: renderT04 },
+    { id: '05', fn: renderT05 },
+    { id: '06', fn: renderT06 },
+    { id: '07', fn: renderT07 },
+    { id: '08', fn: renderT08 },
+    { id: '09', fn: renderT09 },
+    { id: '10', fn: renderT10 },
+    { id: '11', fn: renderT11 },
+    { id: '12', fn: renderT12 },
+    { id: '13', fn: renderT13 },
+    { id: '14', fn: renderT14 },
+    { id: '15', fn: renderT15 }
+  ];
+
+  for (const { id, fn } of all15Templates) {
+    const html = fn({ guest: { name: 'Guest' }, wedding: sampleWedding, events: sampleEvents });
+    assert.match(
+      html,
+      /Dinner served after auspicious vows/,
+      `Template ${id} must display event note/comment`
+    );
+  }
+});

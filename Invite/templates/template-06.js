@@ -915,7 +915,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
 
   const rawList = (Array.isArray(events) && events.length) ? events : defaultBengaliEvents;
   const evs = rawList.map((e, idx) => {
-    const rawNote = clean(e.note) || clean(e.comment) || clean(e.description);
+    const rawNote = clean(e.note) || clean(e.comment) || clean(e.event_comment) || clean(e.description);
     const def = defaultBengaliEvents[idx % defaultBengaliEvents.length];
     return {
       ...e,

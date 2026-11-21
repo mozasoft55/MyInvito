@@ -1012,7 +1012,7 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
       const p = dparts(e.event_date);
       const dress = clean(e.dress_code) || k.dress;
       const color = /^#[0-9a-f]{3,8}$/i.test(clean(e.dress_color)) ? clean(e.dress_color) : k.c;
-      const desc = clean(e.description || e.comment || e.note || '');
+      const desc = clean(e.note || e.comment || e.event_comment || e.description || '');
 
       return `
         <article class="t07-evcard">

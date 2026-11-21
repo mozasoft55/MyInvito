@@ -1477,6 +1477,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
                 <div class="t14-ev-ribbon">${formatRibbonDate(ev.event_date, ev.event_time)}</div>
                 <div class="t14-ev-name">${esc(ev.event_name || ev.name || 'Sacred Ritual')}</div>
                 <div class="t14-ev-venue">📍 ${esc(ev.venue || venueName)}</div>
+                ${clean(ev.note || ev.comment || ev.description || ev.event_comment) ? `<div class="t14-ev-note" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;">💬 ${esc(clean(ev.note || ev.comment || ev.description || ev.event_comment))}</div>` : ''}
               </div>
               <div class="t14-ev-badge">RSVP →</div>
             </div>

@@ -793,6 +793,7 @@ h2.t15-h2 {
               <div class="t15-t">${esc(evName)}</div>
               <p>📅 ${esc(evDate)}${evTime ? ` · ⏰ ${esc(evTime)}` : ''}</p>
               ${evVenue ? `<p>📍 ${esc(evVenue)}</p>` : ''}
+              ${clean(ev.note || ev.comment || ev.description || ev.event_comment) ? `<p class="t15-ev-note" style="margin:4px 0 0;font-size:12px;color:rgba(80,16,30,0.8);">💬 ${esc(clean(ev.note || ev.comment || ev.description || ev.event_comment))}</p>` : ''}
             </div>
           </div>
         `;

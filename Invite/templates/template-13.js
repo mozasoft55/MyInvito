@@ -1459,6 +1459,7 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
                 <span class="t13-event-ribbon">${formatRibbonDate(ev.event_date, ev.event_time)}</span>
                 <span class="t13-event-name">${esc(ev.event_name || `Ceremony ${i + 1}`)}</span>
                 <span class="t13-event-venue">📍 ${esc(ev.venue || venueName)}</span>
+                ${clean(ev.note || ev.comment || ev.description || ev.event_comment) ? `<span class="t13-event-note" style="display:block;font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px;">💬 ${esc(clean(ev.note || ev.comment || ev.description || ev.event_comment))}</span>` : ''}
                 <button class="t13-event-rsvp" data-trigger-rsvp="true" onclick="window.__openRoyalRsvpModal &amp;&amp; window.__openRoyalRsvpModal();">RSVP for Ceremony &rarr;</button>
               </div>
             </div>

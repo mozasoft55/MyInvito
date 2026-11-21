@@ -28,13 +28,6 @@ begin
   from public.onboarding_admins
   where user_id = v_uid;
 
-  if not v_is_admin then
-    select exists (
-      select 1 from public.admin_roles
-      where user_id = v_uid and is_active = true
-    ) into v_is_admin;
-  end if;
-
   return coalesce(v_is_admin, false);
 end;
 $$;
@@ -738,53 +731,50 @@ begin
   end if;
 
   if p_action = 'list' then
-    begin
-      v_res := public.get_admin_payment_queue();
-    exception when undefined_function then
-      select coalesce(jsonb_agg(jsonb_build_object(
-        'payment_id', p.payment_id,
-        'order_reference', p.order_reference,
-        'customer_id', p.customer_id,
-        'wedding_id', p.wedding_id,
-        'customer_name', c.customer_name,
-        'customer_email', c.email,
-        'customer_phone', c.phone,
-        'city', c.city,
-        'couple_name', w.couple_name,
-        'event_date', w.event_date,
-        'package', c.package,
-        'payment_mode', p.payment_mode,
-        'expected_amount_paise', p.expected_amount_paise,
-        'claimed_amount_paise', p.claimed_amount_paise,
-        'verified_amount_paise', p.verified_amount_paise,
-        'external_reference', p.external_reference,
-        'proof_storage_path', p.proof_storage_path,
-        'payment_status', p.payment_status,
-        'card_status', coalesce(o.card_status, 'Active'),
-        'verified_by', p.verified_by,
-        'verified_at', p.verified_at,
-        'rejection_reason', p.rejection_reason,
-        'preview_guest_code', (
-          select g.invite_code from public.guests g
-          where g.wedding_id = p.wedding_id
-          order by g.created_at asc limit 1
-        ),
-        'submitted_at', p.submitted_at,
-        'payment_submitted_at', p.submitted_at,
-        'order_created_at', o.created_at,
-        'activated_at', coalesce(o.activated_at, p.verified_at),
-        'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
-        'template_style', w.template_style,
-        'template_number', w.template_style,
-        'applied_promo_code', o.applied_promo_code,
-        'promo_discount_paise', coalesce(o.promo_discount_paise, 0)
-      ) order by p.submitted_at desc), '[]'::jsonb)
-      into v_res
-      from public.onboarding_payments p
-      join public.customers c on c.customer_id = p.customer_id
-      join public.weddings w on w.id = p.wedding_id
-      left join public.onboarding_orders o on o.order_reference = p.order_reference;
-    end;
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'payment_id', p.payment_id,
+      'order_reference', p.order_reference,
+      'customer_id', p.customer_id,
+      'wedding_id', p.wedding_id,
+      'customer_name', c.customer_name,
+      'customer_email', c.email,
+      'customer_phone', c.phone,
+      'city', c.city,
+      'couple_name', w.couple_name,
+      'event_date', w.event_date,
+      'package', c.package,
+      'payment_mode', p.payment_mode,
+      'expected_amount_paise', p.expected_amount_paise,
+      'claimed_amount_paise', p.claimed_amount_paise,
+      'verified_amount_paise', p.verified_amount_paise,
+      'external_reference', p.external_reference,
+      'proof_storage_path', p.proof_storage_path,
+      'payment_status', p.payment_status,
+      'card_status', coalesce(o.card_status, 'Active'),
+      'verified_by', p.verified_by,
+      'verified_at', p.verified_at,
+      'rejection_reason', p.rejection_reason,
+      'preview_guest_code', (
+        select g.invite_code from public.guests g
+        where g.wedding_id = p.wedding_id
+        order by g.created_at asc limit 1
+      ),
+      'submitted_at', p.submitted_at,
+      'payment_submitted_at', p.submitted_at,
+      'order_created_at', o.created_at,
+      'activated_at', coalesce(o.activated_at, p.verified_at),
+      'expires_at', coalesce(o.expires_at, case when coalesce(o.activated_at, p.verified_at) is not null then coalesce(o.activated_at, p.verified_at) + interval '90 days' else null end),
+      'template_style', w.template_style,
+      'template_number', w.template_style,
+      'applied_promo_code', o.applied_promo_code,
+      'promo_discount_paise', coalesce(o.promo_discount_paise, 0)
+    ) order by p.submitted_at desc), '[]'::jsonb)
+    into v_res
+    from public.onboarding_payments p
+    join public.customers c on c.customer_id = p.customer_id
+    join public.weddings w on w.id = p.wedding_id
+    left join public.onboarding_orders o on o.order_reference = p.order_reference;
+
     return jsonb_build_object('success', true, 'payments', coalesce(v_res, '[]'::jsonb));
 
   elsif p_action = 'list_cash_requests' then

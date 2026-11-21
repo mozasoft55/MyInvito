@@ -487,7 +487,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
       <div class="t10-ec-img t10-ph"><img src="${esc(img)}" data-fallback="${esc(U(k.alt))}" alt="${esc(name)}" loading="lazy" decoding="async"><span class="t10-ec-day">DAY ${dn}${p ? ` · ${esc(weekday(p).slice(0, 3))}, ${esc(shortDate(p))}` : ''}</span></div>
       <div class="t10-ec-b"><span class="ic" aria-hidden="true">${k.icon}</span><h3>${esc(name)}</h3>${clean(e.local_name) ? `<small>${esc(e.local_name)}</small>` : ''}
         <div class="t10-meta">${t ? `<span><b>◷</b>${esc(t)}</span>` : ''}${loc ? `<span><b>⌖</b>${esc(loc)}</span>` : ''}</div>
-        ${clean(e.description) ? `<p class="t10-desc">${esc(e.description)}</p>` : ''}
+        ${clean(e.note || e.comment || e.description || e.event_comment) ? `<p class="t10-desc">${esc(e.note || e.comment || e.description || e.event_comment)}</p>` : ''}
         ${clean(e.dress_code) ? `<div class="t10-dress"><span class="t10-sw" style="background:${color}"></span>Dress code: ${esc(e.dress_code)}</div>` : ''}
       </div></article>`;
   }).join('');

@@ -492,19 +492,43 @@ async function openConsole() {
 
 async function renderQueue() {
   showError('');
-  const [queueRes, cashRes] = await Promise.allSettled([
-    callAdmin('list', { action: 'list' }),
-    callAdmin('list_cash_requests', { action: 'list_cash_requests' })
-  ]);
+  let queuePayments = null;
+  let queueError = null;
 
-  if (queueRes.status === 'fulfilled') {
-    payments = queueRes.value.payments || [];
-  } else {
-    showError(queueRes.reason?.message || 'Failed to load payment queue.');
+  try {
+    const res = await callAdmin('list', { action: 'list' });
+    queuePayments = res.payments || [];
+  } catch (err) {
+    try {
+      const { data, error } = await sb.rpc('get_admin_payment_queue');
+      if (!error && Array.isArray(data)) {
+        queuePayments = data;
+      } else {
+        queueError = err.message || error?.message || 'Failed to load payment queue.';
+      }
+    } catch (_) {
+      queueError = err.message || 'Failed to load payment queue.';
+    }
   }
 
-  if (cashRes.status === 'fulfilled') {
-    cashRequests = cashRes.value.cash_requests || [];
+  if (queuePayments !== null) {
+    payments = queuePayments;
+  } else if (queueError) {
+    if (queueError.includes('get_admin_payment_queue() does not exist') || queueError.includes('undefined_function')) {
+      showError('Database schema updated. Please run admin-security.sql in Supabase SQL Editor to install the payment RPCs.');
+    } else {
+      showError(queueError);
+    }
+  }
+
+  try {
+    const cashRes = await callAdmin('list_cash_requests', { action: 'list_cash_requests' });
+    cashRequests = cashRes.cash_requests || [];
+  } catch (_) {
+    try {
+      const { data } = await sb.rpc('get_admin_cash_quote_requests');
+      if (Array.isArray(data)) cashRequests = data;
+    } catch (_) {}
   }
 
   renderStats();

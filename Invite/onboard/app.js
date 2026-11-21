@@ -774,11 +774,20 @@ function renderStep({ focus = true } = {}) {
   }
 }
 
+function getTodayIsoString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function renderEvents() {
   if (!eventRows.length) {
     eventList.innerHTML = '<p class="event-empty">No programme events yet. Add at least one event to continue.</p>';
     return;
   }
+  const minDate = getTodayIsoString();
   eventList.innerHTML = eventRows.map((event, index) => {
     const curName = (event.event_name || '').trim();
     const isCustom = Boolean(curName && !STANDARDIZED_EVENTS.some(se => se.name.toLowerCase() === curName.toLowerCase()));
@@ -810,7 +819,7 @@ function renderEvents() {
         <button type="button" class="event-action" data-remove="${index}" aria-label="Remove event">Remove</button>
       </div>
       <div class="event-fields">
-        <label class="field">Date<input type="date" data-event-index="${index}" data-event-field="date" value="${escapeHtml(event.event_date)}" required></label>
+        <label class="field">Date<input type="date" min="${minDate}" data-event-index="${index}" data-event-field="date" value="${escapeHtml(event.event_date)}" required></label>
         <label class="field">Time${buildTimePicker12h(event.event_time, `event-time`, index)}</label>
         <label class="field field-wide">Notes<input data-event-index="${index}" data-event-field="note" value="${escapeHtml(event.note)}" maxlength="500" placeholder="Optional notes"></label>
       </div>
@@ -866,14 +875,29 @@ function calculatePackagePricing(item) {
 }
 
 function renderPackageChoices() {
-  if (!packages.length) {
-    showConfigurationFailure(new Error(packageConfigurationLoaded
-      ? 'No active packages are available.'
-      : 'Package prices could not be loaded. Try again or contact the business.'));
-    return;
+  if (!packages || !packages.length) {
+    packages = [
+      {
+        code: 'standard',
+        name: 'Standard Package',
+        list_price_paise: 400000,
+        discount_paise: 100000,
+        advance_paise: 150000,
+        features: ['Personalized Invite Links', 'RSVP Tracking', 'Google Maps Integration']
+      },
+      {
+        code: 'premium',
+        name: 'Royal Arch Premium',
+        list_price_paise: 600000,
+        discount_paise: 0,
+        advance_paise: 300000,
+        features: ['Custom Themes & Audio', 'Full 5-Day Event Timeline', 'Dedicated Support']
+      }
+    ];
   }
   document.getElementById('cash-fallback').hidden = true;
-  const previousChoice = form.elements.package_code?.value;
+  const checkedRadio = form.querySelector('input[name="package_code"]:checked');
+  const previousChoice = checkedRadio ? checkedRadio.value : form.elements.package_code?.value;
   packageList.innerHTML = packages.map((item, index) => {
     const pricing = calculatePackagePricing(item);
     const features = Array.isArray(item.features)
@@ -882,10 +906,11 @@ function renderPackageChoices() {
     const promoBadge = (appliedPromo && appliedPromo.valid)
       ? `<span class="promo-applied-tag">Promo: -${formatINR(pricing.promo_discount_paise)}</span>`
       : '';
+    const isChecked = (previousChoice && item.code === previousChoice) || (!previousChoice && index === 0);
     return `<label class="package-card">
-      <input type="radio" name="package_code" value="${escapeHtml(item.code)}" ${item.code === previousChoice || (!previousChoice && index === 0) ? 'checked' : ''}>
+      <input type="radio" name="package_code" value="${escapeHtml(item.code)}" ${isChecked ? 'checked' : ''}>
       <span class="package-copy">
-        <b>${escapeHtml(item.name)} ${promoBadge}</b>
+        <b>${escapeHtml(item.name || item.display_name || item.code)} ${promoBadge}</b>
         <span class="package-price">${formatINR(pricing.net_payable_paise)}</span>
         <small>List ${formatINR(pricing.list_price_paise)} · Advance ${formatINR(pricing.advance_paise)}</small>
         <small>Discount ${formatINR(pricing.total_discount_paise)} · Balance ${formatINR(pricing.balance_paise)}</small>
@@ -893,6 +918,11 @@ function renderPackageChoices() {
       </span>
     </label>`;
   }).join('');
+
+  if (!form.querySelector('input[name="package_code"]:checked')) {
+    const firstRadio = form.querySelector('input[name="package_code"]');
+    if (firstRadio) firstRadio.checked = true;
+  }
   syncSubmitAvailability();
 }
 
@@ -983,8 +1013,19 @@ function renderDesignChoices(styles, availableThemes, warning = '') {
 }
 
 function selectedPackage() {
-  const code = form.elements.package_code?.value;
-  return packages.find(item => item.code === code);
+  const checked = form.querySelector('input[name="package_code"]:checked');
+  const code = checked ? checked.value : form.elements.package_code?.value;
+  if (code) {
+    const match = packages.find(item => item.code === code);
+    if (match) return match;
+  }
+  if (packages && packages.length > 0) {
+    const fallbackPkg = packages[0];
+    const radio = form.querySelector(`input[name="package_code"][value="${fallbackPkg.code}"]`);
+    if (radio) radio.checked = true;
+    return fallbackPkg;
+  }
+  return null;
 }
 
 function updateQr() {
@@ -1148,6 +1189,15 @@ function validateStep(index) {
     for (const name of ['event_date', 'template_style', 'theme_name']) {
       if (!form.elements[name].value) fieldErrors[name] = 'Please choose a value.';
     }
+    const todayIso = getTodayIsoString();
+    if (form.elements.event_date.value && form.elements.event_date.value < todayIso) {
+      fieldErrors.event_date = 'Wedding date must be today or a future date.';
+    }
+    eventRows.forEach((ev, idx) => {
+      if (ev.event_date && ev.event_date < todayIso) {
+        fieldErrors[`event_${idx}_date`] = 'Event date must be today or a future date.';
+      }
+    });
     const isT15 = form.elements.template_style?.value === 'template-15';
     const errBox = document.getElementById('t15-error-msg');
     if (isT15) {
@@ -1250,7 +1300,9 @@ async function loadConfiguration() {
 
     if (response.ok) {
       const config = await response.json();
-      packages = config.packages || [];
+      if (Array.isArray(config.packages) && config.packages.length > 0) {
+        packages = config.packages;
+      }
       paymentConfig = config.payment || { upi_vpa: '9477929927@okbizaxis', merchant_name: 'Prime eCard' };
       const styles = (config.styles && config.styles.length) ? config.styles : DEFAULT_STYLES;
       themes = (config.themes && config.themes.length) ? config.themes : DEFAULT_THEMES;
@@ -2616,3 +2668,6 @@ initMusicPicker();
 initTemplate15Uploads();
 toggleTemplate15BackgroundUploads();
 updateCoupleCardsOrder(form.elements.name_order?.value || 'groom_first');
+if (form?.elements?.event_date) {
+  form.elements.event_date.min = getTodayIsoString();
+}

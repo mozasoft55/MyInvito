@@ -1074,7 +1074,7 @@ export default function render({ guest = {}, wedding = {}, events = [] } = {}) {
     const timeStr = formatTime(e.event_time);
     const imgUrl = safeImg(e.image) || safeImg(e.event_image) || safeImg(e.image_url) || safeImg(e.photo_url) || (custom !== '/' ? `${custom}${kind.asset}` : '') || `${assetBase}${kind.asset}` || A(kind.medal);
     const dress = clean(e.dress_code) || kind.dress;
-    const desc = clean(e.description) || clean(e.description_bn);
+    const desc = clean(e.note || e.comment || e.description || e.event_comment || e.description_bn);
 
     return `<article class="t05-evcard${isMain ? ' main' : ''}">
       <div class="t05-evcard-thumb">

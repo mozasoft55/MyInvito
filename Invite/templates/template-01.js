@@ -670,7 +670,7 @@ export default function render({ guest, wedding, events = [] } = {}) {
           <div class="t8-ev-t"><span class="ic" aria-hidden="true">${k.icon}</span><div><h3>${esc(name)}</h3>${clean(e.local_name) ? `<small dir="auto">${esc(e.local_name)}</small>` : ''}</div></div></div>
         <div class="t8-ev-b">
           ${loc ? `<div class="t8-meta"><b>⌖</b>${esc(loc)}</div>` : ''}
-          ${clean(e.description) ? `<p class="t8-desc">${esc(e.description)}</p>` : ''}
+          ${clean(e.note || e.comment || e.description || e.event_comment) ? `<p class="t8-desc">${esc(e.note || e.comment || e.description || e.event_comment)}</p>` : ''}
           ${clean(e.dress_code) ? `<div class="t8-dress"><span class="t8-sw" style="background:${color}"></span>Dress code: ${esc(e.dress_code)}</div>` : ''}
         </div></article></div>`;
     }).join('');

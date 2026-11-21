@@ -268,7 +268,7 @@ export default function render({ guest, wedding: rawWedding, events = [] } = {})
     <div class="ev">
       <div>
         <b>${esc(e.event_name)}</b>
-        <small>${esc(fmtDate(e.event_date))}${e.note ? ' · ' + esc(e.note) : ''}</small>
+        <small>${esc(fmtDate(e.event_date))}${clean(e.note || e.comment || e.description || e.event_comment) ? ' · ' + esc(clean(e.note || e.comment || e.description || e.event_comment)) : ''}</small>
       </div>
       <span>${esc(fmtTime(e.event_time))}</span>
     </div>

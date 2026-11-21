@@ -1729,6 +1729,7 @@ export default function renderT04(data = {}) {
               ${ev.event_date ? `<div class="t04-event-row">${ICONS.calendar} <span>${formatDate(ev.event_date)}</span></div>` : ''}
               ${ev.event_time ? `<div class="t04-event-row">${ICONS.countdown} <span>${formatTime(ev.event_time)}</span></div>` : ''}
               ${ev.venue ? `<div class="t04-event-row">${ICONS.pin} <span>${esc(ev.venue)}</span></div>` : ''}
+              ${clean(ev.note || ev.comment || ev.description || ev.event_comment) ? `<div class="t04-event-row t04-event-note"><span>💬 ${esc(ev.note || ev.comment || ev.description || ev.event_comment)}</span></div>` : ''}
             </article>
           `).join('') : '<p style="font-size:13px;color:var(--text-muted);font-style:italic">Programme events will be announced shortly.</p>'}
         </div>

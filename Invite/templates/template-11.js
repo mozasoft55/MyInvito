@@ -1361,6 +1361,7 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
                 <div class="t11-ev-ribbon">${formatRibbonDate(ev.event_date, ev.event_time)}</div>
                 <div class="t11-ev-name">${esc(ev.event_name || 'Wedding Ceremony')}</div>
                 <div class="t11-ev-venue">📍 ${esc(ev.venue || venueName)}</div>
+                ${clean(ev.note || ev.comment || ev.description || ev.event_comment) ? `<div class="t11-ev-note" style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;">💬 ${esc(clean(ev.note || ev.comment || ev.description || ev.event_comment))}</div>` : ''}
                 <div class="t11-ev-bottom">
                   <span class="t11-ev-bless">Bless with Presence</span>
                   <button type="button" class="t11-ev-rsvp-link" data-trigger-rsvp>RSVP &rarr;</button>
