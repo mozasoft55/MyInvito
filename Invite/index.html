@@ -319,10 +319,10 @@
       max-height: 90vh;
       max-height: 90dvh;
       background: #FFFDF8;
-      border-radius: 28px;
-      border: 2px solid #D4AF37;
+      border-radius: 24px;
+      border: 1.5px solid #D4AF37;
       box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
-      padding: 6px;
+      padding: 0;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -332,8 +332,8 @@
       position: relative;
       width: 100%;
       height: 100%;
-      border-radius: 22px;
-      border: 1px solid rgba(212, 175, 55, 0.55);
+      border-radius: 24px;
+      border: none;
       background: #FFFDF8;
       overflow: hidden;
       display: flex;
@@ -342,9 +342,9 @@
 
     .royal-modal-close {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 20;
+      top: 12px;
+      right: 12px;
+      z-index: 30;
       width: 32px;
       height: 32px;
       border-radius: 50%;
@@ -399,14 +399,28 @@
       border-radius: 9999px;
     }
 
-    /* Header & Crest */
+    /* Header & Crest (Sticky Top) */
     .royal-rsvp-header {
+      position: sticky;
+      top: -24px;
+      background: #FFFDF8;
+      z-index: 15;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      padding-top: 4px;
+      padding: 10px 16px 8px;
+      margin: -24px -22px 0 -22px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+    @media (max-width: 480px) {
+      .royal-rsvp-header {
+        top: -20px;
+        margin: -20px -16px 0 -16px;
+        padding: 8px 12px 6px;
+      }
     }
 
     .royal-crest-emblem {
@@ -760,12 +774,26 @@
       font-weight: 600;
     }
 
-    /* Buttons */
+    /* Buttons (Sticky Bottom) */
     .royal-action-row {
+      position: sticky;
+      bottom: -24px;
+      background: #FFFDF8;
+      z-index: 15;
       display: flex;
       align-items: center;
       gap: 10px;
-      padding-top: 4px;
+      padding: 12px 16px;
+      margin: 0 -22px -24px -22px;
+      border-top: 1px solid rgba(212, 175, 55, 0.25);
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+    }
+    @media (max-width: 480px) {
+      .royal-action-row {
+        bottom: -20px;
+        margin: 0 -16px -20px -16px;
+        padding: 10px 14px;
+      }
     }
 
     .royal-btn-primary {
@@ -990,56 +1018,63 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      min-height: 66px;
-      padding: 12px 32px;
-      border-radius: 9999px;
+      gap: 10px;
+      min-height: 48px;
+      padding: 10px 22px;
+      border-radius: 50px;
       background: linear-gradient(135deg, #7B1828, #982034);
       color: #ffffff;
-      border: 2px solid #D4AF37;
-      box-shadow: 0 16px 36px rgba(123, 24, 40, 0.4), 0 0 0 3px rgba(212, 175, 55, 0.25);
+      border: 1.5px solid #D4AF37;
+      box-shadow: 0 8px 24px rgba(123, 24, 40, 0.35), 0 0 0 2px rgba(212, 175, 55, 0.2);
       cursor: pointer;
       font-family: inherit;
       text-decoration: none;
       box-sizing: border-box;
-      max-width: 100%;
+      max-width: 90%;
+      margin: 0 auto;
       transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
     .royal-rsvp-launch-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 22px 46px rgba(123, 24, 40, 0.52), 0 0 0 5px rgba(212, 175, 55, 0.35);
+      box-shadow: 0 12px 28px rgba(123, 24, 40, 0.45), 0 0 0 3px rgba(212, 175, 55, 0.3);
     }
     .royal-rsvp-launch-btn:active {
       transform: scale(0.98);
     }
     .royal-rsvp-icon {
-      font-size: 28px;
+      font-size: 20px;
       line-height: 1;
+      flex-shrink: 0;
     }
     .royal-rsvp-content {
       display: flex;
       flex-direction: column;
-      text-align: left;
+      align-items: center;
+      text-align: center;
       line-height: 1.25;
     }
     .royal-rsvp-title {
       font-family: 'Cinzel', serif;
-      font-size: 20px;
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.04em;
       color: #ffffff;
+      text-align: center;
+      white-space: normal;
     }
     .royal-rsvp-hint {
       font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-      font-size: 13px;
+      font-size: 11px;
       color: #F2DDA4;
       opacity: 0.95;
-      margin-top: 3px;
+      margin-top: 2px;
+      text-align: center;
     }
     .royal-rsvp-arrow {
-      font-size: 19px;
+      font-size: 16px;
       color: #E5C16C;
-      margin-left: 6px;
+      margin-left: 2px;
+      flex-shrink: 0;
       transition: transform 0.25s ease;
     }
     .royal-rsvp-launch-btn:hover .royal-rsvp-arrow {
@@ -1283,10 +1318,10 @@
       const { guest = {}, wedding = {}, events = [] } = invitation;
       const isFamily = Boolean(guest.with_family || (guest.persons && guest.persons > 1));
       const guestName = String(guest.name || (isFamily ? 'Respected Family' : 'Respected Guest')).trim();
-      const rawVenueName = String(wedding.venue || wedding.venue_name || wedding.venue_title || wedding.banquet_name || wedding.hall_name || '').trim();
-      const venueName = rawVenueName || 'Wedding Celebration Venue';
+      const rawVenueName = String(wedding.venue || wedding.venue_name || wedding.venue_title || wedding.banquet_name || wedding.hall_name || wedding.venue_hall || '').trim();
+      const venueName = rawVenueName || wedding.ceremony_venue || 'Royal Palace Banquet';
       const venueTitle = String(wedding.venue_title || '').trim();
-      const venueAddress = String(wedding.venue_address || wedding.address || wedding.city || '').trim();
+      const venueAddress = String(wedding.venue_address || wedding.address || wedding.city || '').trim() || 'Grand Imperial Ballroom, Heritage Boulevard';
       const venueComment = String(wedding.comment || wedding.venue_comment || wedding.venue_note || wedding.note || '').trim();
       const mapUrl = String(wedding.map_url || '').trim();
 

@@ -123,9 +123,9 @@ const CEREMONY_IMAGES = [
   { re: /gaye\s*holud|holud|haldi/i, img: './assets/template-06-gaye-holud.webp' },
   { re: /mehndi|mehendi/i, img: './assets/template-06-sangeet.webp' },
   { re: /sangeet|musical/i, img: './assets/template-06-sangeet.webp' },
-  { re: /biye|bibaho|shubho|nikah|vivah|wedding|ceremony/i, img: './assets/template-06-shubho-bibaho.webp' },
+  { re: /reception/i, img: './assets/template-06-reception.webp' },
   { re: /bou\s*bhat|boubhat|walima/i, img: './assets/template-06-boubhat.webp' },
-  { re: /reception/i, img: './assets/template-06-reception.webp' }
+  { re: /biye|bibaho|shubho|nikah|vivah|wedding|ceremony/i, img: './assets/template-11-cover.webp' }
 ];
 
 function getEventPhoto(ev) {
@@ -133,7 +133,7 @@ function getEventPhoto(ev) {
   if (custom) return custom;
   const name = clean(ev.event_name || ev.name || ev.title || '');
   const found = CEREMONY_IMAGES.find(c => c.re.test(name));
-  return found ? found.img : './assets/template-06-shubho-bibaho.webp';
+  return found ? found.img : './assets/template-11-cover.webp';
 }
 
 function buildGoogleCalendarUrl({ wedding = {}, guest = {} } = {}) {
@@ -204,7 +204,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
     || clean(wedding.location)
     || clean(wedding.city_address)
     || clean(wedding.city)
-    || '';
+    || 'Grand Imperial Ballroom, Heritage Boulevard';
 
   const mapLink = safeUrl(wedding.map_url)
     || (venueName || venueAddr ? `https://maps.google.com/?q=${encodeURIComponent([venueName, venueAddr].filter(Boolean).join(', '))}` : '');
@@ -244,11 +244,11 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
     || safeImg(wedding.photo_venue)
     || safeImg(wedding.image4)
     || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')
-    || './assets/template-06-shubho-bibaho.webp';
+    || './assets/template-11-cover.webp';
 
   // Normalized Events
   const rawEvents = Array.isArray(events) && events.length ? events : [
-    { event_name: 'Shubho Bibaho', event_date: wedding.date || '2026-11-28', event_time: wedding.time || '7:00 PM', venue: venueName },
+    { event_name: 'Wedding Ceremony', event_date: wedding.date || '2026-11-28', event_time: wedding.time || '7:00 PM', venue: venueName },
     { event_name: 'Royal Reception', event_date: wedding.date || '2026-11-29', event_time: '7:30 PM', venue: venueName }
   ];
 
@@ -515,7 +515,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   left: 12cqw;
   right: 12cqw;
   top: 6cqh;
-  bottom: 8.5cqh;
+  bottom: calc(96px + env(safe-area-inset-bottom, 16px));
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -526,17 +526,12 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   text-align: center;
   color: #140b02;
   box-sizing: border-box;
-  padding: 0;
+  padding: 0 0 2cqw;
 }
 .t11-framed-content::-webkit-scrollbar { display: none; }
 
 .t11-sec-arch {
-  width: 14cqw;
-  height: 4cqw;
-  background: url('./assets/template-11-cover.webp') center 15%/280% no-repeat;
-  border-radius: 2cqw;
-  opacity: 0.9;
-  margin-bottom: 0.6cqw;
+  display: none !important;
 }
 .t11-sec-kicker {
   font-family: 'Cinzel', serif;
@@ -544,6 +539,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   letter-spacing: 0.3em;
   color: #7a0918;
   font-weight: 800;
+  margin-bottom: 0.2cqw;
 }
 .t11-sec-title {
   font-family: 'Cinzel', serif;
@@ -551,7 +547,7 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   color: #140b02;
   letter-spacing: 0.06em;
   font-weight: 800;
-  margin: 0.3cqw 0 0.5cqw;
+  margin: 0.2cqw 0 0.3cqw;
   line-height: 1.2;
   word-break: break-word;
 }
@@ -560,8 +556,8 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
   font-weight: 600;
   color: #2e1a05;
   max-width: 74cqw;
-  line-height: 1.35;
-  margin-bottom: 2cqw;
+  line-height: 1.25;
+  margin-bottom: 1.2cqw;
 }
 
 /* Page 2 (3rd Image): Scratch & Reveal Card */
@@ -1105,7 +1101,8 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 .t11-names {
   font-family: 'Great Vibes', cursive;
-  font-size: 10.2cqw;
+  font-size: 11.5cqw;
+  font-weight: 700;
   line-height: 1.1;
   color: #ffe6a3;
   text-shadow: 0 0.4cqw 1cqw rgba(0, 0, 0, 0.98), 0 0 2.5cqw rgba(255, 215, 0, 0.7);
@@ -1127,10 +1124,15 @@ export default function render({ guest = {}, wedding = {}, events = [] }) {
 }
 .t11-per {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 3.6cqw;
+  font-size: clamp(10.5px, 2.6cqw, 12px);
+  font-weight: 600;
   letter-spacing: 0.12em;
-  margin-top: 0.4cqw;
+  margin: 0.4cqw auto 0;
   color: #f2e2be;
+  max-width: 82%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #t11-open-btn {
   margin-top: 2.8cqw;
@@ -1280,14 +1282,14 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
         <div class="t11-sec-arch" aria-hidden="true"></div>
         <div class="t11-sec-kicker">AUSPICIOUS WEDDING MUHURAT</div>
         <h2 class="t11-sec-title">THE SACRED WEDDING DATE</h2>
-        <p class="t11-sec-sub">Scratch below to reveal our sacred wedding date, followed by live countdown &amp; calendar</p>
+        <p class="t11-sec-sub">Reveal our sacred wedding date, followed by live countdown &amp; calendar</p>
 
         <!-- 1. Interactive Scratch Card -->
         <div class="t11-scratch-card-wrap">
           <div class="t11-scratch-head">
             <span class="t11-scratch-icon">✨</span>
-            <h3 class="t11-scratch-title">Scratch &amp; Reveal Wedding Date</h3>
-            <p class="t11-scratch-desc">Scratch the golden card below to reveal the sacred wedding date &amp; muhurat!</p>
+            <h3 class="t11-scratch-title">Wedding Date &amp; Muhurat</h3>
+            <p class="t11-scratch-desc">Gently swipe to reveal the auspicious date &amp; muhurat</p>
           </div>
           <div class="t11-scratch-box" id="t11-scratch-box">
             <div class="t11-scratch-unveiled">
@@ -1410,7 +1412,6 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
         <div class="t11-sec-arch" aria-hidden="true"></div>
         <div class="t11-sec-kicker">YOUR PRESENCE IS OUR PRESENT</div>
         <h2 class="t11-sec-title">Kindly RSVP</h2>
-        <p class="t11-sec-sub">Your presence is our present — Kindly RSVP to celebrate with us.</p>
 
         <div class="t11-rsvp-card">
           <div class="t11-rsvp-badge">${esc(guestBadge)}</div>

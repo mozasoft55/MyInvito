@@ -152,7 +152,7 @@ begin
         from public.rsvps r
         left join public.guests g on lower(btrim(g.invite_code)) = lower(btrim(r.invite_code))
           and g.wedding_id = v_order.wedding_id
-        where r.wedding_id = v_order.wedding_id
+        where (r.wedding_id = v_order.wedding_id or lower(btrim(r.invite_code)) in (select lower(btrim(g2.invite_code)) from public.guests g2 where g2.wedding_id = v_order.wedding_id))
       )
     ) into v_result;
 

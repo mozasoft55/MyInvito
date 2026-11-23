@@ -241,7 +241,7 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
     || clean(wedding.location)
     || clean(wedding.city_address)
     || clean(wedding.city)
-    || '';
+    || 'Grand Imperial Ballroom, Heritage Boulevard';
 
   const banquetPhoto = safeImg(wedding.venue_photo)
     || safeImg(wedding.venue_photo_url)
@@ -452,8 +452,9 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
 }
 .t13-l-nm {
   font-family: 'Great Vibes', cursive;
-  font-size: calc(7.6cqw * var(--k, 1));
-  line-height: 1.02;
+  font-size: calc(8.6cqw * var(--k, 1));
+  font-weight: 700;
+  line-height: 1.05;
   color: #7a1220;
   text-shadow: 0 0.25cqw 0 rgba(255, 238, 196, 0.95);
 }
@@ -464,13 +465,19 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
   line-height: 1.05;
   color: #2b1204;
   margin-top: calc(0.8cqw * var(--k, 1));
+  text-shadow: 0 0.15em 0.35em rgba(255, 245, 210, 0.95), 0 0 0.8em rgba(255, 220, 140, 0.8), 0 0.05em 0.1em rgba(40, 15, 0, 0.4);
 }
 .t13-l-prs {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 700;
-  font-size: calc(4.6cqw * var(--k, 1));
-  line-height: 1.05;
+  font-size: clamp(10.5px, 2.6cqw, 12px);
+  line-height: 1.1;
   color: #4a1a0a;
+  max-width: 82%;
+  margin: calc(0.4cqw * var(--k, 1)) auto 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .t13-obtn {
   pointer-events: auto;
@@ -840,7 +847,7 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
   justify-content: space-evenly;
   align-items: center;
   padding-top: calc(20px + 2cqw);
-  padding-bottom: calc(76px + env(safe-area-inset-bottom, 16px));
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 16px));
   padding-left: 17cqw;
   padding-right: 17cqw;
   text-align: center;
@@ -1105,13 +1112,12 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
 }
 .t13-event-name {
   font-family: 'Cinzel', serif;
-  font-size: 2.6cqw;
+  font-size: clamp(11.5px, 2.3cqw, 14px);
   font-weight: 700;
   color: #1a0b02;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
 }
 .t13-event-venue {
   font-family: 'Cormorant Garamond', serif;
@@ -1503,7 +1509,6 @@ export default function renderTemplate13({ guest = {}, wedding = {}, events = []
         <div>
           <div class="t13-sec-kicker">YOUR PRESENCE IS OUR PRESENT</div>
           <div class="t13-sec-title">Kindly RSVP</div>
-          <p class="t13-sec-sub" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:3cqw;color:#5D3A40;margin:0.5cqw 0 1.2cqw;text-align:center">Your presence is our present — Kindly RSVP to celebrate with us.</p>
           <div class="t13-gold-divider"></div>
         </div>
 

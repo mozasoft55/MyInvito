@@ -142,9 +142,9 @@ const CEREMONY_IMAGES = [
   { re: /gaye\s*holud|holud|haldi/i, img: './assets/template-06-gaye-holud.webp' },
   { re: /mehndi|mehendi/i, img: './assets/template-06-sangeet.webp' },
   { re: /sangeet|musical/i, img: './assets/template-06-sangeet.webp' },
-  { re: /biye|bibaho|shubho|nikah|vivah|wedding|ceremony/i, img: './assets/template-06-shubho-bibaho.webp' },
+  { re: /reception/i, img: './assets/template-06-reception.webp' },
   { re: /bou\s*bhat|boubhat|walima/i, img: './assets/template-06-boubhat.webp' },
-  { re: /reception/i, img: './assets/template-06-reception.webp' }
+  { re: /biye|bibaho|shubho|nikah|vivah|wedding|ceremony/i, img: './assets/template-06-shubho-bibaho.webp' }
 ];
 
 function getEventPhoto(ev) {
@@ -253,7 +253,7 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
     || clean(wedding.location)
     || clean(wedding.city_address)
     || clean(wedding.city)
-    || '';
+    || 'Grand Imperial Ballroom, Heritage Boulevard';
 
   const banquetPhoto = safeImg(wedding.venue_photo)
     || safeImg(wedding.venue_photo_url)
@@ -473,7 +473,7 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
   border-radius: 1cqw;
 }
 .t12-b-nm {
-  font: 400 8cqw 'Great Vibes', cursive;
+  font: 700 8.8cqw 'Great Vibes', cursive;
   line-height: 1.05;
   padding: 0 0.8cqw;
 }
@@ -488,8 +488,15 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
   margin-top: 0.5cqw;
 }
 .t12-b-prs {
-  font: 700 4.4cqw 'Cormorant Garamond', serif;
-  line-height: 1.05;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(10.5px, 2.6cqw, 12px);
+  font-weight: 700;
+  line-height: 1.1;
+  max-width: 82%;
+  margin: 0.3cqw auto 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .t12-obtn {
   pointer-events: auto;
@@ -833,10 +840,10 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-evenly;
   align-items: center;
-  padding-top: 5cqw;
-  padding-bottom: calc(76px + env(safe-area-inset-bottom, 16px));
+  padding-top: calc(34px + 5cqw);
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 16px));
   padding-left: 14cqw;
   padding-right: 14cqw;
   text-align: center;
@@ -856,6 +863,8 @@ export default function renderTemplate12({ guest = {}, wedding = {}, events = []
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-evenly;
+  min-height: calc(100cqh - 34px - 5cqw - 96px);
 }
 
 .t12-sec-kicker {
@@ -1504,7 +1513,6 @@ body:not(.invitation-unveiled) .royal-dock-wrap,
       <div class="t12-framed-content">
         <div class="t12-sec-kicker">YOUR PRESENCE IS OUR PRESENT</div>
         <h2 class="t12-sec-title">Kindly RSVP</h2>
-        <p class="t12-sec-sub">Your presence is our present — Kindly RSVP to celebrate with us.</p>
 
         <div class="t12-rsvp-card">
           <div class="t12-rsvp-badge">${isFamily ? 'FAMILY INVITATION BOARD' : 'PERSONAL INVITATION BOARD'}</div>

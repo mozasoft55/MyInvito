@@ -187,10 +187,10 @@ body.royal-modal-open {
   max-height: 90vh;
   max-height: 90dvh;
   background: #FFFDF8;
-  border-radius: 28px;
-  border: 2px solid #D4AF37;
+  border-radius: 24px;
+  border: 1.5px solid #D4AF37;
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
-  padding: 6px;
+  padding: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -200,8 +200,8 @@ body.royal-modal-open {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 22px;
-  border: 1px solid rgba(212, 175, 55, 0.55);
+  border-radius: 24px;
+  border: none;
   background: #FFFDF8;
   overflow: hidden;
   display: flex;
@@ -212,7 +212,7 @@ body.royal-modal-open {
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 20;
+  z-index: 30;
   width: 44px;
   height: 44px;
   min-width: 44px;
@@ -270,14 +270,28 @@ body.royal-modal-open {
   border-radius: 9999px;
 }
 
-/* Header & Crest */
+/* Header & Crest (Sticky Top) */
 .royal-rsvp-header {
+  position: sticky;
+  top: -24px;
+  background: #FFFDF8;
+  z-index: 15;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding-top: 4px;
+  padding: 10px 16px 8px;
+  margin: -24px -22px 0 -22px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+@media (max-width: 480px) {
+  .royal-rsvp-header {
+    top: -20px;
+    margin: -20px -16px 0 -16px;
+    padding: 8px 12px 6px;
+  }
 }
 
 .royal-crest-emblem {
@@ -631,12 +645,26 @@ body.royal-modal-open {
   font-weight: 600;
 }
 
-/* Buttons */
+/* Buttons (Sticky Bottom) */
 .royal-action-row {
+  position: sticky;
+  bottom: -24px;
+  background: #FFFDF8;
+  z-index: 15;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-top: 4px;
+  padding: 12px 16px;
+  margin: 0 -22px -24px -22px;
+  border-top: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+}
+@media (max-width: 480px) {
+  .royal-action-row {
+    bottom: -20px;
+    margin: 0 -16px -20px -16px;
+    padding: 10px 14px;
+  }
 }
 
 .royal-btn-primary {

@@ -361,6 +361,20 @@ function getStoredLocalGuests(ref) {
   catch (e) { console.warn('localStorage read failed:', e); }
   return null;
 }
+function safeClassifyResponse(raw) {
+  if (typeof classifyResponse === 'function') {
+    try {
+      const res = classifyResponse(raw);
+      if (res) return res;
+    } catch (_) {}
+  }
+  const s = String(raw || '').toLowerCase().trim();
+  if (s.includes('accept') || s.includes('attend') || s.includes('yes') || s.includes('glad')) return 'attending';
+  if (s.includes('declin') || s.includes('unable') || s.includes('no') || s.includes('can\'t') || s.includes('sorry')) return 'declined';
+  if (s.includes('maybe') || s.includes('not sure') || s.includes('tentative') || s.includes('unsure')) return 'maybe';
+  return 'attending';
+}
+
 function getStoredLocalRsvps(ref) {
   const keys = [
     rsvpsKey(ref),
@@ -386,7 +400,7 @@ function getStoredLocalRsvps(ref) {
             if (dedupeKey) seenIds.add(dedupeKey);
 
             const rawResp = item.status || item.response || 'attending';
-            const normResp = (typeof classifyResponse === 'function' ? classifyResponse(rawResp) : null) || 'attending';
+            const normResp = safeClassifyResponse(rawResp);
             const count = item.attending_count != null ? Number(item.attending_count) : (item.attendees != null ? Number(item.attendees) : 1);
             const wishes = item.wishes_message || item.wishes || item.note || item.comment || '';
 

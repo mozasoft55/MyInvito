@@ -85,7 +85,7 @@ test('Strict data isolation: customer uploaded photos are strictly isolated to s
 
   // 2. Template 11, 13, 14, 06 previewing another template or standard catalog must NOT leak Template 12's photos
   const otherTemplates = [
-    { id: '11', fn: t11, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-06-shubho-bibaho.webp' },
+    { id: '11', fn: t11, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-11-cover.webp' },
     { id: '13', fn: t13, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-13-page.webp' },
     { id: '14', fn: t14, defaultBride: 'template-06-bride.webp', defaultVenue: 'template-14-page.webp' },
     { id: '06', fn: t06, defaultBride: 'default-bride.webp', defaultVenue: 'template-06-palace.jpg' }

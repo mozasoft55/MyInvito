@@ -113,7 +113,7 @@ function formatRibbonDate(dateStr, timeStr) {
     }
   }
   const timePart = clean(timeStr) || '07:00 PM';
-  return `${datePart} · ${timePart}`;
+  return `${datePart} · <span style="white-space:nowrap;">${timePart}</span>`;
 }
 
 function formatAddress(addr) {
@@ -249,7 +249,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
     || clean(wedding.location)
     || clean(wedding.city_address)
     || clean(wedding.city)
-    || '';
+    || 'Grand Imperial Ballroom, Heritage Boulevard';
 
   const banquetPhoto = safeImg(wedding.venue_photo)
     || safeImg(wedding.venue_photo_url)
@@ -456,6 +456,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
 }
 .t14-gr {
   font-family: 'Great Vibes', cursive;
+  font-weight: 700;
   color: #ffe9b0;
   text-shadow: 0 0.06em 0.12em #3a0510, 0 0 0.4em rgba(255, 200, 90, 0.45);
 }
@@ -469,8 +470,14 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
 .t14-pe {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 700;
+  font-size: clamp(10.5px, 2.6cqw, 12px);
   color: #ffd9c0;
   text-shadow: 0 0.06em 0.15em #2a0309;
+  max-width: 82%;
+  margin: 0.3em auto 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .t14-op {
   pointer-events: auto;
@@ -588,13 +595,13 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
 .t14-bg {
   position: absolute;
   inset: 0;
-  background: var(--t14-page) center/cover no-repeat;
-  transform-origin: 50% 46%;
+  background: var(--t14-page) center top / 100% 100% no-repeat;
+  transform-origin: 50% 20%;
   transform: scale(1);
   transition: transform 5s ease-out;
 }
 .t14-bg.d {
-  transform: scale(1.2);
+  transform: scale(1.05);
 }
 
 /* Frosted glass veil on Screen 1 */
@@ -602,7 +609,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
   position: absolute;
   left: 7.5%;
   right: 7.5%;
-  top: 14%;
+  top: 15.5%;
   bottom: 15%;
   border-radius: 4cqw;
   -webkit-backdrop-filter: blur(13px) saturate(1.1);
@@ -622,7 +629,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
   position: absolute;
   left: 10%;
   width: 80%;
-  top: 15%;
+  top: 16%;
   bottom: 16%;
   display: flex;
   flex-direction: column;
@@ -837,7 +844,7 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
   justify-content: space-evenly;
   align-items: center;
   padding-top: calc(16px + 2cqw);
-  padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 16px));
   padding-left: 17.5cqw;
   padding-right: 17.5cqw;
   text-align: center;
@@ -1098,21 +1105,22 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
 }
 .t14-ev-ribbon {
   font-family: 'Cinzel', serif;
-  font-size: 2.1cqw;
+  font-size: 2cqw;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   color: #8c1729;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .t14-ev-name {
   font-family: 'Cinzel', serif;
-  font-size: 3.2cqw;
+  font-size: clamp(11.5px, 2.7cqw, 14px);
   font-weight: 700;
   color: #1a0b02;
   margin-top: 0.2cqw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.25;
+  word-break: break-word;
 }
 .t14-ev-venue {
   font-family: 'Cormorant Garamond', serif;
@@ -1306,11 +1314,11 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
       <div class="t14-tin" id="t14-tin">
         <div class="t14-ln t14-wl" style="font-size: 5.4cqw;">WELCOME</div>
         <div class="t14-ln t14-sm" style="font-size: 2.3cqw;">A CELEBRATION OF LOVE</div>
-        <div class="t14-ln t14-gr" style="font-size: 7.6cqw;">${esc(groomName)}</div>
-        <div class="t14-ln t14-gr" style="font-size: 7.6cqw;">&amp; ${esc(brideName)}</div>
+        <div class="t14-ln t14-gr" style="font-size: 8.6cqw; font-weight: 700;">${esc(groomName)}</div>
+        <div class="t14-ln t14-gr" style="font-size: 8.6cqw; font-weight: 700;">&amp; ${esc(brideName)}</div>
         <div class="t14-ln t14-sm" style="font-size: 2.3cqw;">CORDIALLY INVITED</div>
         <div class="t14-ln t14-gu" style="font-size: 6.6cqw;">${esc(guestDisplayName)}</div>
-        <div class="t14-ln t14-pe" style="font-size: 4.9cqw;">${esc(partyBadge)}</div>
+        <div class="t14-ln t14-pe" style="font-size: clamp(10.5px, 2.6cqw, 12px);">${esc(partyBadge)}</div>
         <button class="t14-ln t14-op" id="t14-hit-open" type="button">OPEN</button>
         <button class="t14-skip-intro" id="t14-skip-btn" type="button">SKIP INTRO</button>
       </div>
@@ -1521,7 +1529,6 @@ export default function renderTemplate14({ guest = {}, wedding = {}, events = []
         <div class="t14-guest-card">
           <div class="t14-guest-kicker">YOUR PRESENCE IS OUR PRESENT</div>
           <h2 style="font-family:'Cinzel',serif;font-size:3.8cqw;font-weight:700;color:#7B1828;margin:0.4cqw 0">Kindly RSVP</h2>
-          <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:2.8cqw;color:#5D3A40;margin:0 0 0.8cqw">Your presence is our present — Kindly RSVP to celebrate with us.</p>
           <div style="font-family:'Cinzel',serif;font-size:1.8cqw;letter-spacing:0.18em;color:#801428;font-weight:700;margin-top:0.4cqw">${isFamily ? 'FAMILY INVITATION BOARD' : 'PERSONAL INVITATION BOARD'}</div>
           <div class="t14-guest-name">${esc(guestDisplayName)}</div>
           <div class="t14-guest-badge">Cordially inviting you ${isFamily ? 'and your family' : ''} (${esc(partyBadge)})</div>
