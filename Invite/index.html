@@ -1430,6 +1430,17 @@
         if (s.startsWith('../music/')) return './music/' + s.slice(9);
         if (s.startsWith('/music/')) return '.' + s;
         if (s.startsWith('music/')) return './' + s;
+        if (s.endsWith('.mp3')) return './music/' + s;
+        const PRESET_SONGS = [
+          'raataan-lambiyan', 'tere-vaaste', 'din-shagna-da', 'kabira-encore',
+          'piya-ghar-aavenge', 'aaj-se-teri', 'tere-dware', 'tere-dware-pe-aayi-baraat',
+          'flute', 'instrumental-1', 'instrumental-2'
+        ];
+        if (PRESET_SONGS.includes(s.toLowerCase())) {
+          const map = { 'tere-dware': 'tere-dware-pe-aayi-baraat' };
+          const resolved = map[s.toLowerCase()] || s.toLowerCase();
+          return `./music/${resolved}.mp3`;
+        }
         return s;
       }
 
@@ -1523,6 +1534,10 @@
         stopSynthesizer();
         updateMusicUi(false);
       }
+
+      window.__startWeddingMusic = startMusic;
+      window.__stopWeddingMusic = stopMusic;
+      window.__isWeddingMusicPlaying = () => isMusicPlaying;
 
       function updateMusicUi(isOn) {
         const musicBtn = document.getElementById('royalDockMusic');
@@ -1834,10 +1849,17 @@
 
       document.addEventListener('click', e => {
         const trigger = e.target.closest(
-          '.t9-bindi, .t9-entry, [data-open], [data-open-gate], .t04-wax-trigger, .t04-door-btn, .t03-seal, .t8-seal, .royal-envelope, .t11-obtn, #t11-open-btn, .t11-hit, .t12-obtn, #t12-open-btn, .t12-hit, .t13-obtn, #t13-open-btn, .t13-hit, .t14-obtn, #t14-open-btn, .t14-hit, .t7-obtn, #t7-open-btn, .t7-hit, .t12-skip-btn, .t13-skip-btn, .t14-skip-btn'
+          '.t9-bindi, .t9-entry, [data-open], [data-open-gate], .t04-wax-trigger, .t04-door-btn, .t03-seal, .t8-seal, .royal-envelope, ' +
+          '#t11-open-btn, .t11-obtn, .t11-hit, .t11-skip-btn, #t11-skip-btn, ' +
+          '#t12-open-btn, .t12-obtn, .t12-hit, .t12-skip-btn, #t12-skip-btn, ' +
+          '#t13-hit-open, #t13-open-btn, .t13-obtn, .t13-hit, .t13-tap, .t13-skip-btn, #t13-skip-btn, ' +
+          '#t14-hit-open, #t14-open-btn, #t14-carpet-tap, .t14-op, .t14-obtn, .t14-hit, .t14-skip-intro, .t14-skip-btn, #t14-skip-btn, ' +
+          '#t15-open, .t15-open-btn, .open-btn, ' +
+          '.t7-obtn, #t7-open-btn, .t7-hit, ' +
+          '[id*="hit-open"], [id*="open-btn"], [id*="skip-btn"], [class*="skip-btn"]'
         );
         if (trigger) {
-          setTimeout(unveilInvitation, 350);
+          unveilInvitation();
         }
       });
 
@@ -2559,11 +2581,26 @@
           if (s.startsWith('../music/')) return './music/' + s.slice(9);
           if (s.startsWith('/music/')) return '.' + s;
           if (s.startsWith('music/')) return './' + s;
+          if (s.endsWith('.mp3')) return './music/' + s;
+          const PRESET_SONGS = [
+            'raataan-lambiyan', 'tere-vaaste', 'din-shagna-da', 'kabira-encore',
+            'piya-ghar-aavenge', 'aaj-se-teri', 'tere-dware', 'tere-dware-pe-aayi-baraat',
+            'flute', 'instrumental-1', 'instrumental-2'
+          ];
+          if (PRESET_SONGS.includes(s.toLowerCase())) {
+            const map = { 'tere-dware': 'tere-dware-pe-aayi-baraat' };
+            const resolved = map[s.toLowerCase()] || s.toLowerCase();
+            return `./music/${resolved}.mp3`;
+          }
           return s;
         }
 
-        const scopedMusicChoice = wedding.order_reference ? getStored('wedding_music_url_' + wedding.order_reference) : null;
-        const scopedMusicTitle = wedding.order_reference ? getStored('wedding_music_title_' + wedding.order_reference) : null;
+        const scopedMusicChoice = (orderRef ? getStored('wedding_music_url_' + orderRef) : null)
+          || (orderMetadata?.music_url)
+          || (wedding.order_reference ? getStored('wedding_music_url_' + wedding.order_reference) : null);
+        const scopedMusicTitle = (orderRef ? getStored('wedding_music_title_' + orderRef) : null)
+          || (orderMetadata?.music_title)
+          || (wedding.order_reference ? getStored('wedding_music_title_' + wedding.order_reference) : null);
         const globalMusicChoice = getStored('wedding-music-url');
         const globalMusicTitle = getStored('wedding-music-title');
 
@@ -2571,16 +2608,20 @@
           wedding.music_url = normalizeMusicUrl(scopedMusicChoice);
         } else if (wedding.music_url && wedding.music_url !== 'none') {
           wedding.music_url = normalizeMusicUrl(wedding.music_url);
+        } else if (orderMetadata?.music_url && orderMetadata.music_url !== 'none') {
+          wedding.music_url = normalizeMusicUrl(orderMetadata.music_url);
         } else if (globalMusicChoice && globalMusicChoice !== 'none' && isPreviewMode) {
           wedding.music_url = normalizeMusicUrl(globalMusicChoice);
         } else {
-          wedding.music_url = './invitation.mp3';
+          wedding.music_url = './music/din-shagna-da.mp3';
         }
 
         if (scopedMusicTitle) {
           wedding.music_title = scopedMusicTitle;
         } else if (wedding.music_title) {
           wedding.music_title = wedding.music_title;
+        } else if (orderMetadata?.music_title) {
+          wedding.music_title = orderMetadata.music_title;
         } else if (globalMusicTitle && isPreviewMode) {
           wedding.music_title = globalMusicTitle;
         }

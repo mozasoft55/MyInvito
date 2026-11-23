@@ -72,6 +72,8 @@ let goalEditing = false;
 let filter = 'all';
 let query = '';
 let stats = null;
+let guestPage = 1;
+const GUESTS_PER_PAGE = 50;
 
 const STATUS_META = {
   attending: { label: 'Coming', tile: 'Coming' },
@@ -711,8 +713,28 @@ function renderGuestList() {
       '<button type="button" class="button button-outline button-small" data-filter="all" data-clear-search>Show everyone</button></div>';
     return;
   }
+
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / GUESTS_PER_PAGE));
+  if (guestPage > totalPages) guestPage = totalPages;
+  if (guestPage < 1) guestPage = 1;
+  const startIdx = (guestPage - 1) * GUESTS_PER_PAGE;
+  const endIdx = Math.min(startIdx + GUESTS_PER_PAGE, totalRows);
+  const pageRows = rows.slice(startIdx, endIdx);
+
+  const paginationHtml = totalRows > GUESTS_PER_PAGE ? `
+    <div class="guest-pagination" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card,#fff);border:1px solid var(--border,#e2d9cc);border-top:0;border-radius:0 0 10px 10px;font-size:13px;flex-wrap:wrap;gap:8px;">
+      <span style="color:var(--text-muted,#786c5e);">Showing ${startIdx + 1}–${endIdx} of ${totalRows} guests</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" class="button button-outline button-small" data-guest-nav="prev" ${guestPage <= 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>← Previous</button>
+        <span style="font-weight:600;padding:0 6px;">Page ${guestPage} of ${totalPages}</span>
+        <button type="button" class="button button-outline button-small" data-guest-nav="next" ${guestPage >= totalPages ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>Next →</button>
+      </div>
+    </div>
+  ` : '';
+
   guestWrap.innerHTML = '<table class="guest-table"><thead><tr><th class="th-idx">#</th><th>Guest</th><th>People</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody>' +
-    rows.map((st, idx) => guestRow(st, idx)).join('') + '</tbody></table>';
+    pageRows.map((st, idx) => guestRow(st, startIdx + idx)).join('') + '</tbody></table>' + paginationHtml;
 }
 
 function renderAll() {
@@ -725,6 +747,7 @@ function renderAll() {
 
 function setFilter(next, { scroll = false } = {}) {
   filter = next;
+  guestPage = 1;
   renderTracker();
   renderChips();
   renderGuestList();
@@ -1430,6 +1453,7 @@ for (const dialog of [guestDialog, importDialog, replyDialog, templateDialog]) {
 
 $('guest-search').addEventListener('input', event => {
   query = event.target.value;
+  guestPage = 1;
   renderGuestList();
 });
 
@@ -1440,6 +1464,21 @@ if (csvTemplate) {
 
 $('dashboard-content').addEventListener('click', async event => {
   const t = event.target;
+  const navBtn = t.closest('[data-guest-nav]');
+  if (navBtn) {
+    const dir = navBtn.dataset.guestNav;
+    if (dir === 'prev' && guestPage > 1) {
+      guestPage--;
+      renderGuestList();
+      $('guest-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (dir === 'next') {
+      guestPage++;
+      renderGuestList();
+      $('guest-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    return;
+  }
+
   const filterBtn = t.closest('[data-filter]');
   const copy = t.closest('[data-copy]');
   const sent = t.closest('[data-sent]');

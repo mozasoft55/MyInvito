@@ -1020,6 +1020,16 @@ export function mount(root, options = {}) {
       if (!locked || this.disabled) return;
       this.disabled = true;
 
+      const win = typeof window !== 'undefined' ? window : null;
+      if (win) {
+        if (typeof win.__startWeddingMusic === 'function') {
+          try { win.__startWeddingMusic(true); } catch {}
+        }
+        if (typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+          try { win.dispatchEvent(new CustomEvent('invitation-unveiled')); } catch {}
+        }
+      }
+
       const g = el('t15-glow') || el('glow');
       if (g) {
         g.style.background = (L.lamps && L.lamps.length)

@@ -1823,10 +1823,15 @@ export function initTemplate14(container) {
     busy = true;
 
     const win = typeof window !== 'undefined' ? window : null;
-    if (win && typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
-      try {
-        win.dispatchEvent(new CustomEvent('invitation-unveiled'));
-      } catch {}
+    if (win) {
+      if (typeof win.__startWeddingMusic === 'function') {
+        try { win.__startWeddingMusic(true); } catch {}
+      }
+      if (typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+        try {
+          win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+        } catch {}
+      }
     }
 
     if (carpetTap) {
@@ -1917,6 +1922,9 @@ export function initTemplate14(container) {
     if (doc && doc.body) doc.body.classList.add('invitation-unveiled');
     if (win) {
       win._invitationUnveiled = true;
+      if (typeof win.__startWeddingMusic === 'function') {
+        try { win.__startWeddingMusic(true); } catch {}
+      }
       if (typeof win.__updateRoyalDockVisibility === 'function') {
         win.__updateRoyalDockVisibility();
       }

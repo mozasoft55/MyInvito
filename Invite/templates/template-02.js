@@ -384,9 +384,14 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
     const b = e.target.closest('[data-next]');
     if (!b) return;
     go(+b.dataset.next);
-    if (au && !played) {
+    if (!played) {
       played = true;
-      au.play().then(() => ab.classList.add('spin')).catch(() => {});
+      if (typeof window !== 'undefined' && typeof window.__startWeddingMusic === 'function') {
+        window.__startWeddingMusic(true);
+        if (ab) ab.classList.add('spin');
+      } else if (au) {
+        au.play().then(() => ab.classList.add('spin')).catch(() => {});
+      }
     }
   };
   root.addEventListener('click', handleClick);
@@ -417,9 +422,26 @@ export function mount(root, { guest, wedding: rawWedding, events = [] } = {}) {
   root.addEventListener('touchstart', handleTouchStart, { passive: true });
   root.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-  if (au) {
-    au.addEventListener('ended', () => ab.classList.remove('spin'));
-    ab.onclick = () => au.paused ? au.play().then(() => ab.classList.add('spin')).catch(() => {}) : (au.pause(), ab.classList.remove('spin'));
+  if (ab) {
+    if (au) au.addEventListener('ended', () => ab.classList.remove('spin'));
+    ab.onclick = () => {
+      if (typeof window !== 'undefined' && typeof window.__isWeddingMusicPlaying === 'function' && typeof window.__startWeddingMusic === 'function' && typeof window.__stopWeddingMusic === 'function') {
+        if (window.__isWeddingMusicPlaying()) {
+          window.__stopWeddingMusic();
+          ab.classList.remove('spin');
+        } else {
+          window.__startWeddingMusic(true);
+          ab.classList.add('spin');
+        }
+      } else if (au) {
+        if (au.paused) {
+          au.play().then(() => ab.classList.add('spin')).catch(() => {});
+        } else {
+          au.pause();
+          ab.classList.remove('spin');
+        }
+      }
+    };
   }
 
   const t = parseWhen(wedding.date, wedding.time);

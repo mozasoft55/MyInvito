@@ -1898,10 +1898,15 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     if (intro && intro.classList) intro.classList.add('t12-go');
 
     const win = typeof window !== 'undefined' ? window : null;
-    if (win && typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
-      try {
-        win.dispatchEvent(new CustomEvent('invitation-unveiled'));
-      } catch {}
+    if (win) {
+      if (typeof win.__startWeddingMusic === 'function') {
+        try { win.__startWeddingMusic(true); } catch {}
+      }
+      if (typeof win.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+        try {
+          win.dispatchEvent(new CustomEvent('invitation-unveiled'));
+        } catch {}
+      }
     }
 
     const T = (fn, ms) => {
@@ -1955,6 +1960,9 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     }
     if (win) {
       win._invitationUnveiled = true;
+      if (typeof win.__startWeddingMusic === 'function') {
+        try { win.__startWeddingMusic(true); } catch {}
+      }
       if (typeof win.__updateRoyalDockVisibility === 'function') {
         win.__updateRoyalDockVisibility();
       }

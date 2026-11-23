@@ -1661,6 +1661,9 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     busy = true;
 
     try {
+      if (typeof window.__startWeddingMusic === 'function') {
+        window.__startWeddingMusic(true);
+      }
       window.dispatchEvent(new CustomEvent('invitation-unveiled'));
     } catch {}
 
@@ -1722,6 +1725,9 @@ export function mount(root, { guest = {}, wedding = {}, events = [] } = {}) {
     isDone = true;
     busy = false;
     try {
+      if (typeof window.__startWeddingMusic === 'function') {
+        window.__startWeddingMusic(true);
+      }
       window.dispatchEvent(new CustomEvent('invitation-unveiled'));
       if (typeof window.__updateRoyalDockVisibility === 'function') {
         window.__updateRoyalDockVisibility();

@@ -59,8 +59,18 @@ const getStoredPhoto = k => {
   } catch {}
   return '';
 };
-const safeUrl = v => (/^https?:\/\//i.test(clean(v)) ? esc(clean(v)) : '');
-const safePortrait = (v, fallback) => (/^https?:\/\//i.test(clean(v)) ? esc(clean(v)) : fallback);
+const safeUrl = v => {
+  const s = clean(v);
+  if (!s || s === 'none' || s === 'off') return '';
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:|music\/|assets\/|[a-z0-9_.-]+\.mp3)/i.test(s)) return esc(s);
+  return '';
+};
+const safePortrait = (v, fallback) => {
+  const s = clean(v);
+  if (!s) return fallback;
+  if (/^(https?:\/\/|\/|\.\/|\.\.\/|data:image\/|blob:|[a-z0-9_./-]+\.(webp|jpg|jpeg|png|gif|svg|avif))/i.test(s)) return esc(s);
+  return fallback;
+};
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -656,4 +656,11 @@ $$;
 revoke all on function public.manage_admin_portal(text, jsonb) from public;
 grant execute on function public.manage_admin_portal(text, jsonb) to authenticated, service_role;
 
+-- 9. High-Scale B-Tree Indexes for 100,000 (1 Lakh) Guests & High-Concurrency RSVPs
+create index if not exists idx_guests_invite_code_lower on public.guests (lower(btrim(invite_code)));
+create index if not exists idx_guests_wedding_created on public.guests (wedding_id, created_at desc);
+create index if not exists idx_rsvps_wedding_submitted on public.rsvps (wedding_id, submitted_at desc);
+create index if not exists idx_rsvps_invite_code_lower on public.rsvps (lower(btrim(invite_code)));
+create index if not exists idx_events_wedding_sort on public.events (wedding_id, sort_order);
+
 commit;
