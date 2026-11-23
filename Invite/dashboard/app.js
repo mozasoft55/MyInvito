@@ -304,9 +304,10 @@ async function callRpc(name, body) {
 }
 
 async function dashboardRequest(action, extra = {}) {
-  // 1. Try Edge Function ONLY if configured and a genuine cryptographic token (>= 32 chars) exists
+  // 1. Edge Function check (Safely disabled: /customer-dashboard Edge Function replaced by direct SQL RPC manage_customer_dashboard to prevent CORS 404)
   const hasRealToken = dashboardToken && dashboardToken !== 'demo-token' && dashboardToken.length >= 32;
-  if (hasRealToken && ONBOARDING_CONFIG.dashboardEndpoint) {
+  const isEdgeFunctionActive = false;
+  if (hasRealToken && isEdgeFunctionActive && ONBOARDING_CONFIG.dashboardEndpoint) {
     try {
       const efRes = await fetch(ONBOARDING_CONFIG.dashboardEndpoint, {
         method: 'POST',
@@ -329,7 +330,7 @@ async function dashboardRequest(action, extra = {}) {
     }
   }
 
-  // 2. Direct SQL RPC manage_customer_dashboard
+  // 2. Direct SQL RPC manage_customer_dashboard (fast, secure, bypasses Edge Function CORS 404s)
   const result = await callRpc('manage_customer_dashboard', {
     p_order_reference: orderReference,
     p_action: action,
@@ -363,18 +364,17 @@ function getStoredLocalGuests(ref) {
   catch (e) { console.warn('localStorage read failed:', e); }
   return null;
 }
-function safeClassifyResponse(raw) {
-  if (typeof classifyResponse === 'function') {
-    try {
-      const res = classifyResponse(raw);
-      if (res) return res;
-    } catch (_) {}
-  }
+export function safeClassifyResponse(raw) {
   const s = String(raw || '').toLowerCase().trim();
-  if (s.includes('accept') || s.includes('attend') || s.includes('yes') || s.includes('glad')) return 'attending';
-  if (s.includes('declin') || s.includes('unable') || s.includes('no') || s.includes('can\'t') || s.includes('sorry')) return 'declined';
-  if (s.includes('maybe') || s.includes('not sure') || s.includes('tentative') || s.includes('unsure')) return 'maybe';
+  if (!s || s === 'pending' || s === 'none' || s === 'no response') return null;
+  if (/(declin|unable|not attend|not coming|cannot attend|reject|^no$|can't|sorry)/.test(s)) return 'declined';
+  if (/(tentative|maybe|not sure|unsure|undecided)/.test(s)) return 'maybe';
+  if (/(attend|accept|confirm|coming|^yes$|glad)/.test(s)) return 'attending';
   return 'attending';
+}
+
+if (typeof window !== 'undefined') {
+  window.classifyResponse = safeClassifyResponse;
 }
 
 function getStoredLocalRsvps(ref) {
@@ -453,8 +453,21 @@ function resolveGoal(data, tracking) {
 
 /* ───────────── sharing ───────────── */
 
+function getInvitationBaseUrl() {
+  const loc = (typeof window !== 'undefined' && window.location) ? window.location : { pathname: '/Invite/dashboard/', origin: 'http://localhost' };
+  let pathname = loc.pathname || '/';
+  if (pathname.includes('/dashboard')) {
+    pathname = pathname.substring(0, pathname.indexOf('/dashboard') + 1);
+  }
+  if (!pathname.endsWith('/')) {
+    pathname += '/';
+  }
+  return new URL(pathname, loc.origin || 'http://localhost').href;
+}
+
 function invitationUrl(guest) {
-  const u = new URL('?code=' + encodeURIComponent(guest.invite_code || ''), new URL('../', location.href));
+  const baseUrl = getInvitationBaseUrl();
+  const u = new URL('?code=' + encodeURIComponent(guest.invite_code || ''), baseUrl);
   if (currentActiveTemplate) {
     u.searchParams.set('template', currentActiveTemplate);
   }
@@ -566,12 +579,14 @@ function renderTracker() {
   }
 
   // 6. Recent replies with wishes
-  const replies = s.states.filter(st => Boolean(st.reply)).sort((a, b) => (b.replyAt || 0) - (a.replyAt || 0));
+  const replies = s.states.filter(st => Boolean(st.reply || ['attending', 'maybe', 'declined'].includes(st.status))).sort((a, b) => (b.replyAt || 0) - (a.replyAt || 0));
   html += '<div class="subpanel"><div class="panel-head panel-head-mb"><h3>Recent replies <span class="count">' + replies.length + '</span></h3>' +
     (replies.length ? '<button type="button" class="link-btn" data-filter="replies">View all in guest list ↓</button>' : '') + '</div>' +
     (replies.length
       ? '<ul class="reply-list">' + replies.map(st => {
-          const wishText = (st.reply && (st.reply.wishes_message || st.reply.wishes || st.reply.note || st.reply.comment || '')) || '';
+          const wishText = (st.reply && (st.reply.wishes_message || st.reply.wishes || st.reply.note || st.reply.comment || ''))
+            || (st.guest && (st.guest.wishes || st.guest.wishes_message || st.guest.note || st.guest.comment || ''))
+            || '';
           const timeText = st.replyAt ? escapeHtml(timeAgo(st.replyAt) || 'recently') : 'recently';
           return '<li><div class="reply-top">' + badge(st.status) +
             '<strong>' + escapeHtml(st.guest.guest_name || st.guest.name || 'Guest') + '</strong>' +
@@ -814,6 +829,16 @@ function renderDashboard(data) {
     ))
     || 'Ambient Instrumental (Default)';
 
+  const songUrl = (data && (data.music_url || (data.wedding && data.wedding.music_url)))
+    || orderObj.music_url
+    || (orderObj.wedding && orderObj.wedding.music_url)
+    || (typeof localStorage !== 'undefined' && (
+      localStorage.getItem('wedding_music_url_' + orderReference)
+      || localStorage.getItem('wedding-music-url')
+      || localStorage.getItem('wedding_music_url_default')
+    ))
+    || './music/din-shagna-da.mp3';
+
   setTxt('soundtrack-title', songTitle);
   setTxt('metric-soundtrack', songTitle);
 
@@ -845,7 +870,7 @@ function renderDashboard(data) {
   const previewLink = $('preview-link');
   if (previewLink) {
     const baseCode = (data && data.preview_guest_code) ? data.preview_guest_code : '9D6JGSQY7YD8';
-    previewLink.href = `../?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(chosenTemplate)}`;
+    previewLink.href = `${getInvitationBaseUrl()}?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(chosenTemplate)}`;
   }
 
   // 3. Populate Template Identifier & Timestamps
@@ -960,19 +985,32 @@ async function refreshDashboard() {
       const seen = new Set();
       for (const r of data.rsvps) {
         if (r.id) seen.add(String(r.id));
-        if (r.invite_code) seen.add('c_' + r.invite_code);
-        if (r.guest_id) seen.add('g_' + r.guest_id);
+        if (r.invite_code) seen.add('c_' + String(r.invite_code).toLowerCase().trim());
+        if (r.guest_id) seen.add('g_' + String(r.guest_id));
       }
       const toSync = [];
       for (const lr of localRsvps) {
+        const lrCodeKey = lr.invite_code ? ('c_' + String(lr.invite_code).toLowerCase().trim()) : null;
+        const lrGidKey = lr.guest_id ? ('g_' + String(lr.guest_id)) : null;
         const hasId = lr.id && seen.has(String(lr.id));
-        const hasCode = lr.invite_code && seen.has('c_' + lr.invite_code);
-        const hasGid = lr.guest_id && seen.has('g_' + lr.guest_id);
-        if (!hasId && !hasCode && !hasGid) {
+        const hasCode = lrCodeKey && seen.has(lrCodeKey);
+        const hasGid = lrGidKey && seen.has(lrGidKey);
+
+        const matchIdx = data.rsvps.findIndex(r =>
+          (r.id && lr.id && String(r.id) === String(lr.id)) ||
+          (lrCodeKey && r.invite_code && ('c_' + String(r.invite_code).toLowerCase().trim()) === lrCodeKey) ||
+          (lrGidKey && r.guest_id && ('g_' + String(r.guest_id)) === lrGidKey)
+        );
+        if (matchIdx !== -1) {
+          const sr = data.rsvps[matchIdx];
+          if (!sr.wishes_message && (lr.wishes_message || lr.wishes || lr.note)) {
+            sr.wishes_message = lr.wishes_message || lr.wishes || lr.note;
+          }
+        } else if (!hasId && !hasCode && !hasGid) {
           data.rsvps.push(lr);
           if (lr.id) seen.add(String(lr.id));
-          if (lr.invite_code) seen.add('c_' + lr.invite_code);
-          if (lr.guest_id) seen.add('g_' + lr.guest_id);
+          if (lrCodeKey) seen.add(lrCodeKey);
+          if (lrGidKey) seen.add(lrGidKey);
           toSync.push(lr);
         }
       }
@@ -1319,7 +1357,8 @@ function openReplyDialog(state) {
     eventsEl.textContent = Array.isArray(evs) && evs.length ? evs.join(', ') : (evs || 'All wedding celebrations');
   }
   if (messageEl) {
-    messageEl.textContent = reply.wishes_message ? '“' + reply.wishes_message + '”' : 'No message was written with this reply.';
+    const fullMsg = reply.wishes_message || reply.wishes || reply.note || reply.comment || g.wishes || g.wishes_message || g.note || g.comment || '';
+    messageEl.textContent = fullMsg ? '“' + fullMsg + '”' : 'No message was written with this reply.';
   }
   if (timeEl) {
     timeEl.textContent = state.replyAt ? new Date(state.replyAt).toLocaleString() + ' (' + timeAgo(state.replyAt) + ')' : '—';
@@ -1423,7 +1462,7 @@ $('save-template-dialog')?.addEventListener('click', async () => {
     const previewLink = $('preview-link');
     if (previewLink) {
       const baseCode = (dashboard && dashboard.preview_guest_code) ? dashboard.preview_guest_code : '9D6JGSQY7YD8';
-      previewLink.href = `../?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(selectedPickerTemplate)}`;
+      previewLink.href = `${getInvitationBaseUrl()}?code=${encodeURIComponent(baseCode)}&template=${encodeURIComponent(selectedPickerTemplate)}`;
     }
 
     renderAll();

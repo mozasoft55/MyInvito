@@ -2415,6 +2415,7 @@
           || getStored('customer-dashboard-template-default');
 
         const resolvedTpl = urlTemplate
+          || (!isPreviewMode && (wedding.template_id || wedding.template_style) ? (wedding.template_id || wedding.template_style) : null)
           || (wedding.template_id && wedding.template_id !== 'template-02' ? wedding.template_id : null)
           || storedTpl
           || wedding.template_id

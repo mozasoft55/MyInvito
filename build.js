@@ -12,29 +12,57 @@ try {
 
 const distDir = path.join(__dirname, 'dist');
 if (fs.existsSync(distDir)) {
-  fs.rmSync(distDir, { recursive: true, force: true });
+  try {
+    fs.rmSync(distDir, { recursive: true, force: true });
+  } catch (_) {
+    // If folder handle is temporarily locked on Windows, continue and overwrite
+  }
 }
-fs.mkdirSync(distDir, { recursive: true });
+if (!fs.existsSync(distDir)) {
+  try {
+    fs.mkdirSync(distDir, { recursive: true });
+  } catch (_) {}
+}
 
 // 1. Copy main entrypoint index.html
-fs.copyFileSync(path.join(__dirname, 'index.html'), path.join(distDir, 'index.html'));
+try {
+  fs.copyFileSync(path.join(__dirname, 'index.html'), path.join(distDir, 'index.html'));
+} catch (e) {
+  console.warn('[Build] Warning copying index.html:', e.message);
+}
 
 // 2. Copy Invite suite (templates, studio, onboard, assets)
-fs.cpSync(path.join(__dirname, 'Invite'), path.join(distDir, 'Invite'), { recursive: true });
+try {
+  fs.cpSync(path.join(__dirname, 'Invite'), path.join(distDir, 'Invite'), { recursive: true, force: true });
+} catch (e) {
+  console.warn('[Build] Warning copying Invite suite:', e.message);
+}
 
 // 3. Copy music directory if present
 if (fs.existsSync(path.join(__dirname, 'music'))) {
-  fs.cpSync(path.join(__dirname, 'music'), path.join(distDir, 'music'), { recursive: true });
+  try {
+    fs.cpSync(path.join(__dirname, 'music'), path.join(distDir, 'music'), { recursive: true, force: true });
+  } catch (e) {
+    console.warn('[Build] Warning copying music:', e.message);
+  }
 }
 if (fs.existsSync(path.join(__dirname, 'user-music'))) {
-  fs.cpSync(path.join(__dirname, 'user-music'), path.join(distDir, 'user-music'), { recursive: true });
+  try {
+    fs.cpSync(path.join(__dirname, 'user-music'), path.join(distDir, 'user-music'), { recursive: true, force: true });
+  } catch (e) {
+    console.warn('[Build] Warning copying user-music:', e.message);
+  }
 }
 
 // 4. Copy Cloudflare Pages _headers to dist root if present
-if (fs.existsSync(path.join(__dirname, 'Invite', '_headers'))) {
-  fs.copyFileSync(path.join(__dirname, 'Invite', '_headers'), path.join(distDir, '_headers'));
-} else if (fs.existsSync(path.join(__dirname, '_headers'))) {
-  fs.copyFileSync(path.join(__dirname, '_headers'), path.join(distDir, '_headers'));
+try {
+  if (fs.existsSync(path.join(__dirname, 'Invite', '_headers'))) {
+    fs.copyFileSync(path.join(__dirname, 'Invite', '_headers'), path.join(distDir, '_headers'));
+  } else if (fs.existsSync(path.join(__dirname, '_headers'))) {
+    fs.copyFileSync(path.join(__dirname, '_headers'), path.join(distDir, '_headers'));
+  }
+} catch (e) {
+  console.warn('[Build] Warning copying _headers:', e.message);
 }
 
 // 5. Ensure .nojekyll for static hosting
