@@ -1487,6 +1487,9 @@
           if (!bgAudio) {
             bgAudio = new Audio(musicSrc);
             bgAudio.loop = true;
+            bgAudio.preload = 'auto';
+            bgAudio.setAttribute('playsinline', '');
+            bgAudio.setAttribute('webkit-playsinline', '');
             bgAudio.volume = 0.35; // Plays softly when guests open invite
           } else {
             const currentFull = bgAudio.src;
@@ -1497,34 +1500,66 @@
             if (currentFull !== targetFull) {
               bgAudio.pause();
               bgAudio.src = musicSrc;
-              bgAudio.load();
+              bgAudio.preload = 'auto';
             }
+          }
+
+          if (audioCtx && audioCtx.state === 'suspended') {
+            try { audioCtx.resume(); } catch (_) {}
           }
 
           const p = bgAudio.play();
           if (p && typeof p.catch === 'function') {
             p.then(() => {
               stopSynthesizer();
+              updateMusicUi(true);
             }).catch(() => {
               // If browser autoplay policy temporarily holds playback, trigger on first user touch/click
-              const onNextInteraction = () => {
-                if (!isUserMuted && isMusicPlaying && bgAudio && bgAudio.paused) {
-                  bgAudio.play().then(() => stopSynthesizer()).catch(() => {});
-                }
-                document.removeEventListener('click', onNextInteraction);
-                document.removeEventListener('touchstart', onNextInteraction);
-              };
-              document.addEventListener('click', onNextInteraction, { once: true });
-              document.addEventListener('touchstart', onNextInteraction, { once: true });
+              attachMobileAudioUnlock();
             });
           } else {
             stopSynthesizer();
+            updateMusicUi(true);
           }
         } catch {
           startSynthesizer();
         }
         updateMusicUi(true);
       }
+
+      let mobileAudioUnlockAttached = false;
+      function attachMobileAudioUnlock() {
+        if (mobileAudioUnlockAttached) return;
+        mobileAudioUnlockAttached = true;
+
+        const UNLOCK_EVENTS = ['touchend', 'click', 'pointerup'];
+        const onNextInteraction = () => {
+          if (!isUserMuted && isMusicPlaying && bgAudio && bgAudio.paused) {
+            if (audioCtx && audioCtx.state === 'suspended') {
+              try { audioCtx.resume(); } catch (_) {}
+            }
+            bgAudio.play().then(() => {
+              stopSynthesizer();
+              updateMusicUi(true);
+              UNLOCK_EVENTS.forEach(evt => {
+                document.removeEventListener(evt, onNextInteraction, true);
+                window.removeEventListener(evt, onNextInteraction, true);
+              });
+              mobileAudioUnlockAttached = false;
+            }).catch(() => {});
+          } else if (!isUserMuted && !bgAudio) {
+            startMusic(true);
+          }
+        };
+
+        UNLOCK_EVENTS.forEach(evt => {
+          document.addEventListener(evt, onNextInteraction, { capture: true, passive: true });
+          window.addEventListener(evt, onNextInteraction, { capture: true, passive: true });
+        });
+      }
+
+      // Pre-arm mobile audio unlock capture listeners immediately
+      attachMobileAudioUnlock();
 
       function stopMusic() {
         isMusicPlaying = false;
@@ -1824,7 +1859,7 @@
           return;
         }
         const introCover = document.querySelector(
-          '#t07LightsOffOverlay:not(.t07-open), .t07-entry:not(.t07-open), .t07-lights-off:not(.is-lit), .t9-entry:not(.t9-open), .t04-cover:not(.t04-open), .t7-entry:not(.t7-leaving), .t03-doors:not(.t03-open), .t8-cover:not(.t8-open), [data-screen="0"]:not(.is-hidden), #t11-intro:not([style*="display: none"]):not([style*="display:none"]), #t12-intro:not([style*="display: none"]):not([style*="display:none"]), #t13-intro:not([style*="display: none"]):not([style*="display:none"]), #t14-intro:not([style*="display: none"]):not([style*="display:none"])'
+          '#t07LightsOffOverlay:not(.t07-open), .t07-entry:not(.t07-open), .t07-lights-off:not(.is-lit), .t9-entry:not(.t9-open), .t04-cover:not(.t04-open), #intro:not(.out), .t7-entry:not(.t7-leaving), .t03-doors:not(.t03-open), .t8-cover:not(.t8-open), [data-screen="0"]:not(.is-hidden), #t11-intro:not([style*="display: none"]):not([style*="display:none"]), #t12-intro:not([style*="display: none"]):not([style*="display:none"]), #t13-intro:not([style*="display: none"]):not([style*="display:none"]), #t14-intro:not([style*="display: none"]):not([style*="display:none"])'
         );
         const isIntroActive = Boolean(introCover && introCover.offsetParent !== null);
         if (isIntroActive) {
@@ -1841,27 +1876,32 @@
         document.body.classList.add('invitation-unveiled');
         updateDockVisibility();
         if (!isMusicPlaying && !isUserMuted) {
-          startMusic();
+          startMusic(true);
         }
       }
 
       window.addEventListener('invitation-unveiled', unveilInvitation);
 
-      document.addEventListener('click', e => {
-        const trigger = e.target.closest(
-          '.t9-bindi, .t9-entry, [data-open], [data-open-gate], .t04-wax-trigger, .t04-door-btn, .t03-seal, .t8-seal, .royal-envelope, ' +
-          '#t11-open-btn, .t11-obtn, .t11-hit, .t11-skip-btn, #t11-skip-btn, ' +
-          '#t12-open-btn, .t12-obtn, .t12-hit, .t12-skip-btn, #t12-skip-btn, ' +
-          '#t13-hit-open, #t13-open-btn, .t13-obtn, .t13-hit, .t13-tap, .t13-skip-btn, #t13-skip-btn, ' +
-          '#t14-hit-open, #t14-open-btn, #t14-carpet-tap, .t14-op, .t14-obtn, .t14-hit, .t14-skip-intro, .t14-skip-btn, #t14-skip-btn, ' +
-          '#t15-open, .t15-open-btn, .open-btn, ' +
-          '.t7-obtn, #t7-open-btn, .t7-hit, ' +
-          '[id*="hit-open"], [id*="open-btn"], [id*="skip-btn"], [class*="skip-btn"]'
-        );
+      const openTriggerSelector =
+        '.t9-bindi, .t9-entry, [data-open], [data-open-gate], .t04-wax-trigger, .t04-door-btn, .t03-seal, .t8-seal, .royal-envelope, ' +
+        '#t11-open-btn, .t11-obtn, .t11-hit, .t11-skip-btn, #t11-skip-btn, ' +
+        '#t12-open-btn, .t12-obtn, .t12-hit, .t12-skip-btn, #t12-skip-btn, ' +
+        '#t13-hit-open, #t13-open-btn, .t13-obtn, .t13-hit, .t13-tap, .t13-skip-btn, #t13-skip-btn, ' +
+        '#t14-hit-open, #t14-open-btn, #t14-carpet-tap, .t14-op, .t14-obtn, .t14-hit, .t14-skip-intro, .t14-skip-btn, #t14-skip-btn, ' +
+        '#t15-open, .t15-open-btn, .open-btn, ' +
+        '.t7-obtn, #t7-open-btn, .t7-hit, ' +
+        '#pill, #bf, .bf, [aria-label*="Open"], [aria-label*="open"], ' +
+        '[id*="hit-open"], [id*="open-btn"], [id*="skip-btn"], [class*="skip-btn"]';
+
+      const handleTriggerUnveil = e => {
+        const trigger = e.target.closest(openTriggerSelector);
         if (trigger) {
           unveilInvitation();
         }
-      });
+      };
+
+      document.addEventListener('click', handleTriggerUnveil);
+      document.addEventListener('touchend', handleTriggerUnveil, { passive: true });
 
       updateDockVisibility();
       setTimeout(updateDockVisibility, 80);

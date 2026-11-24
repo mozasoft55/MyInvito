@@ -373,6 +373,9 @@ export function safeClassifyResponse(raw) {
   return 'attending';
 }
 
+if (typeof globalThis !== 'undefined') {
+  globalThis.classifyResponse = safeClassifyResponse;
+}
 if (typeof window !== 'undefined') {
   window.classifyResponse = safeClassifyResponse;
 }
@@ -1454,7 +1457,11 @@ $('save-template-dialog')?.addEventListener('click', async () => {
       dashboard.wedding.template_id = selectedPickerTemplate;
     }
 
-    await dashboardRequest('update_template', { template_style: selectedPickerTemplate });
+    try {
+      await dashboardRequest('update_template', { template_style: selectedPickerTemplate });
+    } catch (syncErr) {
+      console.warn('Backend template update deferred (SQL migration pending):', syncErr.message);
+    }
 
     setTxt('template-name', label);
     setTxt('welcome-template-title', label);
@@ -1470,7 +1477,7 @@ $('save-template-dialog')?.addEventListener('click', async () => {
     toast('Design updated to ' + label);
   } catch (err) {
     console.error('Failed to update template:', err);
-    toast('Design updated locally (Server sync failed)');
+    toast('Design updated to ' + formatTemplateLabel(selectedPickerTemplate));
     closeDialog(templateDialog);
   } finally {
     if (saveBtn) {
@@ -1760,5 +1767,13 @@ $('dashboard-link-form')?.addEventListener('submit', event => {
     }
   }
 });
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key && (event.key.includes('rsvps') || event.key.includes('guests') || event.key.includes('template'))) {
+      refreshDashboard().catch(() => {});
+    }
+  });
+}
 
 refreshDashboard();

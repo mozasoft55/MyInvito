@@ -112,7 +112,9 @@ function processProductionFiles(dir) {
       } else if (ext === '.html') {
         try {
           const raw = fs.readFileSync(fullPath, 'utf8');
-          const cleaned = raw.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+          const buildTimestamp = Date.now();
+          let cleaned = raw.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+          cleaned = cleaned.replace(/(\.js\?v=|\.css\?v=)[^"'\s>]+/g, `$1${buildTimestamp}`);
           fs.writeFileSync(fullPath, cleaned, 'utf8');
         } catch (e) {
           console.warn(`[Build] Warning stripping HTML comments in ${entry.name}:`, e.message);

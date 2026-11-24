@@ -235,13 +235,15 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
 }
 .t04-wrapper {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   height: 100dvh;
+  min-height: 100dvh;
   margin: 0;
   padding: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: #070d1f;
   overflow: hidden;
   box-sizing: border-box;
@@ -254,13 +256,30 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
 }
 .stage {
   position: relative;
-  height: min(100dvh, 150vw);
-  width: min(66.667dvh, 100vw);
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  margin: 0 auto;
   container-type: size;
   overflow: hidden;
   background: #fff9ec;
   font-family: 'Cormorant Garamond', serif;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+@media (max-width: 600px) {
+  .stage {
+    max-width: 100% !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
 }
 .scroller {
   position: absolute;
@@ -303,10 +322,10 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
 
 .card {
   position: absolute;
-  left: 12.5%;
-  right: 12.5%;
-  top: 15%;
-  bottom: 15%;
+  left: 7%;
+  right: 7%;
+  top: 9%;
+  bottom: 9%;
   border-radius: 3.5cqw;
   background: linear-gradient(160deg, rgba(255, 252, 244, 0.75), rgba(255, 244, 222, 0.55) 55%, rgba(255, 250, 240, 0.70));
   backdrop-filter: blur(7px) saturate(1.15);
@@ -473,10 +492,10 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
 
 .card-paper {
   position: absolute;
-  left: 9.5%;
-  right: 9.5%;
-  top: 6%;
-  bottom: 6%;
+  left: 6%;
+  right: 6%;
+  top: 4.5%;
+  bottom: 4.5%;
   border-radius: 3.5cqw;
   background: linear-gradient(160deg, rgba(255, 252, 244, 0.82), rgba(255, 246, 228, 0.68) 55%, rgba(255, 250, 240, 0.80));
   backdrop-filter: blur(8px) saturate(1.15);
@@ -993,8 +1012,8 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
 /* 3D Butterfly */
 .bf {
   position: absolute;
-  left: 23.05cqw;
-  top: 58.6cqw;
+  left: 23.05%;
+  top: 39%;
   width: 68.36cqw;
   height: 55.66cqw;
   z-index: 8;
@@ -1483,8 +1502,11 @@ export function mount(root, { guest, wedding, events } = {}) {
       started = true;
 
       // Synchronously trigger background soundtrack
-      if (typeof window !== 'undefined' && typeof window.__startWeddingMusic === 'function') {
-        try { window.__startWeddingMusic(true); } catch (_) {}
+      if (typeof window !== 'undefined') {
+        if (typeof window.__startWeddingMusic === 'function') {
+          try { window.__startWeddingMusic(true); } catch (_) {}
+        }
+        try { window.dispatchEvent(new CustomEvent('invitation-unveiled')); } catch (_) {}
       }
       if (musicBtn) musicBtn.classList.add('playing');
 
@@ -1542,13 +1564,14 @@ export function mount(root, { guest, wedding, events } = {}) {
       }, 7000);
     };
 
+    const onStart = () => { start(); };
     if (bf) {
-      bf.addEventListener('click', start);
-      bf.addEventListener('touchend', e => { e.preventDefault(); start(); }, { passive: false });
+      bf.addEventListener('click', onStart);
+      bf.addEventListener('touchend', onStart, { passive: true });
     }
     if (pill) {
-      pill.addEventListener('click', start);
-      pill.addEventListener('touchend', e => { e.preventDefault(); start(); }, { passive: false });
+      pill.addEventListener('click', onStart);
+      pill.addEventListener('touchend', onStart, { passive: true });
     }
 
     raf = requestAnimationFrame(loop);
