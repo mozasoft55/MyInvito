@@ -158,13 +158,13 @@ test('template-04 removes unwanted branding and retains working invitation navig
     events
   });
 
-  assert.match(html, /data-next>Begin Invitation/);
-  assert.match(html, /data-screen="1"/);
-  assert.match(html, /data-prev/);
+  assert.match(html, /data-restart>Start Again ↻/);
+  assert.match(html, /class="bf"/);
+  assert.match(html, /id="intro"/);
   assert.doesNotMatch(html, /ROYAL WEDDING|A FAMILY WEDDING INVITATION|MADE WITH LOVE/);
 });
 
-test('template-04 renders the five-section royal Islamic Shadi card invitation with authentic motifs', async () => {
+test('template-04 renders the royal Butterfly invitation with dynamic data and authentic motifs', async () => {
   const module = await import('../templates/template-04.js');
   const html = module.default({
     guest: { name: 'Ayesha Rahman', persons: 3, with_family: true },
@@ -189,23 +189,21 @@ test('template-04 renders the five-section royal Islamic Shadi card invitation w
     ]
   });
 
-  // Check Shadi Card cultural and aesthetic markers
-  assert.match(html, /Shadi Mubarak/);
-  assert.match(html, /بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ/);
-  assert.match(html, /Surah Ar-Rum/);
+  // Check Butterfly aesthetic and dynamic data markers
+  assert.match(html, /WELCOME/);
+  assert.match(html, /A CELEBRATION OF LOVE/);
+  assert.match(html, /CORDIALLY INVITED/);
   assert.match(html, /Ayesha Rahman &amp; Family/);
-  assert.match(html, /Dulhan \/ Bride/);
-  assert.match(html, /Dulha \/ Groom/);
-  assert.match(html, /Dr\. Tarana Khatoon/);
-  assert.match(html, /Md Akbar Ansari/);
+  assert.match(html, /Akbar/);
+  assert.match(html, /Tarana/);
   assert.match(html, /Mrs\. &amp; Mr\. Md Kalim Khan/);
+  assert.match(html, /Mrs\. &amp; Mr\. Md Moin Ansari/);
   assert.match(html, /Nikah Mubarak/);
-  assert.match(html, /Programme-e-Taqreeb/);
+  assert.match(html, /WEDDING PROGRAMME/);
   assert.match(html, /id="t04-calendar"/);
   assert.match(html, /id="t04-maps"/);
-  assert.match(html, /data-reveal>Scratch Card/);
+  assert.match(html, /id="royalRsvpForm"/);
   assert.match(html, /data-restart>Start Again ↻/);
-  assert.equal((html.match(/class="t04-screen[^"]*" data-screen=/g) || []).length, 5);
 });
 
 test('template-04 gracefully handles missing dates and venue links', async () => {

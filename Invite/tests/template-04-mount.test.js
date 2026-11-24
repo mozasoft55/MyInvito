@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import renderT04, { mount } from '../templates/template-04.js';
 
-test('template-04 renders gate opening with lights-off, family board, and couple parents', () => {
+test('template-04 renders butterfly entrance, stage, couple portraits, and programme cards', () => {
   const html = renderT04({
     guest: { name: 'Aarav Sharma', persons: 2, with_family: true },
     wedding: {
@@ -23,34 +23,38 @@ test('template-04 renders gate opening with lights-off, family board, and couple
     ]
   });
 
-  // Screen 0: Gate opening, lights off initially, doors portal, wax seal trigger, sparklers container
-  assert.match(html, /class="[^"]*t04-cover[^"]*t04-unlit[^"]*"/);
-  assert.match(html, /class="t04-doors-portal"/);
-  assert.match(html, /class="t04-door t04-door-l"/);
-  assert.match(html, /class="t04-door t04-door-r"/);
-  assert.match(html, /class="t04-sparks"/);
-  assert.match(html, /class="t04-wax-trigger"/);
-  assert.match(html, /TAP TO OPEN/);
-  assert.match(html, /প্রবেশ করুন/);
+  // Entrance & Stage
+  assert.match(html, /id="stage"/);
+  assert.match(html, /id="intro"/);
+  assert.match(html, /id="pill"/);
+  assert.match(html, /id="bf"/);
+  assert.match(html, /id="fx"/);
 
-  // Screen 1: First screen with Guest Name & Family Invitation Board
-  assert.match(html, /data-screen="1"/);
-  assert.match(html, /FAMILY INVITATION BOARD/);
+  // Page 1: First screen with text layers
+  assert.match(html, /WELCOME/);
+  assert.match(html, /A CELEBRATION OF LOVE/);
+  assert.match(html, /CORDIALLY INVITED/);
   assert.match(html, /Aarav Sharma &amp; Family/);
-  assert.match(html, /data-type="single"/);
-  assert.match(html, /data-type="family"/);
-  assert.match(html, /On opening the invitation, the lights will softly illuminate and the doors will gently unfold/);
-  assert.match(html, /Surah Ar-Rum/);
+  assert.match(html, /Family/);
 
-  // Screen 2: Second screen with Bride & Groom details, Parents, and Photographs
-  assert.match(html, /data-screen="2"/);
-  assert.match(html, /Dulhan \/ Bride/);
-  assert.match(html, /Dulha \/ Groom/);
-  assert.match(html, /Zoya Fatima/);
-  assert.match(html, /Faizan Ahmad/);
-  assert.match(html, /D\/o Mrs\. &amp; Mr\. Tariq Fatima/);
-  assert.match(html, /S\/o Mrs\. &amp; Mr\. Naseem Ahmad/);
-  assert.match(html, /class="t04-couple-arch-hero"/);
+  // Page 2: Couple details, Parents, and Photographs
+  assert.match(html, /id="p2"/);
+  assert.match(html, /THE WEDDING OF/);
+  assert.match(html, /Faizan/);
+  assert.match(html, /Zoya/);
+  assert.match(html, /Mrs\. &amp; Mr\. Naseem Ahmad/);
+  assert.match(html, /Mrs\. &amp; Mr\. Tariq Fatima/);
+  assert.match(html, /SON OF/);
+  assert.match(html, /DAUGHTER OF/);
+
+  // Subsequent Pages: Programme, Muhurat/Date, Venue, RSVP
+  assert.match(html, /WEDDING PROGRAMME/);
+  assert.match(html, /Nikah Ceremony/);
+  assert.match(html, /AUSPICIOUS TIMING/);
+  assert.match(html, /Grand Imperial Palace/);
+  assert.match(html, /KINDLY RESPOND/);
+  assert.match(html, /id="royalRsvpForm"/);
+  assert.match(html, /data-restart>Start Again ↻/);
 });
 
 test('template-04 mount initializes safely and returns cleanup function', () => {
