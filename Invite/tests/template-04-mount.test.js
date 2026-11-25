@@ -39,7 +39,7 @@ test('template-04 renders butterfly entrance, stage, couple portraits, and progr
 
   // Page 2: Couple details, Parents, and Photographs
   assert.match(html, /id="p2"/);
-  assert.match(html, /THE WEDDING OF/);
+  assert.match(html, /TWO HEARTS · ONE DESTINY/);
   assert.match(html, /Faizan/);
   assert.match(html, /Zoya/);
   assert.match(html, /Mrs\. &amp; Mr\. Naseem Ahmad/);
@@ -50,7 +50,7 @@ test('template-04 renders butterfly entrance, stage, couple portraits, and progr
   // Subsequent Pages: Programme, Muhurat/Date, Venue
   assert.match(html, /WEDDING PROGRAMME/);
   assert.match(html, /Nikah Ceremony/);
-  assert.match(html, /AUSPICIOUS TIMING/);
+  assert.match(html, /AUSPICIOUS WEDDING MUHURAT/);
   assert.match(html, /Grand Imperial Palace/);
   assert.match(html, /id="t04-scratch-canvas"/);
   assert.match(html, /t04-scratch-btn/);

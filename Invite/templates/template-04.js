@@ -153,7 +153,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   const groomName = clean(w.groom_name) || 'Groom';
   const brideInit = brideName.charAt(0).toUpperCase() || 'B';
   const groomInit = groomName.charAt(0).toUpperCase() || 'G';
-  const brideFirst = clean(w.name_order) === 'bride_first';
+  const brideFirst = clean(w.name_order) !== 'groom_first';
 
   // Photos
   const customBridePhoto = safeImg(w.bride_photo || w.image2 || storedBride);
@@ -243,8 +243,11 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   ];
   const eventList = (Array.isArray(events) && events.length) ? events : defaultEvents;
 
-  // Signature
-  const signature = clean(w.footer_text) || clean(w.families) || `With Best Compliments from Near & Dear Ones`;
+  // Family Signoff & Signature format: "The Pari & Param Families"
+  const defaultFamilyName = (brideName && groomName && brideName !== 'Bride' && groomName !== 'Groom')
+    ? `The ${brideName} & ${groomName} Families`
+    : 'The Pari & Param Families';
+  const familySignature = clean(w.footer_text) || clean(w.families) || defaultFamilyName;
 
   return `
 <!-- Template 04: Royal Butterfly Garden Invitation Suite -->
@@ -483,10 +486,25 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   white-space: nowrap;
   filter: drop-shadow(0 .2cqw .2cqw rgba(201, 162, 74, 0.6));
 }
-.rel {
-  font: 600 2.3cqw/1 Cinzel, serif;
-  letter-spacing: .3cqw;
+.journey-tag {
+  font: 500 italic 3.2cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
+  letter-spacing: .08cqw;
+}
+.role-lbl {
+  font: 700 2.4cqw/1 Cinzel, serif;
+  letter-spacing: .25cqw;
+  color: #b8892b;
+  text-transform: uppercase;
+}
+.rel {
+  font: 600 2.2cqw/1 Cinzel, serif;
+  letter-spacing: .2cqw;
+  color: #5a3a08;
+}
+.rel-full {
+  font-size: .85em;
+  opacity: .85;
 }
 .fa {
   font: 700 3cqw/1.1 'Cormorant Garamond', serif;
@@ -497,6 +515,49 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   color: #1a1004;
   max-width: 30cqw;
   overflow-wrap: anywhere;
+}
+.p2-quote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .6cqw;
+  margin-top: 1cqw;
+  padding-top: 1.2cqw;
+  border-top: 1px solid rgba(201, 162, 74, 0.35);
+  width: 90%;
+}
+.p2-ornament {
+  font-size: 3.5cqw;
+  color: #c9a24a;
+  line-height: 1;
+}
+.p2-quote-text {
+  font: 500 italic 3.2cqw/1.35 'Cormorant Garamond', serif;
+  color: #5a3a08;
+  text-align: center;
+}
+.t04-scratch-tagline {
+  font: 500 italic 2.8cqw/1.3 'Cormorant Garamond', serif;
+  color: #5a3a08;
+  max-width: 44cqw;
+  margin: 0.2cqw auto;
+  text-align: center;
+}
+.cd-section-title {
+  font: 700 2.4cqw/1 Cinzel, serif;
+  letter-spacing: .25cqw;
+  color: #6b0f1a;
+  text-transform: uppercase;
+  margin-top: .8cqw;
+}
+.venue-loc-sub {
+  font: 600 3.2cqw/1.2 'Cormorant Garamond', serif;
+  color: #5a3a08;
+}
+.sig-prefix {
+  font: 500 italic 2.9cqw/1.3 'Cormorant Garamond', serif;
+  color: #5a3a08;
+  text-align: center;
 }
 
 /* Inner Paper Cards */
@@ -1056,12 +1117,14 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   <main class="stage" id="stage">
     <!-- Scrollable Snapping Pages -->
     <div class="scroller lock" id="sc">
-      <!-- Page 2: The Wedding Of -->
+      <!-- Page 2: Two Hearts · One Destiny -->
       <section class="pg" id="p2">
         <div class="glow" style="left:8.8%;top:72.3%"></div>
         <div class="glow" style="left:91.5%;top:72%"></div>
         <div class="card" id="card">
-          <div class="kick rv" style="--i:0">THE WEDDING OF</div>
+          <div class="kick rv" style="--i:0">TWO HEARTS · ONE DESTINY</div>
+          <div class="sub-kick rv" style="--i:0.4">Together with their Families</div>
+          <div class="journey-tag rv" style="--i:0.8">The Journey of Love &amp; Togetherness</div>
           <div class="div rv" style="--i:1"></div>
           <div class="pair rv" style="--i:2">
             ${brideFirst ? `
@@ -1072,10 +1135,11 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
                   <img src="${bridePhoto}" alt="${esc(brideName)}" onerror="this.style.display='none';this.parentElement.textContent='${brideInit}';" />
                 </div>
               </div>
+              <div class="role-lbl">BRIDE</div>
               <div class="nm">${esc(brideName)}</div>
-              <div class="rel">DAUGHTER OF</div>
+              <div class="rel">D/O <span class="rel-full">(DAUGHTER OF)</span></div>
               ${brideParents ? `<div class="fa">${esc(brideParents)}</div>` : ''}
-              ${brideAddress ? `<div class="ad">${esc(brideAddress)}</div>` : ''}
+              ${brideAddress ? `<div class="ad">📍 ${esc(brideAddress)}</div>` : ''}
             </div>
             <div class="amp">&amp;</div>
             <!-- Groom Column -->
@@ -1085,10 +1149,11 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
                   <img src="${groomPhoto}" alt="${esc(groomName)}" onerror="this.style.display='none';this.parentElement.textContent='${groomInit}';" />
                 </div>
               </div>
+              <div class="role-lbl">GROOM</div>
               <div class="nm">${esc(groomName)}</div>
-              <div class="rel">SON OF</div>
+              <div class="rel">S/O <span class="rel-full">(SON OF)</span></div>
               ${groomParents ? `<div class="fa">${esc(groomParents)}</div>` : ''}
-              ${groomAddress ? `<div class="ad">${esc(groomAddress)}</div>` : ''}
+              ${groomAddress ? `<div class="ad">📍 ${esc(groomAddress)}</div>` : ''}
             </div>
             ` : `
             <!-- Groom Column -->
@@ -1098,10 +1163,11 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
                   <img src="${groomPhoto}" alt="${esc(groomName)}" onerror="this.style.display='none';this.parentElement.textContent='${groomInit}';" />
                 </div>
               </div>
+              <div class="role-lbl">GROOM</div>
               <div class="nm">${esc(groomName)}</div>
-              <div class="rel">SON OF</div>
+              <div class="rel">S/O <span class="rel-full">(SON OF)</span></div>
               ${groomParents ? `<div class="fa">${esc(groomParents)}</div>` : ''}
-              ${groomAddress ? `<div class="ad">${esc(groomAddress)}</div>` : ''}
+              ${groomAddress ? `<div class="ad">📍 ${esc(groomAddress)}</div>` : ''}
             </div>
             <div class="amp">&amp;</div>
             <!-- Bride Column -->
@@ -1111,18 +1177,64 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
                   <img src="${bridePhoto}" alt="${esc(brideName)}" onerror="this.style.display='none';this.parentElement.textContent='${brideInit}';" />
                 </div>
               </div>
+              <div class="role-lbl">BRIDE</div>
               <div class="nm">${esc(brideName)}</div>
-              <div class="rel">DAUGHTER OF</div>
+              <div class="rel">D/O <span class="rel-full">(DAUGHTER OF)</span></div>
               ${brideParents ? `<div class="fa">${esc(brideParents)}</div>` : ''}
-              ${brideAddress ? `<div class="ad">${esc(brideAddress)}</div>` : ''}
+              ${brideAddress ? `<div class="ad">📍 ${esc(brideAddress)}</div>` : ''}
             </div>
             `}
+          </div>
+          <div class="p2-quote rv" style="--i:3">
+            <div class="p2-ornament">❖</div>
+            <p class="p2-quote-text">Two hearts, two families,<br>one beautiful beginning.</p>
           </div>
         </div>
       </section>
 
-      <!-- Page 3: Wedding Programme with Ceremony Photos -->
+      <!-- Page 3: Auspicious Wedding Muhurat & Scratch Card Date Reveal -->
       <section class="pg paper" id="p3">
+        <div class="bd l"></div>
+        <div class="bd r"></div>
+        <div class="card-paper" id="date-card">
+          <div class="kick">AUSPICIOUS WEDDING MUHURAT</div>
+          <div class="sub-kick">The Sacred Wedding Date</div>
+          <p class="t04-scratch-tagline">Scratch below to reveal our sacred wedding date, followed by live countdown &amp; calendar</p>
+          <div class="div"></div>
+
+          <!-- Interactive Scratch Card -->
+          <div class="t04-scratch-wrap">
+            <div class="t04-scratch-box" id="t04-scratch-box">
+              <div class="t04-scratch-unveiled">
+                <span class="t04-scratch-icon">💍</span>
+                <div class="t04-scratch-date">${esc(dateLong)}</div>
+                <div class="t04-scratch-time">⏰ Auspicious Muhurat: ${esc(timeStr)}</div>
+                <div class="t04-scratch-badge">✦ Shubh Vivah · Sacred Union ✦</div>
+              </div>
+              <canvas id="t04-scratch-canvas" class="t04-scratch-canvas" aria-label="Scratch to reveal the wedding date"></canvas>
+            </div>
+            <button type="button" class="t04-scratch-btn" id="t04-scratch-btn">
+              <span>✨</span> Scratch or Tap to Reveal
+            </button>
+          </div>
+
+          <!-- Live Countdown Timer -->
+          <div class="cd-section-title">COUNT DOWN DATE</div>
+          <div class="countdown-grid" id="t04-countdown" data-target="${countdownTarget}">
+            <div class="cd-box"><span class="cd-val" data-cd="days">00</span><span class="cd-lbl">Days</span></div>
+            <div class="cd-box"><span class="cd-val" data-cd="hours">00</span><span class="cd-lbl">Hours</span></div>
+            <div class="cd-box"><span class="cd-val" data-cd="minutes">00</span><span class="cd-lbl">Mins</span></div>
+            <div class="cd-box"><span class="cd-val" data-cd="seconds">00</span><span class="cd-lbl">Secs</span></div>
+          </div>
+
+          <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="gold-btn-sm" id="t04-calendar">
+            📅 Save Date
+          </a>
+        </div>
+      </section>
+
+      <!-- Page 4: Wedding Programme with Ceremony Photos -->
+      <section class="pg paper" id="p4">
         <div class="bd l"></div>
         <div class="bd r"></div>
         <div class="card-paper" id="prog-card">
@@ -1158,45 +1270,6 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
         </div>
       </section>
 
-      <!-- Page 4: Auspicious Timing & Scratch Card Date Reveal -->
-      <section class="pg paper" id="p4">
-        <div class="bd l"></div>
-        <div class="bd r"></div>
-        <div class="card-paper" id="date-card">
-          <div class="kick">AUSPICIOUS TIMING</div>
-          <div class="sub-kick">Scratch To Reveal Wedding Date</div>
-          <div class="div"></div>
-
-          <!-- Interactive Scratch Card -->
-          <div class="t04-scratch-wrap">
-            <div class="t04-scratch-box" id="t04-scratch-box">
-              <div class="t04-scratch-unveiled">
-                <span class="t04-scratch-icon">💍</span>
-                <div class="t04-scratch-date">${esc(dateLong)}</div>
-                <div class="t04-scratch-time">⏰ Auspicious Muhurat: ${esc(timeStr)}</div>
-                <div class="t04-scratch-badge">✦ Shubh Vivah · Sacred Union ✦</div>
-              </div>
-              <canvas id="t04-scratch-canvas" class="t04-scratch-canvas" aria-label="Scratch to reveal the wedding date"></canvas>
-            </div>
-            <button type="button" class="t04-scratch-btn" id="t04-scratch-btn">
-              <span>✨</span> Scratch or Tap to Reveal
-            </button>
-          </div>
-
-          <!-- Live Countdown Timer -->
-          <div class="countdown-grid" id="t04-countdown" data-target="${countdownTarget}">
-            <div class="cd-box"><span class="cd-val" data-cd="days">00</span><span class="cd-lbl">Days</span></div>
-            <div class="cd-box"><span class="cd-val" data-cd="hours">00</span><span class="cd-lbl">Hours</span></div>
-            <div class="cd-box"><span class="cd-val" data-cd="minutes">00</span><span class="cd-lbl">Mins</span></div>
-            <div class="cd-box"><span class="cd-val" data-cd="seconds">00</span><span class="cd-lbl">Secs</span></div>
-          </div>
-
-          <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="gold-btn-sm" id="t04-calendar">
-            📅 Add to Google Calendar
-          </a>
-        </div>
-      </section>
-
       <!-- Page 5: Celebration Venue & Directions -->
       <section class="pg paper" id="p5">
         <div class="bd l"></div>
@@ -1204,6 +1277,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
         <div class="card-paper" id="venue-card">
           <div class="kick">CELEBRATION VENUE</div>
           <div class="sub-kick">${esc(primaryVenueTitle)}</div>
+          ${secondaryAddress ? `<div class="venue-loc-sub">${esc(secondaryAddress)}</div>` : ''}
           <div class="div"></div>
           ${venuePhoto ? `
           <div class="venue-photo-wrap">
@@ -1225,7 +1299,8 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
           </div>
 
           <div class="venue-signature">
-            <div class="sig-name">${esc(signature)}</div>
+            <div class="sig-prefix">With love, affection, and best wishes,</div>
+            <div class="sig-name">${esc(familySignature)}</div>
             <div class="sig-sub">We eagerly look forward to celebrating with you!</div>
             <button type="button" class="start-again-btn" data-restart>Start Again ↻</button>
           </div>
