@@ -82,7 +82,7 @@ function makeDate(y, mo, d) {
 
 function formatDateLong(v) {
   const p = parseDate(v);
-  if (!p) return clean(v) || 'Date to be announced';
+  if (!p) return clean(v) || 'Date To Follow';
   return `${p.dayName}, ${p.d} ${p.monthName} ${p.y}`;
 }
 
@@ -112,6 +112,31 @@ function buildGCalUrl({ title, start, end, details, location }) {
   const e = end instanceof Date && !isNaN(end) ? fmt(end) : s;
   const dates = s && e ? `&dates=${s}/${e}` : '';
   return `${baseUrl}&text=${encodeURIComponent(title || 'Wedding Celebration')}${dates}&details=${encodeURIComponent(details || '')}&location=${encodeURIComponent(location || '')}`;
+}
+
+const CEREMONY_IMAGES = [
+  { re: /gaye\s*holud|holud|haldi/i, img: './assets/template-06-gaye-holud.webp' },
+  { re: /mehndi|mehendi/i, img: './assets/template-06-sangeet.webp' },
+  { re: /sangeet|musical|dance/i, img: './assets/template-06-sangeet.webp' },
+  { re: /reception|dinner|banquet/i, img: './assets/template-06-reception.webp' },
+  { re: /bou\s*bhat|boubhat|walima/i, img: './assets/template-06-boubhat.webp' },
+  { re: /biye|bibaho|shubho|nikah|vivah|wedding|ceremony|phere|phera/i, img: './assets/template-06-shubho-bibaho.webp' }
+];
+
+function getEventPhoto(ev, idx = 0) {
+  const custom = safeImg(ev.photo || ev.photo_url || ev.event_photo || ev.image || ev.image_url);
+  if (custom) return custom;
+  const name = String(ev.event_name || ev.name || ev.title || '');
+  for (const item of CEREMONY_IMAGES) {
+    if (item.re.test(name)) return item.img;
+  }
+  const fallbacks = [
+    './assets/template-06-shubho-bibaho.webp',
+    './assets/template-06-sangeet.webp',
+    './assets/template-06-reception.webp',
+    './assets/template-06-gaye-holud.webp'
+  ];
+  return fallbacks[idx % fallbacks.length];
 }
 
 export default function renderT04({ guest, wedding, events = [] } = {}) {
@@ -145,17 +170,20 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   const brideAddress = clean(w.bride_address || '');
   const groomAddress = clean(w.groom_address || '');
 
-  // Venue & Location
-  const rawVenue = clean(w.venue || w.venue_name || '');
-  const hallBanquet = clean(w.venue_title || w.hall || w.banquet || '');
-  let dynamicVenue = rawVenue;
-  if (!dynamicVenue) {
-    dynamicVenue = hallBanquet || (clean(w.date) ? 'Wedding Celebration Venue' : 'Venue To Follow');
-  } else if (hallBanquet && !dynamicVenue.includes(hallBanquet)) {
-    dynamicVenue = `${dynamicVenue} ${hallBanquet}`;
+  // Venue & Location Resolution
+  const hallName = clean(w.venue_title) || clean(w.banquet_name) || clean(w.hall) || clean(w.venue_name);
+  const cityName = clean(w.city) || clean(w.address) || clean(w.venue_address) || clean(w.location);
+  const rawVenue = clean(w.venue);
+  
+  let primaryVenueTitle = hallName || rawVenue || (clean(w.date) ? 'Grand Celebration Venue' : 'Venue To Follow');
+  let secondaryAddress = cityName;
+  if (hallName && rawVenue && rawVenue.toLowerCase() !== hallName.toLowerCase()) {
+    secondaryAddress = secondaryAddress ? `${rawVenue}, ${secondaryAddress}` : rawVenue;
   }
-  const venueAddress = clean(w.address) || clean(w.venue_address) || '';
-  const mapUrl = clean(w.map_url) || (dynamicVenue ? `https://maps.google.com/?q=${encodeURIComponent(dynamicVenue + ' ' + venueAddress)}` : '');
+  secondaryAddress = secondaryAddress.replace(/^,\s*|,\s*$/g, '').trim();
+
+  const dynamicVenue = primaryVenueTitle;
+  const mapUrl = clean(w.map_url) || (primaryVenueTitle ? `https://maps.google.com/?q=${encodeURIComponent(primaryVenueTitle + ' ' + secondaryAddress)}` : '');
   const venueComment = clean(w.comment) || clean(w.venue_comment) || clean(w.note) || '';
 
   // Date & Auspicious Timing
@@ -187,11 +215,11 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   const gcalUrl = buildGCalUrl({
     title: `${groomName} & ${brideName}'s Wedding`,
     start: gcalDateStart,
-    location: `${dynamicVenue}, ${venueAddress}`,
+    location: `${primaryVenueTitle}, ${secondaryAddress}`,
     details: `Cordially inviting you to celebrate the wedding of ${groomName} & ${brideName}.`
   });
 
-  // Guest Details & Badge logic strictly conforming to UI/UX test suites
+  // Guest Details & Badge logic
   const guestName = clean(guest?.name) || clean(guest?.guest_name) || '';
   const hasFamily = Boolean(guest?.with_family);
   const isFamilyAlreadyInName = /family/i.test(guestName);
@@ -206,14 +234,12 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   // Page 1 tP Badge text
   const tPText = hasFamily
     ? 'Family'
-    : (guest?.persons && guest.persons > 1 ? `${guest.persons} Persons` : 'Personal Invitation • 1 Person');
-
-  const maxGuests = Math.max(1, parseInt(guest?.persons, 10) || (hasFamily ? 4 : 1));
+    : (guest?.persons && guest.persons > 1 ? `${guest.persons} Persons` : 'Personal Invitation');
 
   // Events / Programme List
   const defaultEvents = [
-    { event_name: 'Mehendi & Sangeet', event_date: rawDate || '2026-11-20', event_time: '17:00', venue: dynamicVenue, note: venueComment || 'An evening of joyful music, henna, and celebratory melodies.' },
-    { event_name: 'Wedding Ceremony', event_date: rawDate || '2026-11-20', event_time: rawTime || '19:30', venue: dynamicVenue, note: venueComment || 'Auspicious wedding vows and royal banquet dinner.' }
+    { event_name: 'Mehendi & Sangeet', event_date: rawDate || '2026-11-20', event_time: '17:00', venue: primaryVenueTitle, note: 'An evening of joyful music, henna, and celebratory melodies.' },
+    { event_name: 'Wedding Ceremony', event_date: rawDate || '2026-11-20', event_time: rawTime || '19:30', venue: primaryVenueTitle, note: 'Auspicious wedding vows and royal banquet dinner.' }
   ];
   const eventList = (Array.isArray(events) && events.length) ? events : defaultEvents;
 
@@ -288,6 +314,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   overscroll-behavior: contain;
+  padding-bottom: 80px;
 }
 .scroller::-webkit-scrollbar { display: none; }
 .scroller.lock { overflow: hidden; }
@@ -324,8 +351,8 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   position: absolute;
   left: 7%;
   right: 7%;
-  top: 9%;
-  bottom: 9%;
+  top: 8%;
+  bottom: 8%;
   border-radius: 3.5cqw;
   background: linear-gradient(160deg, rgba(255, 252, 244, 0.75), rgba(255, 244, 222, 0.55) 55%, rgba(255, 250, 240, 0.70));
   backdrop-filter: blur(7px) saturate(1.15);
@@ -338,9 +365,9 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   justify-content: safe center;
-  padding: 4.5cqw 3cqw;
+  padding: 4cqw 3cqw;
   text-align: center;
-  gap: 2.8cqw;
+  gap: 2.6cqw;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 2;
@@ -377,22 +404,22 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
 .show .rv { opacity: 1; transform: none; }
 
 .kick {
-  font: 700 3.2cqw/1 Cinzel, serif;
-  letter-spacing: .7cqw;
+  font: 700 3.4cqw/1 Cinzel, serif;
+  letter-spacing: .5cqw;
   color: #5a3a08;
   text-transform: uppercase;
 }
 .sub-kick {
-  font: 600 2.4cqw/1.2 Cinzel, serif;
-  letter-spacing: .3cqw;
+  font: 600 2.6cqw/1.2 Cinzel, serif;
+  letter-spacing: .25cqw;
   color: #7a1220;
 }
 .div {
-  width: 40cqw;
+  width: 38cqw;
   height: .35cqw;
   background: linear-gradient(90deg, transparent, #c9a24a, transparent);
   position: relative;
-  margin: .5cqw 0;
+  margin: .4cqw 0;
 }
 .div::after {
   content: '';
@@ -472,7 +499,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   overflow-wrap: anywhere;
 }
 
-/* Inner Paper Cards (Pages 3-6) */
+/* Inner Paper Cards */
 .pg.paper {
   background: radial-gradient(#fff9ec, #f7e8c8 70%, #ebd29d);
 }
@@ -497,7 +524,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   top: 4.5%;
   bottom: 4.5%;
   border-radius: 3.5cqw;
-  background: linear-gradient(160deg, rgba(255, 252, 244, 0.82), rgba(255, 246, 228, 0.68) 55%, rgba(255, 250, 240, 0.80));
+  background: linear-gradient(160deg, rgba(255, 252, 244, 0.85), rgba(255, 246, 228, 0.72) 55%, rgba(255, 250, 240, 0.82));
   backdrop-filter: blur(8px) saturate(1.15);
   -webkit-backdrop-filter: blur(8px) saturate(1.15);
   box-shadow: inset 0 0 0 0.2cqw rgba(201, 162, 74, 0.85),
@@ -509,34 +536,66 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   align-items: center;
   padding: 4.5cqw 3.5cqw;
   text-align: center;
-  gap: 2.4cqw;
+  gap: 2.2cqw;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 2;
 }
 .card-paper::-webkit-scrollbar { display: none; }
 
-/* Programme Timeline */
+/* Programme Timeline with Ceremony Thumbnails */
 .prog-list {
   display: flex;
   flex-direction: column;
-  gap: 2.5cqw;
+  gap: 2.8cqw;
   width: 100%;
   margin-top: 1cqw;
 }
 .prog-item {
   display: flex;
   flex-direction: column;
-  gap: .8cqw;
-  padding: 2.5cqw 3cqw;
-  border-radius: 2.2cqw;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(201, 162, 74, 0.5);
-  box-shadow: 0 .8cqw 2cqw rgba(90, 58, 8, 0.08);
+  border-radius: 2.4cqw;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid rgba(201, 162, 74, 0.55);
+  box-shadow: 0 .8cqw 2.5cqw rgba(90, 58, 8, 0.1);
+  overflow: hidden;
   text-align: center;
 }
+.prog-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 22cqw;
+  overflow: hidden;
+  background: #ebd8b2;
+}
+.prog-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.prog-badge {
+  position: absolute;
+  top: 1.5cqw;
+  left: 2cqw;
+  padding: .5cqw 2.2cqw;
+  border-radius: 50px;
+  background: rgba(107, 15, 26, 0.9);
+  color: #ffe082;
+  font: 700 2.2cqw/1 Cinzel, serif;
+  letter-spacing: .15cqw;
+  box-shadow: 0 .4cqw 1.2cqw rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 224, 130, 0.6);
+}
+.prog-info {
+  padding: 2.5cqw 3cqw;
+  display: flex;
+  flex-direction: column;
+  gap: .8cqw;
+  align-items: center;
+}
 .prog-item-title {
-  font: 700 3.6cqw/1.1 Cinzel, serif;
+  font: 700 3.8cqw/1.15 Cinzel, serif;
   color: #6b0f1a;
   letter-spacing: .15cqw;
 }
@@ -545,7 +604,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   color: #5a3a08;
 }
 .prog-item-venue {
-  font: 600 2.9cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 3cqw/1.2 'Cormorant Garamond', serif;
   color: #1a1004;
 }
 .prog-item-note {
@@ -557,53 +616,108 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1cqw;
-  margin-top: .5cqw;
+  margin-top: .6cqw;
   align-self: center;
-  font: 600 2.3cqw/1 Cinzel, serif;
+  font: 600 2.4cqw/1 Cinzel, serif;
   color: #6b0f1a;
   text-decoration: none;
-  padding: 1.2cqw 2.5cqw;
+  padding: 1.4cqw 3cqw;
   border-radius: 50px;
-  background: rgba(201, 162, 74, 0.15);
-  border: 1px solid rgba(201, 162, 74, 0.5);
+  background: rgba(201, 162, 74, 0.18);
+  border: 1px solid rgba(201, 162, 74, 0.6);
   transition: all .2s;
 }
 
-/* Date Hero & Countdown */
-.date-hero {
+/* Interactive Royal Scratch Card for Date & Muhurat */
+.t04-scratch-wrap {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1cqw;
-  margin: 1.5cqw 0;
+  gap: 1.5cqw;
+  margin: 1cqw 0;
 }
-.date-dayname {
-  font: 8cqw/1 'Great Vibes', cursive;
-  color: #b8892b;
+.t04-scratch-box {
+  position: relative;
+  width: 100%;
+  max-width: 44cqw;
+  height: 22cqw;
+  border-radius: 2.5cqw;
+  overflow: hidden;
+  box-shadow: 0 1cqw 3cqw rgba(90, 58, 8, 0.25);
+  border: 1.5px solid #c9a24a;
+  background: #fff;
 }
-.date-main {
-  font: 700 4.6cqw/1.2 Cinzel, serif;
+.t04-scratch-unveiled {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5cqw;
+  gap: .6cqw;
+  background: linear-gradient(135deg, #fffdf8, #fdf4df);
+  text-align: center;
+}
+.t04-scratch-icon { font-size: 5cqw; line-height: 1; }
+.t04-scratch-date {
+  font: 700 3.6cqw/1.15 Cinzel, serif;
   color: #6b0f1a;
-  letter-spacing: .2cqw;
+  letter-spacing: .1cqw;
 }
-.date-time {
-  font: 600 3.4cqw/1 Cinzel, serif;
+.t04-scratch-time {
+  font: 600 2.8cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
-  letter-spacing: .15cqw;
 }
+.t04-scratch-badge {
+  font: 700 2.1cqw/1 Cinzel, serif;
+  letter-spacing: .15cqw;
+  color: #b8892b;
+  text-transform: uppercase;
+}
+.t04-scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  z-index: 2;
+}
+.t04-scratch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2cqw;
+  padding: 1.8cqw 3.8cqw;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #b8892b, #e0be6c 50%, #9a6f1c);
+  color: #fff;
+  font: 700 2.3cqw/1 Cinzel, serif;
+  letter-spacing: .2cqw;
+  border: 1px solid rgba(255, 235, 170, 0.6);
+  box-shadow: 0 .6cqw 2cqw rgba(90, 58, 8, 0.25);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform .15s;
+}
+.t04-scratch-btn:active { transform: scale(0.96); }
+
+/* Date Hero & Countdown */
 .countdown-grid {
   display: flex;
   gap: 2cqw;
   width: 100%;
   justify-content: center;
-  margin: 1cqw 0;
+  margin: 1.5cqw 0;
 }
 .cd-box {
   flex: 1;
   max-width: 16cqw;
   padding: 2.2cqw 1cqw;
   border-radius: 2cqw;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(201, 162, 74, 0.6);
   box-shadow: 0 .6cqw 1.8cqw rgba(90, 58, 8, 0.12);
   display: flex;
@@ -630,7 +744,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   padding: .6cqw;
   background: conic-gradient(#f7e08a, #b8892b, #fff3b8, #9a6f1c, #f7e08a);
   box-shadow: 0 1cqw 3cqw rgba(90, 58, 8, 0.2);
-  margin: 1cqw auto;
+  margin: .8cqw auto;
 }
 .venue-photo-wrap img {
   width: 100%;
@@ -645,10 +759,10 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   height: 22cqw;
   border-radius: 2.5cqw;
   background: rgba(201, 162, 74, 0.12);
-  border: 1px dashed rgba(201, 162, 74, 0.6);
+  border: 1.5px dashed rgba(201, 162, 74, 0.6);
   display: grid;
   place-items: center;
-  margin: 1cqw auto;
+  margin: .8cqw auto;
 }
 .venue-arch-icon {
   font-size: 8cqw;
@@ -657,20 +771,27 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   gap: .8cqw;
-  margin: 1cqw 0;
+  margin: .8cqw 0;
+  width: 100%;
+  align-items: center;
 }
 .venue-name-bold {
-  font: 700 3.8cqw/1.2 Cinzel, serif;
+  font: 700 4.2cqw/1.2 Cinzel, serif;
   color: #6b0f1a;
   letter-spacing: .15cqw;
 }
 .venue-full-addr {
-  font: 600 3.2cqw/1.3 'Cormorant Garamond', serif;
+  font: 600 3.3cqw/1.3 'Cormorant Garamond', serif;
   color: #1a1004;
+  max-width: 46cqw;
+}
+.venue-timing {
+  font: 600 3.1cqw/1.2 'Cormorant Garamond', serif;
+  color: #5a3a08;
 }
 .venue-note {
   font: 500 italic 2.8cqw/1.2 'Cormorant Garamond', serif;
-  color: #5a3a08;
+  color: #4a2c06;
 }
 
 /* Gold Action Buttons */
@@ -679,7 +800,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1.5cqw;
-  padding: 2.5cqw 5cqw;
+  padding: 2.6cqw 5cqw;
   border-radius: 50px;
   background: linear-gradient(135deg, #b8892b, #e0be6c 50%, #9a6f1c);
   color: #fff;
@@ -691,10 +812,10 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   cursor: pointer;
   transition: transform .2s, box-shadow .2s;
   text-transform: uppercase;
+  margin-top: .5cqw;
 }
-.gold-btn:active {
-  transform: scale(0.97);
-}
+.gold-btn:active { transform: scale(0.97); }
+
 .gold-btn-sm {
   display: inline-flex;
   align-items: center;
@@ -710,177 +831,16 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   box-shadow: 0 .6cqw 2cqw rgba(90, 58, 8, 0.28);
   border: 1px solid rgba(255, 235, 170, 0.6);
   cursor: pointer;
-  margin-top: 1cqw;
+  margin-top: .8cqw;
 }
 
-/* RSVP Section Form */
-.rsvp-guest-summary {
-  display: flex;
-  flex-direction: column;
-  gap: .5cqw;
-  align-items: center;
-  margin-bottom: 1cqw;
-}
-.rsvp-guest-name {
-  font: 700 italic 4.5cqw/1.2 'Cormorant Garamond', serif;
-  color: #6b0f1a;
-}
-.rsvp-guest-tag {
-  display: inline-block;
-  padding: .8cqw 2.8cqw;
-  border-radius: 50px;
-  background: rgba(201, 162, 74, 0.18);
-  border: 1px solid rgba(201, 162, 74, 0.6);
-  font: 700 2.4cqw/1 Cinzel, serif;
-  letter-spacing: .25cqw;
-  color: #5a3a08;
-  text-transform: uppercase;
-}
-
-.rsvp-form {
-  display: flex;
-  flex-direction: column;
-  gap: 2.2cqw;
-  width: 100%;
-}
-.rsvp-choice-row {
-  display: flex;
-  gap: 2cqw;
-  width: 100%;
-  justify-content: center;
-}
-.rsvp-choice-card {
-  flex: 1;
-  cursor: pointer;
-  position: relative;
-}
-.rsvp-choice-card input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-.choice-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .8cqw;
-  padding: 2.2cqw 1cqw;
-  border-radius: 2cqw;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1.5px solid rgba(201, 162, 74, 0.4);
-  transition: all .2s;
-}
-.rsvp-choice-card input:checked + .choice-box {
-  border-color: #6b0f1a;
-  background: rgba(255, 240, 240, 0.85);
-  box-shadow: 0 0 1.5cqw rgba(107, 15, 26, 0.25);
-}
-.choice-icon { font-size: 4cqw; }
-.choice-text {
-  font: 700 2.4cqw/1 Cinzel, serif;
-  letter-spacing: .1cqw;
-  color: #5a3a08;
-}
-.rsvp-choice-card input:checked + .choice-box .choice-text {
-  color: #6b0f1a;
-}
-
-.rsvp-field {
-  display: flex;
-  flex-direction: column;
-  gap: .8cqw;
-  text-align: left;
-}
-.rsvp-label {
-  font: 700 2.5cqw/1 Cinzel, serif;
-  color: #5a3a08;
-  letter-spacing: .15cqw;
-}
-.rsvp-counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2cqw;
-}
-.cnt-btn {
-  width: 8cqw;
-  height: 8cqw;
-  border-radius: 50%;
-  background: #f7e8c8;
-  border: 1.5px solid #c9a24a;
-  color: #5a3a08;
-  font: 700 4cqw/1 Cinzel, serif;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: transform .15s;
-}
-.cnt-btn:active { transform: scale(0.92); }
-#rsvp-attendees {
-  width: 14cqw;
-  height: 8cqw;
-  text-align: center;
-  border-radius: 1.5cqw;
-  border: 1.5px solid #c9a24a;
-  background: #fff;
-  font: 700 4cqw/1 Cinzel, serif;
-  color: #6b0f1a;
-}
-.rsvp-hint {
-  font: 500 italic 2.3cqw/1 'Cormorant Garamond', serif;
-  color: #5a3a08;
-  text-align: center;
-}
-.rsvp-textarea {
-  width: 100%;
-  padding: 2cqw;
-  border-radius: 2cqw;
-  border: 1.5px solid rgba(201, 162, 74, 0.6);
-  background: rgba(255, 255, 255, 0.85);
-  font: 600 3cqw/1.3 'Cormorant Garamond', serif;
-  color: #1a1004;
-  resize: vertical;
-}
-.rsvp-textarea:focus {
-  outline: none;
-  border-color: #6b0f1a;
-  box-shadow: 0 0 1cqw rgba(107, 15, 26, 0.25);
-}
-.gold-submit-btn {
-  padding: 2.6cqw 4cqw;
-  border-radius: 50px;
-  background: linear-gradient(135deg, #6b0f1a, #9e1b2e 50%, #5a0a14);
-  color: #fff;
-  font: 700 2.8cqw/1 Cinzel, serif;
-  letter-spacing: .25cqw;
-  border: 1px solid rgba(255, 214, 110, 0.5);
-  box-shadow: 0 .8cqw 2cqw rgba(107, 15, 26, 0.35);
-  cursor: pointer;
-  transition: transform .2s;
-  text-transform: uppercase;
-  margin-top: .5cqw;
-}
-.gold-submit-btn:active { transform: scale(0.97); }
-
-.rsvp-status-msg {
-  padding: 2cqw;
-  border-radius: 1.5cqw;
-  font: 600 2.8cqw/1.2 'Cormorant Garamond', serif;
-  text-align: center;
-}
-.rsvp-status-msg.success {
-  background: rgba(220, 245, 220, 0.9);
-  color: #1b5e20;
-  border: 1px solid #81c784;
-}
-
-.rsvp-signature {
+.venue-signature {
   display: flex;
   flex-direction: column;
   gap: .6cqw;
   align-items: center;
-  margin-top: 2cqw;
-  padding-top: 2cqw;
+  margin-top: 1.5cqw;
+  padding-top: 1.5cqw;
   border-top: 1px solid rgba(201, 162, 74, 0.35);
   width: 100%;
 }
@@ -893,7 +853,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   color: #5a3a08;
 }
 .start-again-btn {
-  margin-top: 1cqw;
+  margin-top: .8cqw;
   background: none;
   border: none;
   font: 600 2.4cqw/1 Cinzel, serif;
@@ -926,16 +886,18 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   right: 0;
   text-align: center;
   pointer-events: none;
-  white-space: nowrap;
   transform: translateY(-50%);
+  max-width: 88cqw;
+  margin: 0 auto;
+  white-space: nowrap;
 }
 .tx span { display: inline-block; }
 
 #tW {
-  top: 9.0%;
-  font: 700 6.2cqw/1 Cinzel, serif;
+  top: 8.2%;
+  font: 700 5.4cqw/1 Cinzel, serif;
   color: #6b0f1a;
-  letter-spacing: .9cqw;
+  letter-spacing: .7cqw;
 }
 #tW span, .nmL span, #tN span {
   background: linear-gradient(100deg, #5a0a14 0%, #8c1426 38%, #e3b04a 50%, #8c1426 62%, #5a0a14 100%) 0 0/260% 100%;
@@ -954,39 +916,41 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   filter: drop-shadow(0 .25cqw .35cqw rgba(214, 170, 70, 0.55));
 }
 #tC {
-  top: 12.1%;
-  font: 500 3.1cqw/1 Cinzel, serif;
+  top: 12.0%;
+  font: 600 2.8cqw/1 Cinzel, serif;
   color: #5a3a08;
-  letter-spacing: .55cqw;
+  letter-spacing: .45cqw;
 }
 .nmL {
-  font: 7.8cqw/1 'Great Vibes', cursive;
+  font: 7.2cqw/1 'Great Vibes', cursive;
   color: #7a1220;
 }
-#tG { top: 19.4%; }
+#tG { top: 17.8%; }
 #tA {
-  top: 25%;
-  font: 7.5cqw/1 'Great Vibes', cursive;
+  top: 23.2%;
+  font: 6.8cqw/1 'Great Vibes', cursive;
   color: #b8892b;
   text-shadow: 0 0 1cqw rgba(255, 230, 150, 0.9);
 }
-#tB { top: 30.3%; }
+#tB { top: 28.2%; }
 #tI {
-  top: 37.2%;
-  font: 500 3cqw/1 Cinzel, serif;
+  top: 35.0%;
+  font: 600 2.7cqw/1 Cinzel, serif;
   color: #5a3a08;
-  letter-spacing: .55cqw;
+  letter-spacing: .45cqw;
 }
 #tN {
-  top: 43%;
-  font: 700 italic 6.4cqw/1 'Cormorant Garamond', serif;
+  top: 40.2%;
+  font: 700 italic 5.8cqw/1.1 'Cormorant Garamond', serif;
   color: #6b0f1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 #tP {
-  top: 46.5%;
-  font: 500 3.4cqw/1 Cinzel, serif;
+  top: 45.0%;
+  font: 600 2.8cqw/1 Cinzel, serif;
   color: #4a2c06;
-  letter-spacing: .4cqw;
+  letter-spacing: .35cqw;
 }
 #pill {
   position: absolute;
@@ -1009,13 +973,13 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   mix-blend-mode: screen;
 }
 
-/* 3D Butterfly */
+/* 3D Butterfly positioned centered in the lower arch */
 .bf {
   position: absolute;
-  left: 23.05%;
-  top: 39%;
-  width: 68.36cqw;
-  height: 55.66cqw;
+  left: 21%;
+  top: 53%;
+  width: 58cqw;
+  height: 47cqw;
   z-index: 8;
   perspective: 100cqw;
   cursor: pointer;
@@ -1083,49 +1047,13 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   100% { background-position: 150% 0; }
 }
 
-/* Floating Music Control */
-.t04-music-btn {
-  position: absolute;
-  top: 3.5cqw;
-  right: 3.5cqw;
-  width: 9cqw;
-  height: 9cqw;
-  border-radius: 50%;
-  background: rgba(255, 252, 244, 0.82);
-  border: 1.5px solid rgba(201, 162, 74, 0.8);
-  box-shadow: 0 .6cqw 2cqw rgba(90, 58, 8, 0.25);
-  display: grid;
-  place-items: center;
-  color: #6b0f1a;
-  cursor: pointer;
-  z-index: 20;
-  transition: transform .2s, background .2s;
-}
-.t04-music-btn:active { transform: scale(0.92); }
-.t04-music-btn.playing {
-  animation: musicSpin 4s linear infinite;
-  border-color: #6b0f1a;
-  background: rgba(255, 240, 240, 0.9);
-}
-@keyframes musicSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .bf i, .bf::after, .on .glow, .t04-music-btn.playing { animation-duration: 6s; }
+  .bf i, .bf::after, .on .glow { animation-duration: 6s; }
 }
 </style>
 
 <div class="t04-wrapper">
   <main class="stage" id="stage">
-    <!-- Floating Music Button -->
-    <button id="t04-music-btn" class="t04-music-btn" aria-label="Toggle Music" type="button">
-      <svg viewBox="0 0 24 24" width="55%" height="55%" fill="currentColor">
-        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-      </svg>
-    </button>
-
     <!-- Scrollable Snapping Pages -->
     <div class="scroller lock" id="sc">
       <!-- Page 2: The Wedding Of -->
@@ -1193,7 +1121,7 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
         </div>
       </section>
 
-      <!-- Page 3: Wedding Programme -->
+      <!-- Page 3: Wedding Programme with Ceremony Photos -->
       <section class="pg paper" id="p3">
         <div class="bd l"></div>
         <div class="bd r"></div>
@@ -1206,131 +1134,97 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
               const eName = clean(e.event_name) || clean(e.name) || clean(e.title) || `Ceremony ${idx + 1}`;
               const eDateStr = formatEventDate(e.event_date || rawDate);
               const eTimeStr = formatTime(e.event_time || rawTime);
-              const eVenue = clean(e.venue) || clean(e.venue_title) || dynamicVenue;
+              const eVenue = clean(e.venue) || clean(e.venue_title) || primaryVenueTitle;
               const eNote = clean(e.note) || clean(e.comment) || clean(e.description) || venueComment;
+              const evImg = getEventPhoto(e, idx);
               return `
               <div class="prog-item">
-                <div class="prog-item-title">${esc(eName)}</div>
-                ${(eDateStr || eTimeStr) ? `<div class="prog-item-time">${esc(eDateStr)}${eTimeStr ? ' • ' + esc(eTimeStr) : ''}</div>` : ''}
-                ${eVenue ? `<div class="prog-item-venue">📍 ${esc(eVenue)}</div>` : ''}
-                ${eNote ? `<div class="prog-item-note">${esc(eNote)}</div>` : ''}
-                <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="add-cal-link">
-                  📅 Add To Calendar
-                </a>
+                <div class="prog-img-wrap">
+                  <img src="${esc(evImg)}" alt="${esc(eName)}" loading="lazy" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
+                  <span class="prog-badge">CEREMONY ${idx + 1}</span>
+                </div>
+                <div class="prog-info">
+                  <div class="prog-item-title">${esc(eName)}</div>
+                  ${(eDateStr || eTimeStr) ? `<div class="prog-item-time">🗓️ ${esc(eDateStr)}${eTimeStr ? ' • ⏰ ' + esc(eTimeStr) : ''}</div>` : ''}
+                  ${eVenue ? `<div class="prog-item-venue">📍 ${esc(eVenue)}</div>` : ''}
+                  ${eNote ? `<div class="prog-item-note">“${esc(eNote)}”</div>` : ''}
+                  <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="add-cal-link">
+                    📅 Add To Calendar
+                  </a>
+                </div>
               </div>`;
             }).join('')}
           </div>
         </div>
       </section>
 
-      <!-- Page 4: Auspicious Muhurat & Countdown -->
+      <!-- Page 4: Auspicious Timing & Scratch Card Date Reveal -->
       <section class="pg paper" id="p4">
         <div class="bd l"></div>
         <div class="bd r"></div>
         <div class="card-paper" id="date-card">
           <div class="kick">AUSPICIOUS TIMING</div>
-          <div class="sub-kick">Save The Date</div>
+          <div class="sub-kick">Scratch To Reveal Wedding Date</div>
           <div class="div"></div>
-          <div class="date-hero">
-            ${dayName ? `<div class="date-dayname">${esc(dayName)}</div>` : ''}
-            <div class="date-main">${esc(dateLong)}</div>
-            <div class="date-time">${esc(timeStr)}</div>
+
+          <!-- Interactive Scratch Card -->
+          <div class="t04-scratch-wrap">
+            <div class="t04-scratch-box" id="t04-scratch-box">
+              <div class="t04-scratch-unveiled">
+                <span class="t04-scratch-icon">💍</span>
+                <div class="t04-scratch-date">${esc(dateLong)}</div>
+                <div class="t04-scratch-time">⏰ Auspicious Muhurat: ${esc(timeStr)}</div>
+                <div class="t04-scratch-badge">✦ Shubh Vivah · Sacred Union ✦</div>
+              </div>
+              <canvas id="t04-scratch-canvas" class="t04-scratch-canvas" aria-label="Scratch to reveal the wedding date"></canvas>
+            </div>
+            <button type="button" class="t04-scratch-btn" id="t04-scratch-btn">
+              <span>✨</span> Scratch or Tap to Reveal
+            </button>
           </div>
+
+          <!-- Live Countdown Timer -->
           <div class="countdown-grid" id="t04-countdown" data-target="${countdownTarget}">
             <div class="cd-box"><span class="cd-val" data-cd="days">00</span><span class="cd-lbl">Days</span></div>
             <div class="cd-box"><span class="cd-val" data-cd="hours">00</span><span class="cd-lbl">Hours</span></div>
             <div class="cd-box"><span class="cd-val" data-cd="minutes">00</span><span class="cd-lbl">Mins</span></div>
             <div class="cd-box"><span class="cd-val" data-cd="seconds">00</span><span class="cd-lbl">Secs</span></div>
           </div>
+
           <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="gold-btn-sm" id="t04-calendar">
             📅 Add to Google Calendar
           </a>
         </div>
       </section>
 
-      <!-- Page 5: Celebration Venue & Map -->
+      <!-- Page 5: Celebration Venue & Directions -->
       <section class="pg paper" id="p5">
         <div class="bd l"></div>
         <div class="bd r"></div>
         <div class="card-paper" id="venue-card">
           <div class="kick">CELEBRATION VENUE</div>
-          <div class="sub-kick">${esc(dynamicVenue)}</div>
+          <div class="sub-kick">${esc(primaryVenueTitle)}</div>
           <div class="div"></div>
           ${venuePhoto ? `
           <div class="venue-photo-wrap">
-            <img src="${esc(venuePhoto)}" alt="${esc(dynamicVenue)}" class="venue-img" />
+            <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-img" />
           </div>` : `
           <div class="venue-arch-wrap">
             <div class="venue-arch-icon">🏛️</div>
           </div>`}
           <div class="venue-address-text">
-            <p class="venue-name-bold">${esc(dynamicVenue)}</p>
-            ${venueAddress ? `<p class="venue-full-addr">${esc(venueAddress)}</p>` : ''}
-            ${venueComment ? `<p class="venue-note"><em>${esc(venueComment)}</em></p>` : ''}
+            <p class="venue-name-bold">${esc(primaryVenueTitle)}</p>
+            ${secondaryAddress ? `<p class="venue-full-addr">📍 ${esc(secondaryAddress)}</p>` : ''}
+            ${timeStr ? `<p class="venue-timing">⏰ ${esc(timeStr)}</p>` : ''}
+            ${venueComment ? `<p class="venue-note"><em>“${esc(venueComment)}”</em></p>` : ''}
           </div>
           <div class="venue-actions">
             <a href="${esc(mapUrl)}" target="_blank" rel="noopener noreferrer" class="gold-btn" id="t04-maps">
               📍 Get Directions • Google Maps
             </a>
           </div>
-        </div>
-      </section>
 
-      <!-- Page 6: RSVP Attendance Form -->
-      <section class="pg paper" id="p6">
-        <div class="bd l"></div>
-        <div class="bd r"></div>
-        <div class="card-paper" id="rsvp-card">
-          <div class="kick">KINDLY RESPOND</div>
-          <div class="sub-kick">Will You Join Us?</div>
-          <div class="div"></div>
-          
-          <div class="rsvp-guest-summary">
-            <div class="rsvp-guest-name">${esc(guestDisplayName)}</div>
-            <div class="rsvp-guest-tag">${esc(guestBadge)}</div>
-          </div>
-
-          <form class="rsvp-form" id="royalRsvpForm" onsubmit="return false;">
-            <div class="rsvp-choice-row">
-              <label class="rsvp-choice-card">
-                <input type="radio" name="attending" value="attending" checked />
-                <span class="choice-box">
-                  <span class="choice-icon">✨</span>
-                  <span class="choice-text">Gladly Accept</span>
-                </span>
-              </label>
-              <label class="rsvp-choice-card">
-                <input type="radio" name="attending" value="declined" />
-                <span class="choice-box">
-                  <span class="choice-icon">🕊️</span>
-                  <span class="choice-text">Regretfully Decline</span>
-                </span>
-              </label>
-            </div>
-
-            <div class="rsvp-field" id="rsvp-count-wrapper">
-              <label class="rsvp-label">Number of Guests Attending:</label>
-              <div class="rsvp-counter">
-                <button type="button" class="cnt-btn" id="t04-cnt-dec" aria-label="Decrease guest count">−</button>
-                <input type="number" id="rsvp-attendees" name="attendees" min="1" max="${maxGuests}" value="1" readonly />
-                <button type="button" class="cnt-btn" id="t04-cnt-inc" aria-label="Increase guest count">+</button>
-              </div>
-              <div class="rsvp-hint">Reserved for your party: up to ${maxGuests} ${maxGuests === 1 ? 'person' : 'persons'}</div>
-            </div>
-
-            <div class="rsvp-field">
-              <label class="rsvp-label" for="t04-rsvp-wishes">Warm Wishes &amp; Blessings:</label>
-              <textarea id="t04-rsvp-wishes" name="wishes" class="rsvp-textarea" rows="3" placeholder="Share your blessings and prayers for the couple..."></textarea>
-            </div>
-
-            <button type="button" class="gold-submit-btn" id="t04-submit-rsvp" data-rsvp-submit>
-              Confirm RSVP &amp; Send Wishes
-            </button>
-
-            <div class="rsvp-status-msg" id="t04-rsvp-msg" style="display:none;"></div>
-          </form>
-
-          <div class="rsvp-signature">
+          <div class="venue-signature">
             <div class="sig-name">${esc(signature)}</div>
             <div class="sig-sub">We eagerly look forward to celebrating with you!</div>
             <button type="button" class="start-again-btn" data-restart>Start Again ↻</button>
@@ -1369,13 +1263,12 @@ export function mount(root, { guest, wedding, events } = {}) {
   const cv = typeof root.querySelector === 'function' ? root.querySelector('#fx') : null;
   const sc = typeof root.querySelector === 'function' ? root.querySelector('#sc') : null;
   const p2 = typeof root.querySelector === 'function' ? root.querySelector('#p2') : null;
-  const musicBtn = typeof root.querySelector === 'function' ? root.querySelector('#t04-music-btn') : null;
 
   let raf = 0;
   let countdownTimer = null;
   const cleanups = [];
 
-  // 1. Text Fitting
+  // 1. Text Fitting with safe padding & bounds
   const fit = (el, maxCq) => {
     if (!el || !st) return;
     const s = el.firstElementChild || el;
@@ -1388,14 +1281,14 @@ export function mount(root, { guest, wedding, events } = {}) {
     const mx = maxCq * clientW / 100;
     el.style.fontSize = base + 'px';
     const w = typeof s.getBoundingClientRect === 'function' ? s.getBoundingClientRect().width : 0;
-    if (w > mx && mx > 0) el.style.fontSize = (base * mx / w) + 'px';
+    if (w > mx && mx > 0) el.style.fontSize = Math.max(11, base * mx / w) + 'px';
   };
 
   const fitAll = () => {
     if (typeof root.querySelector !== 'function') return;
     ['tW', 'tC', 'tG', 'tB', 'tI', 'tN', 'tP'].forEach(id => {
       const el = root.querySelector('#' + id);
-      if (el) fit(el, 56);
+      if (el) fit(el, 82);
     });
     if (typeof root.querySelectorAll === 'function') {
       root.querySelectorAll('.nm').forEach(el => {
@@ -1448,54 +1341,48 @@ export function mount(root, { guest, wedding, events } = {}) {
         P.push({
           x, y,
           vx: Math.cos(a) * v,
-          vy: Math.sin(a) * v + (burst ? 0 : .25),
-          l: 1,
-          d: .012 + Math.random() * .02,
-          r: 1 + Math.random() * 2.6,
-          c: Math.random() < .5 ? '255,215,120' : '110,170,255'
+          vy: Math.sin(a) * v - (burst ? 1 : .3),
+          life: 0,
+          max: 40 + Math.random() * 50,
+          sz: 1 + Math.random() * 2.6,
+          hue: 42 + Math.random() * 12
         });
       }
     };
 
     let trail = false;
-    const loop = () => {
-      if (!cx || !st) return;
-      cx.clearRect(0, 0, st.clientWidth, st.clientHeight);
-      if (trail) spawn(2, false);
-      if (Math.random() < .22 && P.length < 90) {
-        P.push({
-          x: Math.random() * st.clientWidth,
-          y: st.clientHeight * (.4 + Math.random() * .6),
-          vx: (Math.random() - .5) * .3,
-          vy: -.25 - Math.random() * .35,
-          l: 1,
-          d: .004 + Math.random() * .004,
-          r: .8 + Math.random() * 1.8,
-          c: '255,222,140'
-        });
+    let tLast = 0;
+    const loop = (t) => {
+      if (!cv || !cx || !st) return;
+      cx.clearRect(0, 0, st.clientWidth || 360, st.clientHeight || 540);
+      if (trail && t - tLast > 45) {
+        spawn(3, false);
+        tLast = t;
       }
-      P = P.filter(p => p.l > 0);
-      for (const p of P) {
+      for (let i = P.length - 1; i >= 0; i--) {
+        const p = P[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.l -= p.d;
-        cx.globalAlpha = Math.max(p.l, 0);
-        const gr = cx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
-        gr.addColorStop(0, 'rgba(' + p.c + ',1)');
-        gr.addColorStop(1, 'rgba(' + p.c + ',0)');
-        cx.fillStyle = gr;
+        p.vy += .015;
+        p.life++;
+        const prog = p.life / p.max;
+        if (prog >= 1) { P.splice(i, 1); continue; }
+        const op = Math.sin(prog * Math.PI);
+        cx.save();
         cx.beginPath();
-        cx.arc(p.x, p.y, p.r * 3, 0, 6.283);
+        cx.arc(p.x, p.y, p.sz * (1 - prog * .4), 0, 6.283);
+        cx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${op * .9})`;
+        cx.shadowColor = `hsl(${p.hue}, 100%, 65%)`;
+        cx.shadowBlur = 8;
         cx.fill();
+        cx.restore();
       }
-      cx.globalAlpha = 1;
       raf = requestAnimationFrame(loop);
     };
 
-    // 3. Butterfly Flight Path Sequence
+    // 3. Butterfly Flight & Unveiling Sequence
+    const tf = (x, y, r, s) => `translate(${x}cqw, ${y}cqh) rotate(${r}deg) scale(${s})`;
     let started = false;
-    const CQ = v => v * st.clientWidth / 100;
-    const tf = (x, y, r, k) => `translate(${CQ(x)}px,${CQ(y)}px) rotate(${r}deg) scale(${k})`;
 
     const start = () => {
       if (started) return;
@@ -1508,7 +1395,6 @@ export function mount(root, { guest, wedding, events } = {}) {
         }
         try { window.dispatchEvent(new CustomEvent('invitation-unveiled')); } catch (_) {}
       }
-      if (musicBtn) musicBtn.classList.add('playing');
 
       if (!bf || !intro) return;
       bf.classList.add('fast');
@@ -1593,7 +1479,118 @@ export function mount(root, { guest, wedding, events } = {}) {
     setTimeout(showIntro, 1200);
   }
 
-  // 4. Live Countdown Timer
+  // 4. Interactive Scratch Card Controller
+  const scratchCanvas = root.querySelector('#t04-scratch-canvas');
+  const scratchBtn = root.querySelector('#t04-scratch-btn');
+  if (scratchCanvas && typeof scratchCanvas.getContext === 'function') {
+    const sCtx = scratchCanvas.getContext('2d');
+    let scratchDone = false;
+    let isScratching = false;
+
+    function paintScratch() {
+      if (!scratchCanvas || !sCtx || scratchDone) return;
+      const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+      const r = scratchCanvas.getBoundingClientRect();
+      const w = Math.max(1, Math.floor((r.width || 280) * dpr));
+      const h = Math.max(1, Math.floor((r.height || 120) * dpr));
+      scratchCanvas.width = w;
+      scratchCanvas.height = h;
+      if (sCtx.scale) sCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const rw = r.width || 280;
+      const rh = r.height || 120;
+
+      // Rich royal gold & crimson foil gradient
+      const grad = sCtx.createLinearGradient(0, 0, rw, rh);
+      grad.addColorStop(0, '#8c1426');
+      grad.addColorStop(0.3, '#d4af37');
+      grad.addColorStop(0.5, '#f7e08a');
+      grad.addColorStop(0.7, '#d4af37');
+      grad.addColorStop(1, '#5a0a14');
+      sCtx.fillStyle = grad;
+      sCtx.fillRect(0, 0, rw, rh);
+
+      // Gold border
+      sCtx.lineWidth = 3;
+      sCtx.strokeStyle = '#ffe082';
+      sCtx.strokeRect(2, 2, rw - 4, rh - 4);
+
+      // Scratch prompt text
+      sCtx.font = "bold 13px 'Cinzel', Georgia, serif";
+      sCtx.fillStyle = '#ffffff';
+      sCtx.textAlign = 'center';
+      sCtx.textBaseline = 'middle';
+      sCtx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      sCtx.shadowBlur = 6;
+      sCtx.fillText('✦ SCRATCH TO REVEAL ✦', rw / 2, rh / 2);
+    }
+
+    function revealScratch() {
+      if (scratchDone) return;
+      scratchDone = true;
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        const r = scratchCanvas.getBoundingClientRect();
+        window.RoyalScratchCracker.triggerFirecrackerCelebration(r.left + r.width / 2, r.top + r.height / 2);
+      }
+      if (scratchCanvas) {
+        scratchCanvas.style.transition = 'opacity 0.6s ease';
+        scratchCanvas.style.opacity = '0';
+        scratchCanvas.style.pointerEvents = 'none';
+        setTimeout(() => { if (scratchCanvas) scratchCanvas.style.display = 'none'; }, 600);
+      }
+      if (scratchBtn) scratchBtn.style.display = 'none';
+    }
+
+    let scratchedCount = 0;
+    function scratchAt(clientX, clientY) {
+      if (scratchDone || !scratchCanvas || !sCtx) return;
+      const rect = scratchCanvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      sCtx.save();
+      sCtx.globalCompositeOperation = 'destination-out';
+      sCtx.beginPath();
+      sCtx.arc(x, y, 22, 0, Math.PI * 2);
+      sCtx.fill();
+      sCtx.restore();
+
+      if (typeof window !== 'undefined' && window.RoyalScratchCracker) {
+        window.RoyalScratchCracker.emitPhuljhariSparks(clientX, clientY, 8);
+      }
+
+      scratchedCount++;
+      if (scratchedCount > 28) {
+        revealScratch();
+      }
+    }
+
+    setTimeout(paintScratch, 100);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', paintScratch, { passive: true });
+      cleanups.push(() => window.removeEventListener('resize', paintScratch));
+    }
+
+    scratchCanvas.addEventListener('mousedown', e => { isScratching = true; scratchAt(e.clientX, e.clientY); });
+    scratchCanvas.addEventListener('mousemove', e => { if (isScratching) scratchAt(e.clientX, e.clientY); });
+    scratchCanvas.addEventListener('mouseup', () => { isScratching = false; });
+    scratchCanvas.addEventListener('mouseleave', () => { isScratching = false; });
+
+    scratchCanvas.addEventListener('touchstart', e => {
+      isScratching = true;
+      if (e.touches && e.touches[0]) scratchAt(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    scratchCanvas.addEventListener('touchmove', e => {
+      if (isScratching && e.touches && e.touches[0]) scratchAt(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    scratchCanvas.addEventListener('touchend', () => { isScratching = false; });
+
+    if (scratchBtn) {
+      scratchBtn.addEventListener('click', revealScratch);
+    }
+  }
+
+  // 5. Live Countdown Timer
   const cdEl = root.querySelector('#t04-countdown');
   if (cdEl && cdEl.dataset.target) {
     const targetMs = new Date(cdEl.dataset.target).getTime();
@@ -1628,95 +1625,7 @@ export function mount(root, { guest, wedding, events } = {}) {
     }
   }
 
-  // 5. RSVP Interactions
-  const cntInput = root.querySelector('#rsvp-attendees');
-  const btnDec = root.querySelector('#t04-cnt-dec');
-  const btnInc = root.querySelector('#t04-cnt-inc');
-  const countWrapper = root.querySelector('#rsvp-count-wrapper');
-  const rsvpForm = root.querySelector('#royalRsvpForm');
-  const submitBtn = root.querySelector('#t04-submit-rsvp');
-  const msgEl = root.querySelector('#t04-rsvp-msg');
-
-  if (cntInput && btnDec && btnInc) {
-    const min = parseInt(cntInput.min, 10) || 1;
-    const max = parseInt(cntInput.max, 10) || 10;
-    btnDec.addEventListener('click', () => {
-      let val = parseInt(cntInput.value, 10) || 1;
-      if (val > min) cntInput.value = val - 1;
-    });
-    btnInc.addEventListener('click', () => {
-      let val = parseInt(cntInput.value, 10) || 1;
-      if (val < max) cntInput.value = val + 1;
-    });
-  }
-
-  if (rsvpForm) {
-    rsvpForm.querySelectorAll('input[name="attending"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        if (countWrapper) {
-          countWrapper.style.display = radio.value === 'declined' ? 'none' : '';
-        }
-      });
-    });
-  }
-
-  if (submitBtn) {
-    submitBtn.addEventListener('click', async () => {
-      const attendingRadio = rsvpForm ? rsvpForm.querySelector('input[name="attending"]:checked') : null;
-      const responseVal = attendingRadio ? attendingRadio.value : 'attending';
-      const count = responseVal === 'declined' ? 0 : (parseInt(cntInput?.value, 10) || 1);
-      const wishes = clean(root.querySelector('#t04-rsvp-wishes')?.value);
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Saving RSVP...';
-
-      try {
-        if (typeof window !== 'undefined' && typeof window.submitRsvp === 'function' && guest?.invite_code) {
-          await window.submitRsvp({
-            invite_code: guest.invite_code,
-            response: responseVal,
-            attendee_count: count,
-            wishes
-          });
-        }
-        if (msgEl) {
-          msgEl.className = 'rsvp-status-msg success';
-          msgEl.textContent = responseVal === 'declined'
-            ? 'Thank you for letting us know. Warm regards!'
-            : `RSVP Confirmed for ${count} guest${count > 1 ? 's' : ''}! We look forward to celebrating together.`;
-          msgEl.style.display = 'block';
-        }
-        submitBtn.textContent = 'RSVP Saved ✓';
-      } catch (err) {
-        if (msgEl) {
-          msgEl.className = 'rsvp-status-msg success';
-          msgEl.textContent = 'RSVP recorded! Thank you for your blessings.';
-          msgEl.style.display = 'block';
-        }
-        submitBtn.textContent = 'RSVP Saved ✓';
-      }
-    });
-  }
-
-  // 6. Music Toggle Button
-  if (musicBtn) {
-    musicBtn.addEventListener('click', () => {
-      if (typeof window !== 'undefined' && typeof window.__startWeddingMusic === 'function') {
-        const isPlaying = typeof window.__isWeddingMusicPlaying === 'function' && window.__isWeddingMusicPlaying();
-        if (isPlaying) {
-          if (typeof window.__stopWeddingMusic === 'function') window.__stopWeddingMusic();
-          musicBtn.classList.remove('playing');
-        } else {
-          window.__startWeddingMusic(true);
-          musicBtn.classList.add('playing');
-        }
-      } else {
-        musicBtn.classList.toggle('playing');
-      }
-    });
-  }
-
-  // 7. Start Again Button
+  // 6. Start Again Button
   const restartBtn = root.querySelector('[data-restart]');
   if (restartBtn && sc) {
     restartBtn.addEventListener('click', () => {

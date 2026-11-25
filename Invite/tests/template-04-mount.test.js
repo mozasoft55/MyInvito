@@ -47,13 +47,13 @@ test('template-04 renders butterfly entrance, stage, couple portraits, and progr
   assert.match(html, /SON OF/);
   assert.match(html, /DAUGHTER OF/);
 
-  // Subsequent Pages: Programme, Muhurat/Date, Venue, RSVP
+  // Subsequent Pages: Programme, Muhurat/Date, Venue
   assert.match(html, /WEDDING PROGRAMME/);
   assert.match(html, /Nikah Ceremony/);
   assert.match(html, /AUSPICIOUS TIMING/);
   assert.match(html, /Grand Imperial Palace/);
-  assert.match(html, /KINDLY RESPOND/);
-  assert.match(html, /id="royalRsvpForm"/);
+  assert.match(html, /id="t04-scratch-canvas"/);
+  assert.match(html, /t04-scratch-btn/);
   assert.match(html, /data-restart>Start Again ↻/);
 });
 

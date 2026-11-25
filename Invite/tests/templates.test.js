@@ -202,7 +202,7 @@ test('template-04 renders the royal Butterfly invitation with dynamic data and a
   assert.match(html, /WEDDING PROGRAMME/);
   assert.match(html, /id="t04-calendar"/);
   assert.match(html, /id="t04-maps"/);
-  assert.match(html, /id="royalRsvpForm"/);
+  assert.match(html, /id="t04-scratch-canvas"/);
   assert.match(html, /data-restart>Start Again ↻/);
 });
 
