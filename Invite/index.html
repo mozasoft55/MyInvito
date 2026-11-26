@@ -1427,10 +1427,11 @@
         if (!url) return '';
         const s = String(url).trim();
         if (s.startsWith('data:') || s.startsWith('http://') || s.startsWith('https://')) return s;
+        if (s.startsWith('./music/')) return s;
         if (s.startsWith('../music/')) return './music/' + s.slice(9);
         if (s.startsWith('/music/')) return '.' + s;
         if (s.startsWith('music/')) return './' + s;
-        if (s.endsWith('.mp3')) return './music/' + s;
+        if (s === './invitation.mp3' || s === 'invitation.mp3') return './invitation.mp3';
         const PRESET_SONGS = [
           'raataan-lambiyan', 'tere-vaaste', 'din-shagna-da', 'kabira-encore',
           'piya-ghar-aavenge', 'aaj-se-teri', 'tere-dware', 'tere-dware-pe-aayi-baraat',
@@ -1440,6 +1441,10 @@
           const map = { 'tere-dware': 'tere-dware-pe-aayi-baraat' };
           const resolved = map[s.toLowerCase()] || s.toLowerCase();
           return `./music/${resolved}.mp3`;
+        }
+        if (s.endsWith('.mp3')) {
+          if (s.startsWith('./') || s.startsWith('/')) return s;
+          return './music/' + s;
         }
         return s;
       }
@@ -2619,10 +2624,11 @@
           if (!url) return '';
           const s = String(url).trim();
           if (s.startsWith('data:') || s.startsWith('http://') || s.startsWith('https://')) return s;
+          if (s.startsWith('./music/')) return s;
           if (s.startsWith('../music/')) return './music/' + s.slice(9);
           if (s.startsWith('/music/')) return '.' + s;
           if (s.startsWith('music/')) return './' + s;
-          if (s.endsWith('.mp3')) return './music/' + s;
+          if (s === './invitation.mp3' || s === 'invitation.mp3') return './invitation.mp3';
           const PRESET_SONGS = [
             'raataan-lambiyan', 'tere-vaaste', 'din-shagna-da', 'kabira-encore',
             'piya-ghar-aavenge', 'aaj-se-teri', 'tere-dware', 'tere-dware-pe-aayi-baraat',
@@ -2632,6 +2638,10 @@
             const map = { 'tere-dware': 'tere-dware-pe-aayi-baraat' };
             const resolved = map[s.toLowerCase()] || s.toLowerCase();
             return `./music/${resolved}.mp3`;
+          }
+          if (s.endsWith('.mp3')) {
+            if (s.startsWith('./') || s.startsWith('/')) return s;
+            return './music/' + s;
           }
           return s;
         }

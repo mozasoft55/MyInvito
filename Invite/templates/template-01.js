@@ -267,7 +267,9 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   const familySignature = clean(w.footer_text) || clean(w.families) || defaultFamilyName;
 
   // Music URL
-  const musicUrl = safeAudioUrl(w.music_url || w.audio_url || '');
+  const defaultMusic = './music/din-shagna-da.mp3';
+  const rawMusic = clean(w.music_url || w.audio_url || '');
+  const musicUrl = rawMusic ? safeAudioUrl(rawMusic) : defaultMusic;
 
   return `
 <!-- Template 01: Royal Wax-Seal Envelope Invitation Suite -->
@@ -363,30 +365,30 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 .card {
   position: absolute;
-  left: 9%;
-  right: 9%;
-  top: 6%;
-  bottom: 6%;
-  border-radius: 4cqw;
-  background: rgba(255, 250, 240, 0.82);
+  left: 7%;
+  right: 7%;
+  top: 3.5%;
+  bottom: 3.5%;
+  border-radius: 3.5cqw;
+  background: rgba(255, 250, 240, 0.88);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
   backdrop-filter: blur(12px) saturate(1.1);
   border: .35cqw solid rgba(201, 160, 70, 0.85);
-  box-shadow: inset 0 0 0 1.1cqw rgba(255, 250, 240, 0.35),
-              inset 0 0 0 1.45cqw rgba(201, 160, 70, 0.55),
+  box-shadow: inset 0 0 0 0.9cqw rgba(255, 250, 240, 0.35),
+              inset 0 0 0 1.2cqw rgba(201, 160, 70, 0.55),
               0 3cqw 7cqw rgba(60, 10, 16, 0.38),
               0 .6cqw 1.6cqw rgba(60, 10, 16, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: safe center;
-  padding: 4.5cqw 3cqw;
+  justify-content: space-evenly;
+  padding: 3cqw 2.5cqw;
   text-align: center;
   opacity: 0;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 2;
-  gap: 1.5cqw;
+  gap: 0;
 }
 .card::-webkit-scrollbar { display: none; }
 .go .card { animation: cardin 1s ease forwards; }
@@ -403,45 +405,47 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 @keyframes cardin { to { opacity: 1; } }
 
 .kick {
-  font: 700 3.4cqw/1 Cinzel, serif;
-  letter-spacing: .35cqw;
+  font: 700 2.8cqw/1.15 Cinzel, serif;
+  letter-spacing: .25cqw;
   color: #5a3a08;
   text-transform: uppercase;
 }
 .sub-kick {
-  font: 600 2.6cqw/1.2 Cinzel, serif;
-  letter-spacing: .25cqw;
+  font: 600 2.2cqw/1.2 Cinzel, serif;
+  letter-spacing: .15cqw;
   color: #7a1220;
+  margin-top: .4cqw;
 }
 .journey-tag {
-  font: 500 italic 3.2cqw/1.2 'Cormorant Garamond', serif;
+  font: 500 italic 2.5cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
   letter-spacing: .08cqw;
+  margin-top: .3cqw;
 }
 .orn {
   display: flex;
   align-items: center;
-  gap: 1.4cqw;
-  margin: 1.5cqw 0 2cqw;
-  width: 48cqw;
+  gap: 1.2cqw;
+  margin: 1cqw 0 1.2cqw;
+  width: 40cqw;
 }
 .orn i {
   flex: 1;
-  height: .28cqw;
+  height: .25cqw;
   background: linear-gradient(90deg, transparent, #b8872a, #f2d37a);
 }
 .orn i:last-child { transform: scaleX(-1); }
 .orn b {
-  width: 1.6cqw;
-  height: 1.6cqw;
+  width: 1.4cqw;
+  height: 1.4cqw;
   transform: rotate(45deg);
   background: linear-gradient(135deg, #f6dc8a, #a8741c);
-  box-shadow: 0 0 1.6cqw rgba(214, 168, 60, .7);
+  box-shadow: 0 0 1.4cqw rgba(214, 168, 60, .7);
 }
 
 .pair {
   display: grid;
-  grid-template-columns: 1fr 6cqw 1fr;
+  grid-template-columns: 1fr 4cqw 1fr;
   align-items: start;
   width: 100%;
 }
@@ -450,21 +454,21 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  gap: .8cqw;
+  gap: .4cqw;
 }
 .amp {
-  font: 400 9cqw/1 'Great Vibes', cursive;
+  font: 400 6.5cqw/1 'Great Vibes', cursive;
   color: #b8872a;
-  padding-top: 7cqw;
-  text-shadow: 0 .3cqw .6cqw rgba(120, 80, 10, .35);
+  padding-top: 4.5cqw;
+  text-shadow: 0 .2cqw .5cqw rgba(120, 80, 10, .3);
 }
 .ph {
-  width: 24cqw;
-  height: 24cqw;
+  width: 17cqw;
+  height: 17cqw;
   border-radius: 50%;
-  padding: .95cqw;
+  padding: .7cqw;
   background: conic-gradient(from 20deg, #f7de8e, #b8872a, #fff1b8, #9b6a18, #f7de8e);
-  box-shadow: 0 1.4cqw 3cqw rgba(70, 40, 5, .45);
+  box-shadow: 0 1cqw 2.2cqw rgba(70, 40, 5, .35);
 }
 .ph div {
   width: 100%;
@@ -474,7 +478,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   background: radial-gradient(#fff6df, #ecd6a0);
   display: grid;
   place-items: center;
-  border: .4cqw solid #fff7e0;
+  border: .3cqw solid #fff7e0;
 }
 .ph img {
   width: 100%;
@@ -483,37 +487,39 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: block;
 }
 .ph span {
-  font: 400 13cqw/1 'Great Vibes', cursive;
+  font: 400 9cqw/1 'Great Vibes', cursive;
   color: #7a1220;
 }
 .role-lbl {
-  font: 700 2.4cqw/1 Cinzel, serif;
-  letter-spacing: .25cqw;
+  font: 700 2.0cqw/1 Cinzel, serif;
+  letter-spacing: .2cqw;
   color: #b8892b;
   text-transform: uppercase;
+  margin-top: .4cqw;
 }
 .nm {
-  font: 400 8.4cqw/1.1 'Great Vibes', cursive;
+  font: 400 6.5cqw/1.1 'Great Vibes', cursive;
   color: #0b1740;
   white-space: nowrap;
   max-width: 100%;
-  filter: drop-shadow(0 .2cqw .2cqw rgba(201, 162, 74, 0.6));
+  filter: drop-shadow(0 .15cqw .15cqw rgba(201, 162, 74, 0.6));
 }
 .rel {
-  font: 600 2.2cqw/1 Cinzel, serif;
-  letter-spacing: .2cqw;
-  color: #5a3a08;
+  font: 700 1.9cqw/1 Cinzel, serif;
+  letter-spacing: .15cqw;
+  color: #6b3e14;
+  text-transform: lowercase;
+  font-style: italic;
 }
-.rel-full { font-size: .85em; opacity: .85; }
 .fa {
-  font: 700 3.8cqw/1.15 'Cormorant Garamond', serif;
+  font: 700 2.9cqw/1.15 'Cormorant Garamond', serif;
   color: #2b1204;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 .ad {
-  font: 600 3cqw/1.2 'Cormorant Garamond', serif;
-  color: #1a1004;
+  font: 600 2.2cqw/1.2 'Cormorant Garamond', serif;
+  color: #3b1f0b;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
@@ -522,19 +528,19 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .6cqw;
-  margin-top: 1cqw;
-  padding-top: 1.2cqw;
+  gap: .3cqw;
+  margin-top: .8cqw;
+  padding-top: .8cqw;
   border-top: 1px solid rgba(201, 162, 74, 0.35);
-  width: 90%;
+  width: 88%;
 }
 .p2-ornament {
-  font-size: 3.5cqw;
+  font-size: 2.2cqw;
   color: #c9a24a;
   line-height: 1;
 }
 .p2-quote-text {
-  font: 500 italic 3.2cqw/1.35 'Cormorant Garamond', serif;
+  font: 500 italic 2.5cqw/1.3 'Cormorant Garamond', serif;
   color: #5a3a08;
   text-align: center;
 }
@@ -549,7 +555,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   height: 100%;
   width: 21.025cqw;
   background: var(--border) 0 0/100% 100% no-repeat;
-  z-index: 1;
+  z-index: 4;
   pointer-events: none;
 }
 .bd.l { left: 0; }
@@ -557,24 +563,25 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 .card-paper {
   position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 4.5%;
-  bottom: 4.5%;
+  left: 7%;
+  right: 7%;
+  top: 3.5%;
+  bottom: 3.5%;
   border-radius: 3.5cqw;
-  background: linear-gradient(160deg, rgba(255, 252, 244, 0.88), rgba(255, 246, 228, 0.76) 55%, rgba(255, 250, 240, 0.85));
+  background: linear-gradient(160deg, rgba(255, 252, 244, 0.92), rgba(255, 246, 228, 0.85) 55%, rgba(255, 250, 240, 0.9));
   backdrop-filter: blur(8px) saturate(1.15);
   -webkit-backdrop-filter: blur(8px) saturate(1.15);
   box-shadow: inset 0 0 0 0.2cqw rgba(201, 162, 74, 0.85),
-              inset 0 0 0 0.8cqw rgba(255, 248, 230, 0.5),
-              inset 0 0 0 1.0cqw rgba(201, 162, 74, 0.4),
+              inset 0 0 0 0.6cqw rgba(255, 248, 230, 0.5),
+              inset 0 0 0 0.9cqw rgba(201, 162, 74, 0.4),
               0 2cqw 5cqw rgba(90, 58, 8, 0.22);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4.5cqw 3.5cqw;
+  justify-content: space-evenly;
+  padding: 3.5cqw 3cqw;
   text-align: center;
-  gap: 2.2cqw;
+  gap: 1cqw;
   overflow-y: auto;
   scrollbar-width: none;
   z-index: 2;
@@ -583,10 +590,10 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 /* Interactive Scratch Card for Muhurat */
 .t01-scratch-tagline {
-  font: 500 italic 2.8cqw/1.3 'Cormorant Garamond', serif;
+  font: 500 italic 2.3cqw/1.25 'Cormorant Garamond', serif;
   color: #5a3a08;
-  max-width: 44cqw;
-  margin: 0.2cqw auto;
+  max-width: 76cqw;
+  margin: 0 auto;
   text-align: center;
 }
 .t01-scratch-wrap {
@@ -594,17 +601,17 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5cqw;
-  margin: 1cqw 0;
+  gap: 1cqw;
+  margin: .4cqw 0;
 }
 .t01-scratch-box {
   position: relative;
   width: 100%;
-  max-width: 46cqw;
-  height: 22cqw;
-  border-radius: 2.5cqw;
+  max-width: 58cqw;
+  height: 18cqw;
+  border-radius: 2cqw;
   overflow: hidden;
-  box-shadow: 0 1cqw 3cqw rgba(90, 58, 8, 0.25);
+  box-shadow: 0 .8cqw 2.5cqw rgba(90, 58, 8, 0.22);
   border: 1.5px solid #c9a24a;
   background: #fff;
 }
@@ -615,24 +622,24 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.5cqw;
-  gap: .6cqw;
+  padding: 1.2cqw;
+  gap: .4cqw;
   background: linear-gradient(135deg, #fffdf8, #fdf4df);
   text-align: center;
 }
-.t01-scratch-icon { font-size: 5cqw; line-height: 1; }
+.t01-scratch-icon { font-size: 3.6cqw; line-height: 1; }
 .t01-scratch-date {
-  font: 700 3.6cqw/1.15 Cinzel, serif;
+  font: 700 3.2cqw/1.1 Cinzel, serif;
   color: #6b0f1a;
-  letter-spacing: .1cqw;
+  letter-spacing: .08cqw;
 }
 .t01-scratch-time {
-  font: 600 2.8cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 2.3cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
 }
 .t01-scratch-badge {
-  font: 700 2.1cqw/1 Cinzel, serif;
-  letter-spacing: .15cqw;
+  font: 700 1.8cqw/1 Cinzel, serif;
+  letter-spacing: .12cqw;
   color: #b8892b;
   text-transform: uppercase;
 }
@@ -649,15 +656,15 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 1.2cqw;
-  padding: 1.8cqw 3.8cqw;
+  gap: 1cqw;
+  padding: 1.3cqw 3.2cqw;
   border-radius: 50px;
   background: linear-gradient(135deg, #b8892b, #e0be6c 50%, #9a6f1c);
   color: #fff;
-  font: 700 2.3cqw/1 Cinzel, serif;
-  letter-spacing: .2cqw;
+  font: 700 1.9cqw/1 Cinzel, serif;
+  letter-spacing: .15cqw;
   border: 1px solid rgba(255, 235, 170, 0.6);
-  box-shadow: 0 .6cqw 2cqw rgba(90, 58, 8, 0.25);
+  box-shadow: 0 .4cqw 1.5cqw rgba(90, 58, 8, 0.22);
   cursor: pointer;
   text-transform: uppercase;
   transition: transform .15s;
@@ -666,39 +673,39 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 /* Live Countdown */
 .cd-section-title {
-  font: 700 2.4cqw/1 Cinzel, serif;
-  letter-spacing: .25cqw;
+  font: 700 2.0cqw/1 Cinzel, serif;
+  letter-spacing: .2cqw;
   color: #6b0f1a;
   text-transform: uppercase;
-  margin-top: .8cqw;
+  margin-top: .4cqw;
 }
 .countdown-grid {
   display: flex;
-  gap: 2cqw;
+  gap: 1.5cqw;
   width: 100%;
   justify-content: center;
-  margin: 1.5cqw 0;
+  margin: .8cqw 0;
 }
 .cd-box {
   flex: 1;
-  max-width: 16cqw;
-  padding: 2.2cqw 1cqw;
-  border-radius: 2cqw;
-  background: rgba(255, 255, 255, 0.75);
+  max-width: 15cqw;
+  padding: 1.5cqw .6cqw;
+  border-radius: 1.8cqw;
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(201, 162, 74, 0.6);
-  box-shadow: 0 .6cqw 1.8cqw rgba(90, 58, 8, 0.12);
+  box-shadow: 0 .4cqw 1.4cqw rgba(90, 58, 8, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .5cqw;
+  gap: .3cqw;
 }
 .cd-val {
-  font: 700 5.5cqw/1 Cinzel, serif;
+  font: 700 4.5cqw/1 Cinzel, serif;
   color: #6b0f1a;
 }
 .cd-lbl {
-  font: 600 2.2cqw/1 Cinzel, serif;
-  letter-spacing: .15cqw;
+  font: 600 1.8cqw/1 Cinzel, serif;
+  letter-spacing: .1cqw;
   color: #5a3a08;
   text-transform: uppercase;
 }
@@ -1124,8 +1131,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
               </div>
               <div class="role-lbl">BRIDE</div>
               <div class="nm">${esc(brideName)}</div>
-              <div class="rel">D/O <span class="rel-full">(DAUGHTER OF)</span></div>
-              ${brideParents ? `<div class="fa">${esc(brideParents)}</div>` : ''}
+              ${brideParents ? `<div class="rel">d/o</div><div class="fa">${esc(brideParents)}</div>` : ''}
               ${brideAddress ? `<div class="ad">📍 ${esc(brideAddress)}</div>` : ''}
             </div>
             <div class="amp">&amp;</div>
@@ -1138,8 +1144,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
               </div>
               <div class="role-lbl">GROOM</div>
               <div class="nm">${esc(groomName)}</div>
-              <div class="rel">S/O <span class="rel-full">(SON OF)</span></div>
-              ${groomParents ? `<div class="fa">${esc(groomParents)}</div>` : ''}
+              ${groomParents ? `<div class="rel">s/o</div><div class="fa">${esc(groomParents)}</div>` : ''}
               ${groomAddress ? `<div class="ad">📍 ${esc(groomAddress)}</div>` : ''}
             </div>
             ` : `
@@ -1152,8 +1157,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
               </div>
               <div class="role-lbl">GROOM</div>
               <div class="nm">${esc(groomName)}</div>
-              <div class="rel">S/O <span class="rel-full">(SON OF)</span></div>
-              ${groomParents ? `<div class="fa">${esc(groomParents)}</div>` : ''}
+              ${groomParents ? `<div class="rel">s/o</div><div class="fa">${esc(groomParents)}</div>` : ''}
               ${groomAddress ? `<div class="ad">📍 ${esc(groomAddress)}</div>` : ''}
             </div>
             <div class="amp">&amp;</div>
@@ -1166,8 +1170,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
               </div>
               <div class="role-lbl">BRIDE</div>
               <div class="nm">${esc(brideName)}</div>
-              <div class="rel">D/O <span class="rel-full">(DAUGHTER OF)</span></div>
-              ${brideParents ? `<div class="fa">${esc(brideParents)}</div>` : ''}
+              ${brideParents ? `<div class="rel">d/o</div><div class="fa">${esc(brideParents)}</div>` : ''}
               ${brideAddress ? `<div class="ad">📍 ${esc(brideAddress)}</div>` : ''}
             </div>
             `}
@@ -1568,9 +1571,13 @@ export function mount(root, { guest, wedding, events } = {}) {
 
   // 4. Open Sequence Controller
   let opened = false;
+  let t01Audio = null;
+
   function triggerOpen() {
     if (opened) return;
     opened = true;
+
+    if (intro) intro.classList.add('go');
 
     // Synchronously trigger background soundtrack
     if (typeof window !== 'undefined') {
@@ -1579,6 +1586,29 @@ export function mount(root, { guest, wedding, events } = {}) {
       }
       try { window.dispatchEvent(new CustomEvent('invitation-unveiled')); } catch (_) {}
     }
+
+    // Direct audio unlock and self-contained playback fallback
+    try {
+      const isMuted = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('guest_music_muted') === 'true';
+      const hostEl = (typeof root.querySelector === 'function' ? root.querySelector('.t01-wrapper') : null) || root;
+      const targetMusic = (hostEl && hostEl.dataset ? hostEl.dataset.music : '') || musicUrl || './music/din-shagna-da.mp3';
+      if (!isMuted && targetMusic && targetMusic !== 'none') {
+        setTimeout(() => {
+          const isGlobalPlaying = typeof window !== 'undefined' && typeof window.__isWeddingMusicPlaying === 'function' && window.__isWeddingMusicPlaying();
+          if (!isGlobalPlaying && !t01Audio) {
+            try {
+              t01Audio = new Audio(targetMusic);
+              t01Audio.loop = true;
+              t01Audio.preload = 'auto';
+              t01Audio.volume = 0.35;
+              t01Audio.setAttribute('playsinline', '');
+              t01Audio.setAttribute('webkit-playsinline', '');
+              t01Audio.play().catch(() => {});
+            } catch (_) {}
+          }
+        }, 300);
+      }
+    } catch (_) {}
 
     if (seal) seal.classList.add('go');
     if (halo) halo.classList.add('go');
@@ -1627,6 +1657,30 @@ export function mount(root, { guest, wedding, events } = {}) {
     });
   }
 
+  // Audio visibility management
+  const onVisibilityChange = () => {
+    if (typeof document === 'undefined') return;
+    if (document.hidden) {
+      if (t01Audio && !t01Audio.paused) {
+        t01Audio.pause();
+        t01Audio._wasPlaying = true;
+      }
+    } else if (t01Audio && t01Audio._wasPlaying) {
+      t01Audio._wasPlaying = false;
+      t01Audio.play().catch(() => {});
+    }
+  };
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    cleanups.push(() => document.removeEventListener('visibilitychange', onVisibilityChange));
+  }
+  cleanups.push(() => {
+    if (t01Audio) {
+      try { t01Audio.pause(); } catch (_) {}
+      t01Audio = null;
+    }
+  });
+
   [hs, hp].forEach(btn => {
     if (btn) {
       btn.addEventListener('click', triggerOpen);
@@ -1668,14 +1722,12 @@ export function mount(root, { guest, wedding, events } = {}) {
       if (!scratchCanvas || !sCtx || scratchDone) return;
       const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
       const r = scratchCanvas.getBoundingClientRect();
-      const w = Math.max(1, Math.floor((r.width || 280) * dpr));
-      const h = Math.max(1, Math.floor((r.height || 120) * dpr));
-      scratchCanvas.width = w;
-      scratchCanvas.height = h;
+      const rw = r.width || scratchCanvas.offsetWidth || 280;
+      const rh = r.height || scratchCanvas.offsetHeight || 100;
+      if (rw <= 0 || rh <= 0) return;
+      scratchCanvas.width = Math.max(1, Math.floor(rw * dpr));
+      scratchCanvas.height = Math.max(1, Math.floor(rh * dpr));
       if (sCtx.scale) sCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      const rw = r.width || 280;
-      const rh = r.height || 120;
 
       // Rich royal gold & crimson foil gradient
       const grad = sCtx.createLinearGradient(0, 0, rw, rh);
@@ -1688,7 +1740,7 @@ export function mount(root, { guest, wedding, events } = {}) {
       sCtx.fillRect(0, 0, rw, rh);
 
       // Gold border
-      sCtx.lineWidth = 3;
+      sCtx.lineWidth = 2;
       sCtx.strokeStyle = '#ffe082';
       sCtx.strokeRect(2, 2, rw - 4, rh - 4);
 
@@ -1721,6 +1773,7 @@ export function mount(root, { guest, wedding, events } = {}) {
     let scratchedCount = 0;
     function scratchAt(clientX, clientY) {
       if (scratchDone || !scratchCanvas || !sCtx) return;
+      if (scratchCanvas.width <= 1) paintScratch();
       const rect = scratchCanvas.getBoundingClientRect();
       const x = clientX - rect.left;
       const y = clientY - rect.top;
@@ -1737,15 +1790,24 @@ export function mount(root, { guest, wedding, events } = {}) {
       }
 
       scratchedCount++;
-      if (scratchedCount > 28) {
+      if (scratchedCount > 20) {
         revealScratch();
       }
     }
 
     setTimeout(paintScratch, 100);
+    setTimeout(paintScratch, 500);
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', paintScratch, { passive: true });
       cleanups.push(() => window.removeEventListener('resize', paintScratch));
+    }
+
+    if (sc) {
+      const onScrollCheck = () => {
+        if (!scratchDone && scratchCanvas.width <= 1) paintScratch();
+      };
+      sc.addEventListener('scroll', onScrollCheck, { passive: true });
+      cleanups.push(() => sc.removeEventListener('scroll', onScrollCheck));
     }
 
     scratchCanvas.addEventListener('mousedown', e => { isScratching = true; scratchAt(e.clientX, e.clientY); });
@@ -1758,8 +1820,11 @@ export function mount(root, { guest, wedding, events } = {}) {
       if (e.touches && e.touches[0]) scratchAt(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
     scratchCanvas.addEventListener('touchmove', e => {
-      if (isScratching && e.touches && e.touches[0]) scratchAt(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
+      if (isScratching && e.touches && e.touches[0]) {
+        try { e.preventDefault(); } catch (_) {}
+        scratchAt(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: false });
     scratchCanvas.addEventListener('touchend', () => { isScratching = false; });
 
     if (scratchBtn) {
