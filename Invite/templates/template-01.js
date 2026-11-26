@@ -365,24 +365,24 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 .card {
   position: absolute;
-  left: 7%;
-  right: 7%;
-  top: 3.5%;
-  bottom: 3.5%;
-  border-radius: 3.5cqw;
-  background: rgba(255, 250, 240, 0.88);
+  left: 8%;
+  right: 8%;
+  top: 9%;
+  bottom: 9%;
+  border-radius: 4cqw;
+  background: rgba(255, 250, 240, 0.90);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
   backdrop-filter: blur(12px) saturate(1.1);
   border: .35cqw solid rgba(201, 160, 70, 0.85);
-  box-shadow: inset 0 0 0 0.9cqw rgba(255, 250, 240, 0.35),
-              inset 0 0 0 1.2cqw rgba(201, 160, 70, 0.55),
+  box-shadow: inset 0 0 0 1.1cqw rgba(255, 250, 240, 0.35),
+              inset 0 0 0 1.45cqw rgba(201, 160, 70, 0.55),
               0 3cqw 7cqw rgba(60, 10, 16, 0.38),
               0 .6cqw 1.6cqw rgba(60, 10, 16, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  padding: 3cqw 2.5cqw;
+  justify-content: center;
+  padding: 4cqw 3.5cqw;
   text-align: center;
   opacity: 0;
   overflow-y: auto;
@@ -404,30 +404,38 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 @keyframes settle { to { opacity: 1; transform: none; } }
 @keyframes cardin { to { opacity: 1; } }
 
+.p2-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2cqw;
+}
 .kick {
-  font: 700 2.8cqw/1.15 Cinzel, serif;
+  font: 700 3.3cqw/1.2 Cinzel, serif;
   letter-spacing: .25cqw;
   color: #5a3a08;
   text-transform: uppercase;
+  margin: 0;
 }
 .sub-kick {
-  font: 600 2.2cqw/1.2 Cinzel, serif;
+  font: 600 2.5cqw/1.2 Cinzel, serif;
   letter-spacing: .15cqw;
   color: #7a1220;
-  margin-top: .4cqw;
+  margin-top: .5cqw;
 }
 .journey-tag {
-  font: 500 italic 2.5cqw/1.2 'Cormorant Garamond', serif;
+  font: 500 italic 2.9cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
-  letter-spacing: .08cqw;
+  letter-spacing: .06cqw;
   margin-top: .3cqw;
 }
 .orn {
   display: flex;
   align-items: center;
-  gap: 1.2cqw;
-  margin: 1cqw 0 1.2cqw;
-  width: 40cqw;
+  gap: 1.4cqw;
+  margin: 1.2cqw auto 0;
+  width: 44cqw;
 }
 .orn i {
   flex: 1;
@@ -436,39 +444,34 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 }
 .orn i:last-child { transform: scaleX(-1); }
 .orn b {
-  width: 1.4cqw;
-  height: 1.4cqw;
+  width: 1.5cqw;
+  height: 1.5cqw;
   transform: rotate(45deg);
   background: linear-gradient(135deg, #f6dc8a, #a8741c);
-  box-shadow: 0 0 1.4cqw rgba(214, 168, 60, .7);
+  box-shadow: 0 0 1.5cqw rgba(214, 168, 60, .7);
 }
 
 .pair {
   display: grid;
-  grid-template-columns: 1fr 4cqw 1fr;
+  grid-template-columns: 1fr 6cqw 1fr;
   align-items: start;
   width: 100%;
+  margin-bottom: 2cqw;
 }
 .col {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  gap: .4cqw;
-}
-.amp {
-  font: 400 6.5cqw/1 'Great Vibes', cursive;
-  color: #b8872a;
-  padding-top: 4.5cqw;
-  text-shadow: 0 .2cqw .5cqw rgba(120, 80, 10, .3);
 }
 .ph {
-  width: 17cqw;
-  height: 17cqw;
+  width: 21cqw;
+  height: 21cqw;
   border-radius: 50%;
-  padding: .7cqw;
+  padding: .85cqw;
   background: conic-gradient(from 20deg, #f7de8e, #b8872a, #fff1b8, #9b6a18, #f7de8e);
-  box-shadow: 0 1cqw 2.2cqw rgba(70, 40, 5, .35);
+  box-shadow: 0 1.2cqw 2.8cqw rgba(70, 40, 5, .4);
+  margin-bottom: 1cqw;
 }
 .ph div {
   width: 100%;
@@ -478,7 +481,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   background: radial-gradient(#fff6df, #ecd6a0);
   display: grid;
   place-items: center;
-  border: .3cqw solid #fff7e0;
+  border: .35cqw solid #fff7e0;
 }
 .ph img {
   width: 100%;
@@ -487,60 +490,68 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: block;
 }
 .ph span {
-  font: 400 9cqw/1 'Great Vibes', cursive;
+  font: 400 11cqw/1 'Great Vibes', cursive;
   color: #7a1220;
 }
 .role-lbl {
-  font: 700 2.0cqw/1 Cinzel, serif;
-  letter-spacing: .2cqw;
+  font: 700 2.3cqw/1 Cinzel, serif;
+  letter-spacing: .22cqw;
   color: #b8892b;
   text-transform: uppercase;
-  margin-top: .4cqw;
+  margin-bottom: .4cqw;
 }
 .nm {
-  font: 400 6.5cqw/1.1 'Great Vibes', cursive;
+  font: 400 8.6cqw/1.1 'Great Vibes', cursive;
   color: #0b1740;
   white-space: nowrap;
   max-width: 100%;
-  filter: drop-shadow(0 .15cqw .15cqw rgba(201, 162, 74, 0.6));
+  filter: drop-shadow(0 .2cqw .2cqw rgba(201, 162, 74, 0.6));
+  margin-bottom: .5cqw;
 }
 .rel {
-  font: 700 1.9cqw/1 Cinzel, serif;
+  font: 700 2.1cqw/1 Cinzel, serif;
   letter-spacing: .15cqw;
   color: #6b3e14;
   text-transform: lowercase;
   font-style: italic;
+  margin-bottom: .3cqw;
 }
 .fa {
-  font: 700 2.9cqw/1.15 'Cormorant Garamond', serif;
+  font: 700 3.8cqw/1.2 'Cormorant Garamond', serif;
   color: #2b1204;
   max-width: 100%;
   overflow-wrap: anywhere;
+  margin-bottom: .4cqw;
 }
 .ad {
-  font: 600 2.2cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 2.7cqw/1.2 'Cormorant Garamond', serif;
   color: #3b1f0b;
   max-width: 100%;
   overflow-wrap: anywhere;
+}
+.amp {
+  font: 400 8.5cqw/1 'Great Vibes', cursive;
+  color: #b8872a;
+  padding-top: 5.5cqw;
+  text-shadow: 0 .25cqw .5cqw rgba(120, 80, 10, .35);
 }
 
 .p2-quote {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .3cqw;
-  margin-top: .8cqw;
-  padding-top: .8cqw;
-  border-top: 1px solid rgba(201, 162, 74, 0.35);
   width: 88%;
+  padding-top: 1.5cqw;
+  border-top: 1px solid rgba(201, 162, 74, 0.4);
 }
 .p2-ornament {
-  font-size: 2.2cqw;
+  font-size: 2.8cqw;
   color: #c9a24a;
   line-height: 1;
+  margin-bottom: .4cqw;
 }
 .p2-quote-text {
-  font: 500 italic 2.5cqw/1.3 'Cormorant Garamond', serif;
+  font: 500 italic 2.9cqw/1.3 'Cormorant Garamond', serif;
   color: #5a3a08;
   text-align: center;
 }
@@ -1116,11 +1127,13 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
       <section class="pg" id="p2">
         <canvas class="p2bg" id="p2bg"></canvas>
         <div class="card" id="card">
-          <div class="kick rv" style="--i:0">TWO HEARTS · ONE DESTINY</div>
-          <div class="sub-kick rv" style="--i:0.4">Together with their Families</div>
-          <div class="journey-tag rv" style="--i:0.8">The Journey of Love &amp; Togetherness</div>
-          <div class="orn rv" style="--i:1"><i></i><b></b><i></i></div>
-          <div class="pair rv" style="--i:2">
+          <div class="p2-header rv" style="--i:0">
+            <div class="kick">TWO HEARTS · ONE DESTINY</div>
+            <div class="sub-kick">Together with their Families</div>
+            <div class="journey-tag">The Journey of Love &amp; Togetherness</div>
+            <div class="orn"><i></i><b></b><i></i></div>
+          </div>
+          <div class="pair rv" style="--i:1">
             ${brideFirst ? `
             <!-- Bride Column -->
             <div class="col" style="--i:0">
@@ -1175,7 +1188,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
             </div>
             `}
           </div>
-          <div class="p2-quote rv" style="--i:3">
+          <div class="p2-quote rv" style="--i:2">
             <div class="p2-ornament">❖</div>
             <p class="p2-quote-text">Two hearts, two families,<br>one beautiful beginning.</p>
           </div>
