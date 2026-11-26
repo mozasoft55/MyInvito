@@ -335,7 +335,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   overscroll-behavior: contain;
-  padding-bottom: 80px;
+  padding: 0;
 }
 .scroller::-webkit-scrollbar { display: none; }
 
@@ -365,12 +365,17 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 .card {
   position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 9%;
-  bottom: 9%;
+  left: 6%;
+  right: 6%;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  max-height: 92%;
   border-radius: 4cqw;
-  background: rgba(255, 250, 240, 0.90);
+  background: rgba(255, 250, 240, 0.92);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
   backdrop-filter: blur(12px) saturate(1.1);
   border: .35cqw solid rgba(201, 160, 70, 0.85);
@@ -382,7 +387,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4cqw 3.5cqw;
+  padding: 3.5cqw 3cqw;
   text-align: center;
   opacity: 0;
   overflow-y: auto;
@@ -409,23 +414,23 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  margin-bottom: 2cqw;
+  margin-bottom: 1.5cqw;
 }
 .kick {
-  font: 700 3.3cqw/1.2 Cinzel, serif;
+  font: 700 3.8cqw/1.2 Cinzel, serif;
   letter-spacing: .25cqw;
   color: #5a3a08;
   text-transform: uppercase;
   margin: 0;
 }
 .sub-kick {
-  font: 600 2.5cqw/1.2 Cinzel, serif;
+  font: 600 3.0cqw/1.2 Cinzel, serif;
   letter-spacing: .15cqw;
   color: #7a1220;
-  margin-top: .5cqw;
+  margin-top: .4cqw;
 }
 .journey-tag {
-  font: 500 italic 2.9cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 italic 3.4cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
   letter-spacing: .06cqw;
   margin-top: .3cqw;
@@ -434,7 +439,7 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: flex;
   align-items: center;
   gap: 1.4cqw;
-  margin: 1.2cqw auto 0;
+  margin: 1cqw auto 0;
   width: 44cqw;
 }
 .orn i {
@@ -453,10 +458,10 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 .pair {
   display: grid;
-  grid-template-columns: 1fr 6cqw 1fr;
+  grid-template-columns: 1fr 5.5cqw 1fr;
   align-items: start;
   width: 100%;
-  margin-bottom: 2cqw;
+  margin-bottom: 1.5cqw;
 }
 .col {
   display: flex;
@@ -465,13 +470,13 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   min-width: 0;
 }
 .ph {
-  width: 21cqw;
-  height: 21cqw;
+  width: 22cqw;
+  height: 22cqw;
   border-radius: 50%;
-  padding: .85cqw;
+  padding: .9cqw;
   background: conic-gradient(from 20deg, #f7de8e, #b8872a, #fff1b8, #9b6a18, #f7de8e);
   box-shadow: 0 1.2cqw 2.8cqw rgba(70, 40, 5, .4);
-  margin-bottom: 1cqw;
+  margin-bottom: .8cqw;
 }
 .ph div {
   width: 100%;
@@ -490,47 +495,47 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: block;
 }
 .ph span {
-  font: 400 11cqw/1 'Great Vibes', cursive;
+  font: 400 12cqw/1 'Great Vibes', cursive;
   color: #7a1220;
 }
 .role-lbl {
-  font: 700 2.3cqw/1 Cinzel, serif;
+  font: 700 2.6cqw/1 Cinzel, serif;
   letter-spacing: .22cqw;
   color: #b8892b;
   text-transform: uppercase;
-  margin-bottom: .4cqw;
+  margin-bottom: .3cqw;
 }
 .nm {
-  font: 400 8.6cqw/1.1 'Great Vibes', cursive;
+  font: 400 9.2cqw/1.1 'Great Vibes', cursive;
   color: #0b1740;
   white-space: nowrap;
   max-width: 100%;
   filter: drop-shadow(0 .2cqw .2cqw rgba(201, 162, 74, 0.6));
-  margin-bottom: .5cqw;
+  margin-bottom: .4cqw;
 }
 .rel {
-  font: 700 2.1cqw/1 Cinzel, serif;
+  font: 700 2.4cqw/1 Cinzel, serif;
   letter-spacing: .15cqw;
   color: #6b3e14;
   text-transform: lowercase;
   font-style: italic;
-  margin-bottom: .3cqw;
+  margin-bottom: .2cqw;
 }
 .fa {
-  font: 700 3.8cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 4.2cqw/1.2 'Cormorant Garamond', serif;
   color: #2b1204;
   max-width: 100%;
   overflow-wrap: anywhere;
-  margin-bottom: .4cqw;
+  margin-bottom: .3cqw;
 }
 .ad {
-  font: 600 2.7cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 3.0cqw/1.2 'Cormorant Garamond', serif;
   color: #3b1f0b;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 .amp {
-  font: 400 8.5cqw/1 'Great Vibes', cursive;
+  font: 400 9.2cqw/1 'Great Vibes', cursive;
   color: #b8872a;
   padding-top: 5.5cqw;
   text-shadow: 0 .25cqw .5cqw rgba(120, 80, 10, .35);
@@ -540,18 +545,18 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 88%;
-  padding-top: 1.5cqw;
+  width: 90%;
+  padding-top: 1.2cqw;
   border-top: 1px solid rgba(201, 162, 74, 0.4);
 }
 .p2-ornament {
-  font-size: 2.8cqw;
+  font-size: 3.2cqw;
   color: #c9a24a;
   line-height: 1;
-  margin-bottom: .4cqw;
+  margin-bottom: .3cqw;
 }
 .p2-quote-text {
-  font: 500 italic 2.9cqw/1.3 'Cormorant Garamond', serif;
+  font: 600 italic 3.2cqw/1.25 'Cormorant Garamond', serif;
   color: #5a3a08;
   text-align: center;
 }
@@ -574,12 +579,17 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 .card-paper {
   position: absolute;
-  left: 7%;
-  right: 7%;
-  top: 3.5%;
-  bottom: 3.5%;
+  left: 6%;
+  right: 6%;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+  max-height: 92%;
   border-radius: 3.5cqw;
-  background: linear-gradient(160deg, rgba(255, 252, 244, 0.92), rgba(255, 246, 228, 0.85) 55%, rgba(255, 250, 240, 0.9));
+  background: linear-gradient(160deg, rgba(255, 252, 244, 0.94), rgba(255, 246, 228, 0.88) 55%, rgba(255, 250, 240, 0.92));
   backdrop-filter: blur(8px) saturate(1.15);
   -webkit-backdrop-filter: blur(8px) saturate(1.15);
   box-shadow: inset 0 0 0 0.2cqw rgba(201, 162, 74, 0.85),
@@ -589,8 +599,8 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  padding: 3.5cqw 3cqw;
+  justify-content: center;
+  padding: 3.5cqw 3.5cqw;
   text-align: center;
   gap: 1cqw;
   overflow-y: auto;
@@ -598,13 +608,17 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   z-index: 2;
 }
 .card-paper::-webkit-scrollbar { display: none; }
+#prog-card {
+  justify-content: flex-start;
+  padding: 3.5cqw 3.5cqw;
+}
 
 /* Interactive Scratch Card for Muhurat */
 .t01-scratch-tagline {
-  font: 500 italic 2.3cqw/1.25 'Cormorant Garamond', serif;
+  font: 600 italic 3.0cqw/1.25 'Cormorant Garamond', serif;
   color: #5a3a08;
-  max-width: 76cqw;
-  margin: 0 auto;
+  max-width: 82cqw;
+  margin: .3cqw auto;
   text-align: center;
 }
 .t01-scratch-wrap {
@@ -612,15 +626,15 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1cqw;
+  gap: .6cqw;
   margin: .4cqw 0;
 }
 .t01-scratch-box {
   position: relative;
   width: 100%;
-  max-width: 58cqw;
-  height: 18cqw;
-  border-radius: 2cqw;
+  max-width: 62cqw;
+  height: 17cqw;
+  border-radius: 2.2cqw;
   overflow: hidden;
   box-shadow: 0 .8cqw 2.5cqw rgba(90, 58, 8, 0.22);
   border: 1.5px solid #c9a24a;
@@ -633,23 +647,23 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.2cqw;
-  gap: .4cqw;
+  padding: 1cqw;
+  gap: .3cqw;
   background: linear-gradient(135deg, #fffdf8, #fdf4df);
   text-align: center;
 }
-.t01-scratch-icon { font-size: 3.6cqw; line-height: 1; }
+.t01-scratch-icon { font-size: 4cqw; line-height: 1; }
 .t01-scratch-date {
-  font: 700 3.2cqw/1.1 Cinzel, serif;
+  font: 700 4.2cqw/1.1 Cinzel, serif;
   color: #6b0f1a;
   letter-spacing: .08cqw;
 }
 .t01-scratch-time {
-  font: 600 2.3cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 3.4cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
 }
 .t01-scratch-badge {
-  font: 700 1.8cqw/1 Cinzel, serif;
+  font: 700 2.4cqw/1 Cinzel, serif;
   letter-spacing: .12cqw;
   color: #b8892b;
   text-transform: uppercase;
@@ -668,12 +682,12 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1cqw;
-  padding: 1.3cqw 3.2cqw;
+  padding: 1.6cqw 3.6cqw;
   border-radius: 50px;
   background: linear-gradient(135deg, #b8892b, #e0be6c 50%, #9a6f1c);
   color: #fff;
-  font: 700 1.9cqw/1 Cinzel, serif;
-  letter-spacing: .15cqw;
+  font: 700 2.6cqw/1 Cinzel, serif;
+  letter-spacing: .12cqw;
   border: 1px solid rgba(255, 235, 170, 0.6);
   box-shadow: 0 .4cqw 1.5cqw rgba(90, 58, 8, 0.22);
   cursor: pointer;
@@ -684,25 +698,25 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 
 /* Live Countdown */
 .cd-section-title {
-  font: 700 2.0cqw/1 Cinzel, serif;
+  font: 700 2.6cqw/1 Cinzel, serif;
   letter-spacing: .2cqw;
   color: #6b0f1a;
   text-transform: uppercase;
-  margin-top: .4cqw;
+  margin-top: .6cqw;
 }
 .countdown-grid {
   display: flex;
   gap: 1.5cqw;
   width: 100%;
   justify-content: center;
-  margin: .8cqw 0;
+  margin: .6cqw 0;
 }
 .cd-box {
   flex: 1;
-  max-width: 15cqw;
-  padding: 1.5cqw .6cqw;
-  border-radius: 1.8cqw;
-  background: rgba(255, 255, 255, 0.85);
+  max-width: 16cqw;
+  padding: 1.8cqw .8cqw;
+  border-radius: 2cqw;
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(201, 162, 74, 0.6);
   box-shadow: 0 .4cqw 1.4cqw rgba(90, 58, 8, 0.1);
   display: flex;
@@ -711,11 +725,11 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   gap: .3cqw;
 }
 .cd-val {
-  font: 700 4.5cqw/1 Cinzel, serif;
+  font: 700 5.4cqw/1 Cinzel, serif;
   color: #6b0f1a;
 }
 .cd-lbl {
-  font: 600 1.8cqw/1 Cinzel, serif;
+  font: 700 2.3cqw/1 Cinzel, serif;
   letter-spacing: .1cqw;
   color: #5a3a08;
   text-transform: uppercase;
@@ -725,24 +739,24 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 .prog-list {
   display: flex;
   flex-direction: column;
-  gap: 2.8cqw;
+  gap: 2cqw;
   width: 100%;
-  margin-top: 1cqw;
+  margin-top: .8cqw;
 }
 .prog-item {
   display: flex;
   flex-direction: column;
-  border-radius: 2.4cqw;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1.5px solid rgba(201, 162, 74, 0.55);
-  box-shadow: 0 .8cqw 2.5cqw rgba(90, 58, 8, 0.1);
+  border-radius: 2.2cqw;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(201, 162, 74, 0.6);
+  box-shadow: 0 .6cqw 2cqw rgba(90, 58, 8, 0.12);
   overflow: hidden;
   text-align: center;
 }
 .prog-img-wrap {
   position: relative;
   width: 100%;
-  height: 22cqw;
+  height: 16cqw;
   overflow: hidden;
   background: #ebd8b2;
 }
@@ -754,39 +768,39 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 }
 .prog-badge {
   position: absolute;
-  top: 1.5cqw;
-  left: 2cqw;
-  padding: .5cqw 2.2cqw;
+  top: 1.2cqw;
+  left: 1.6cqw;
+  padding: .4cqw 1.8cqw;
   border-radius: 50px;
-  background: rgba(107, 15, 26, 0.9);
+  background: rgba(107, 15, 26, 0.92);
   color: #ffe082;
-  font: 700 2.2cqw/1 Cinzel, serif;
-  letter-spacing: .15cqw;
+  font: 700 2.4cqw/1 Cinzel, serif;
+  letter-spacing: .12cqw;
   box-shadow: 0 .4cqw 1.2cqw rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 224, 130, 0.6);
 }
 .prog-info {
-  padding: 2.5cqw 3cqw;
+  padding: 1.8cqw 2.5cqw;
   display: flex;
   flex-direction: column;
-  gap: .8cqw;
+  gap: .5cqw;
   align-items: center;
 }
 .prog-item-title {
-  font: 700 3.8cqw/1.15 Cinzel, serif;
+  font: 700 4.2cqw/1.1 Cinzel, serif;
   color: #6b0f1a;
-  letter-spacing: .15cqw;
+  letter-spacing: .12cqw;
 }
 .prog-item-time {
-  font: 600 3.2cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 3.5cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
 }
 .prog-item-venue {
-  font: 600 3cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 3.3cqw/1.2 'Cormorant Garamond', serif;
   color: #1a1004;
 }
 .prog-item-note {
-  font: 500 italic 2.8cqw/1.3 'Cormorant Garamond', serif;
+  font: 500 italic 3.0cqw/1.25 'Cormorant Garamond', serif;
   color: #4a2c06;
 }
 .add-cal-link {
@@ -794,12 +808,12 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1cqw;
-  margin-top: .6cqw;
+  margin-top: .4cqw;
   align-self: center;
-  font: 600 2.4cqw/1 Cinzel, serif;
+  font: 700 2.6cqw/1 Cinzel, serif;
   color: #6b0f1a;
   text-decoration: none;
-  padding: 1.4cqw 3cqw;
+  padding: 1.2cqw 2.6cqw;
   border-radius: 50px;
   background: rgba(201, 162, 74, 0.18);
   border: 1px solid rgba(201, 162, 74, 0.6);
@@ -809,42 +823,42 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 /* Venue Showcase & Signoff */
 .venue-photo-wrap {
   width: 100%;
-  max-width: 48cqw;
-  border-radius: 2.5cqw;
+  max-width: 52cqw;
+  border-radius: 2.2cqw;
   padding: .6cqw;
   background: conic-gradient(#f7e08a, #b8892b, #fff3b8, #9a6f1c, #f7e08a);
   box-shadow: 0 1cqw 3cqw rgba(90, 58, 8, 0.2);
-  margin: .8cqw auto;
+  margin: .6cqw auto;
 }
 .venue-photo-wrap img {
   width: 100%;
-  height: 28cqw;
+  height: 20cqw;
   object-fit: cover;
-  border-radius: 2cqw;
+  border-radius: 1.8cqw;
   display: block;
 }
 .venue-arch-wrap {
   width: 100%;
   max-width: 44cqw;
-  height: 22cqw;
-  border-radius: 2.5cqw;
+  height: 14cqw;
+  border-radius: 2.2cqw;
   background: rgba(201, 162, 74, 0.12);
   border: 1.5px dashed rgba(201, 162, 74, 0.6);
   display: grid;
   place-items: center;
-  margin: .8cqw auto;
+  margin: .6cqw auto;
 }
-.venue-arch-icon { font-size: 8cqw; }
+.venue-arch-icon { font-size: 6cqw; }
 .venue-address-text {
   display: flex;
   flex-direction: column;
-  gap: .8cqw;
-  margin: .8cqw 0;
+  gap: .5cqw;
+  margin: .6cqw 0;
   width: 100%;
   align-items: center;
 }
 .venue-name-bold {
-  font: 700 4.2cqw/1.2 Cinzel, serif;
+  font: 700 4.4cqw/1.2 Cinzel, serif;
   color: #6b0f1a;
   letter-spacing: .15cqw;
 }
@@ -853,16 +867,16 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   color: #5a3a08;
 }
 .venue-full-addr {
-  font: 600 3.3cqw/1.3 'Cormorant Garamond', serif;
+  font: 700 3.8cqw/1.25 'Cormorant Garamond', serif;
   color: #1a1004;
-  max-width: 46cqw;
+  max-width: 60cqw;
 }
 .venue-timing {
-  font: 600 3.1cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 3.5cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
 }
 .venue-note {
-  font: 500 italic 2.8cqw/1.2 'Cormorant Garamond', serif;
+  font: 500 italic 3.1cqw/1.25 'Cormorant Garamond', serif;
   color: #4a2c06;
 }
 .gold-btn {
@@ -870,19 +884,19 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1.5cqw;
-  padding: 2.6cqw 5cqw;
+  padding: 2.2cqw 4.6cqw;
   border-radius: 50px;
   background: linear-gradient(135deg, #b8892b, #e0be6c 50%, #9a6f1c);
   color: #fff;
-  font: 700 2.8cqw/1 Cinzel, serif;
-  letter-spacing: .25cqw;
+  font: 700 3.0cqw/1 Cinzel, serif;
+  letter-spacing: .2cqw;
   text-decoration: none;
   box-shadow: 0 .8cqw 2.5cqw rgba(90, 58, 8, 0.35);
   border: 1px solid rgba(255, 235, 170, 0.6);
   cursor: pointer;
   transition: transform .2s, box-shadow .2s;
   text-transform: uppercase;
-  margin-top: .5cqw;
+  margin-top: .4cqw;
 }
 .gold-btn:active { transform: scale(0.97); }
 .gold-btn-sm {
@@ -890,46 +904,46 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1.2cqw;
-  padding: 2cqw 4cqw;
+  padding: 2.2cqw 4.5cqw;
   border-radius: 50px;
   background: linear-gradient(135deg, #b8892b, #e0be6c 50%, #9a6f1c);
   color: #fff;
-  font: 700 2.4cqw/1 Cinzel, serif;
-  letter-spacing: .2cqw;
+  font: 700 2.8cqw/1 Cinzel, serif;
+  letter-spacing: .15cqw;
   text-decoration: none;
   box-shadow: 0 .6cqw 2cqw rgba(90, 58, 8, 0.28);
   border: 1px solid rgba(255, 235, 170, 0.6);
   cursor: pointer;
-  margin-top: .8cqw;
+  margin-top: .6cqw;
 }
 .venue-signature {
   display: flex;
   flex-direction: column;
-  gap: .6cqw;
+  gap: .5cqw;
   align-items: center;
-  margin-top: 1.5cqw;
-  padding-top: 1.5cqw;
+  margin-top: 1cqw;
+  padding-top: 1cqw;
   border-top: 1px solid rgba(201, 162, 74, 0.35);
   width: 100%;
 }
 .sig-prefix {
-  font: 500 italic 2.9cqw/1.3 'Cormorant Garamond', serif;
+  font: 600 italic 3.2cqw/1.25 'Cormorant Garamond', serif;
   color: #5a3a08;
   text-align: center;
 }
 .sig-name {
-  font: 700 italic 3.6cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 italic 4.2cqw/1.1 'Cormorant Garamond', serif;
   color: #6b0f1a;
 }
 .sig-sub {
-  font: 500 italic 2.6cqw/1.2 'Cormorant Garamond', serif;
+  font: 500 italic 2.9cqw/1.2 'Cormorant Garamond', serif;
   color: #5a3a08;
 }
 .start-again-btn {
-  margin-top: .8cqw;
+  margin-top: .6cqw;
   background: none;
   border: none;
-  font: 600 2.4cqw/1 Cinzel, serif;
+  font: 700 2.6cqw/1 Cinzel, serif;
   letter-spacing: .2cqw;
   color: #b8892b;
   cursor: pointer;
@@ -1050,16 +1064,16 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 }
 #ft1 {
   top: 15.7%;
-  font: 600 3.2cqw/1 Cinzel, serif;
-  letter-spacing: .16em;
+  font: 600 3.6cqw/1 Cinzel, serif;
+  letter-spacing: .18em;
   color: #5a3a08;
-  width: 66cqw;
+  width: 72cqw;
 }
 #ft2 {
   top: 23%;
-  font: 400 12.5cqw/1.15 'Great Vibes', cursive;
+  font: 400 13.8cqw/1.1 'Great Vibes', cursive;
   color: #7a1220;
-  width: 70cqw;
+  width: 76cqw;
   text-shadow: 0 .2cqw .3cqw rgba(255, 240, 200, .6);
 }
 #ft2 em {
@@ -1069,22 +1083,22 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
 }
 #pt1 {
   top: 70.2%;
-  font: 600 3cqw/1 Cinzel, serif;
+  font: 600 3.4cqw/1 Cinzel, serif;
   letter-spacing: .22em;
   color: #5a3a08;
-  width: 50cqw;
+  width: 56cqw;
 }
 #pt2 {
   top: 74%;
-  font: 700 6.4cqw/1.1 'Cormorant Garamond', serif;
+  font: 700 7.2cqw/1.1 'Cormorant Garamond', serif;
   color: #2b1204;
-  width: 60cqw;
+  width: 70cqw;
 }
 #pt3 {
   top: 77.6%;
-  font: 700 4.6cqw/1 'Cormorant Garamond', serif;
+  font: 700 5.2cqw/1 'Cormorant Garamond', serif;
   color: #4a1a0a;
-  width: 60cqw;
+  width: 70cqw;
 }
 .hit {
   position: absolute;
@@ -1282,7 +1296,6 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
         <div class="card-paper" id="venue-card">
           <div class="kick">CELEBRATION VENUE</div>
           <div class="sub-kick">${esc(primaryVenueTitle)}</div>
-          ${secondaryAddress ? `<div class="venue-loc-sub">${esc(secondaryAddress)}</div>` : ''}
           <div class="orn"><i></i><b></b><i></i></div>
           ${venuePhoto ? `
           <div class="venue-photo-wrap">
@@ -1292,7 +1305,6 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
             <div class="venue-arch-icon">🏛️</div>
           </div>`}
           <div class="venue-address-text">
-            <p class="venue-name-bold">${esc(primaryVenueTitle)}</p>
             ${secondaryAddress ? `<p class="venue-full-addr">📍 ${esc(secondaryAddress)}</p>` : ''}
             ${timeStr ? `<p class="venue-timing">⏰ ${esc(timeStr)}</p>` : ''}
             ${venueComment ? `<p class="venue-note"><em>“${esc(venueComment)}”</em></p>` : ''}
@@ -1386,17 +1398,17 @@ export function mount(root, { guest, wedding, events } = {}) {
 
   const fitAll = () => {
     if (typeof root.querySelector !== 'function') return;
-    fit(root.querySelector('#ft1'), 66, 1.8);
-    fit(root.querySelector('#ft2'), 70, 5);
-    fit(root.querySelector('#pt1'), 50, 1.8);
-    fit(root.querySelector('#pt2'), 60, 3);
-    fit(root.querySelector('#pt3'), 60, 2.6);
+    fit(root.querySelector('#ft1'), 72, 2.0);
+    fit(root.querySelector('#ft2'), 76, 5);
+    fit(root.querySelector('#pt1'), 56, 2.0);
+    fit(root.querySelector('#pt2'), 70, 3.2);
+    fit(root.querySelector('#pt3'), 70, 2.8);
 
     if (typeof root.querySelectorAll === 'function') {
       root.querySelectorAll('.nm').forEach(el => {
         const col = el.parentNode;
-        const lim = (col && col.clientWidth ? col.clientWidth : 34 * (st.clientWidth || 360) / 100) / (st.clientWidth || 360) * 100;
-        fit(el, lim, 4);
+        const lim = (col && col.clientWidth ? col.clientWidth : 36 * (st.clientWidth || 360) / 100) / (st.clientWidth || 360) * 100;
+        fit(el, lim, 4.2);
       });
     }
   };
