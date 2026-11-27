@@ -1449,7 +1449,12 @@ function updateCoupleCardsOrder(order) {
 
 form.addEventListener('change', event => {
   if (event.target.name === 'name_order') updateCoupleCardsOrder(event.target.value);
-  if (event.target.name === 'payment_mode' || event.target.name === 'package_code') updatePaymentPanel();
+  if (event.target.name === 'payment_mode' || event.target.name === 'package_code') {
+    updatePaymentPanel();
+    if (event.target.name === 'package_code' && (appliedPromo || promoInput?.value?.trim())) {
+      handlePromoApply();
+    }
+  }
   if (event.target.name === 'theme_name') renderThemePreview();
   if (event.target.name === 'template_style') {
     const newTpl = event.target.value;
@@ -1538,6 +1543,10 @@ document.getElementById('copy-payment').addEventListener('click', async () => {
 });
 
 async function validatePromoPreview(packageCode, promoCode, phone) {
+  const cleanCode = String(promoCode || '').trim().toUpperCase();
+  const cleanPhone = phone ? String(phone).replace(/\D/g, '').slice(-10) : null;
+  const cleanPkg = packageCode ? String(packageCode).trim() : 'standard';
+
   try {
     const supabaseBase = ONBOARDING_CONFIG.supabaseUrl 
       || (ONBOARDING_CONFIG.onboardingEndpoint ? ONBOARDING_CONFIG.onboardingEndpoint.split('/functions/')[0] : 'https://skpcxbdrmsnwmggjodkz.supabase.co');
@@ -1551,9 +1560,9 @@ async function validatePromoPreview(packageCode, promoCode, phone) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        p_package_code: packageCode,
-        p_promo_code: promoCode,
-        p_phone: phone || null
+        p_promo_code: cleanCode,
+        p_package_code: cleanPkg,
+        p_phone: cleanPhone || null
       }),
       cache: 'no-store'
     });
@@ -1566,15 +1575,14 @@ async function validatePromoPreview(packageCode, promoCode, phone) {
   }
 
   // Local fallback validation if offline/testing
-  const clean = String(promoCode || '').trim().toUpperCase();
-  if (clean === 'NIKAH500') {
+  if (cleanCode === 'NIKAH500') {
     return { valid: true, code: 'NIKAH500', discount_type: 'FLAT', promo_discount_paise: 50000, is_stackable: false, message: 'Promo code applied successfully!' };
   }
-  if (clean === 'VIP1000') {
+  if (cleanCode === 'VIP1000') {
     return { valid: true, code: 'VIP1000', discount_type: 'FLAT', promo_discount_paise: 100000, is_stackable: true, message: 'VIP Promo applied successfully!' };
   }
-  if (clean === 'SPECIAL10') {
-    const pkg = packages.find(p => p.code === packageCode);
+  if (cleanCode === 'SPECIAL10') {
+    const pkg = packages.find(p => p.code === cleanPkg);
     const disc = pkg ? Math.round(pkg.list_price_paise * 0.10) : 40000;
     return { valid: true, code: 'SPECIAL10', discount_type: 'PERCENTAGE', promo_discount_paise: disc, is_stackable: false, message: '10% Discount applied!' };
   }
@@ -1598,8 +1606,9 @@ async function handlePromoApply() {
     return;
   }
 
+  const checkedRadio = form.querySelector('input[name="package_code"]:checked');
   const selectedPack = selectedPackage();
-  const packageCode = selectedPack ? selectedPack.code : 'standard';
+  const packageCode = checkedRadio?.value || selectedPack?.code || form.elements.package_code?.value || (packages && packages[0]?.code) || 'standard';
   const customerPhone = form.elements.phone?.value || '';
 
   if (promoApplyBtn) {
