@@ -3,6 +3,7 @@
    Inspired by Royal Heritage Double-Door Wax-Seal Envelope, Fairy Dust Sparkles,
    Save the Date Calendar, Wedding Programme & Arched Banquet Venue Showcase.
    Full Dynamic Integration matching Prime eCard Royal Architecture.
+   Mobile-Optimized Edge-to-Edge HD Fullscreen & Single Unified Soundtrack.
    ========================================================================== */
 
 const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -344,8 +345,9 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   min-height: 100dvh;
   background: #14070a;
   overflow: hidden;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Background Ambient Lighting */
@@ -358,25 +360,36 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   pointer-events: none;
 }
 
-/* Stage Box */
+/* Stage Box — Responsive Edge-to-Edge HD Fullscreen on Mobile */
 .stage {
   position: relative;
   overflow: hidden;
   container-type: size;
   background: #14070a;
-  width: min(66.667vh, 100vw);
-  height: min(100vh, 150vw);
-  width: min(66.667dvh, 100vw);
-  height: min(100dvh, 150vw);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
   font-family: 'Cormorant Garamond', Georgia, serif;
   color: #2b1204;
-  box-shadow: 0 0 5cqw rgba(0, 0, 0, .8);
+}
+
+@media (min-width: 681px) {
+  .stage {
+    width: min(54vh, 480px);
+    height: min(100vh, 100dvh);
+    max-width: 480px;
+    border-radius: 20px;
+    box-shadow: 0 10px 45px rgba(0, 0, 0, .85);
+  }
 }
 
 .scroller {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   overscroll-behavior: contain;
@@ -385,7 +398,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 
 .pg {
   position: relative;
-  height: 150cqw;
+  height: 100%;
+  height: 100dvh;
   width: 100%;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -396,12 +410,12 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .bgl {
   position: absolute;
   inset: 0;
-  background: var(--page) center/100% 100% no-repeat;
+  background: var(--page) center/cover no-repeat;
   will-change: transform;
 }
 .bl .bgl {
-  transform: scale(1.05);
-  transition: transform 1.8s cubic-bezier(.16, 1, .3, 1);
+  transform: scale(1.04);
+  transition: transform 1.6s cubic-bezier(.16, 1, .3, 1);
 }
 .bl.in .bgl {
   transform: none;
@@ -425,35 +439,34 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .p2in {
   position: absolute;
   inset: 0;
-  transform: scale(1.28);
+  transform: scale(1.25);
   transform-origin: 49% 58%;
   will-change: transform;
 }
 .opening .p2in {
   transform: none;
-  transition: transform 3.4s cubic-bezier(.16, 1, .3, 1) .5s;
+  transition: transform 3.2s cubic-bezier(.16, 1, .3, 1) .5s;
 }
 
 .card {
   position: absolute;
-  left: 7%;
-  right: 7%;
-  top: 9%;
-  bottom: 9%;
+  left: 6%;
+  right: 6%;
+  top: 6%;
+  bottom: 12%;
   border-radius: 4cqw;
-  background: rgba(255, 250, 240, 0.90);
+  background: rgba(255, 250, 240, 0.92);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
   backdrop-filter: blur(14px) saturate(1.15);
   border: .35cqw solid rgba(201, 160, 70, 0.88);
   box-shadow: inset 0 0 0 1.1cqw rgba(255, 250, 240, 0.4),
               inset 0 0 0 1.45cqw rgba(201, 160, 70, 0.6),
-              0 3cqw 8cqw rgba(50, 8, 14, 0.35),
-              0 .6cqw 2cqw rgba(50, 8, 14, 0.2);
+              0 3cqw 8cqw rgba(50, 8, 14, 0.35);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3.5cqw 3cqw;
+  padding: 3cqw 3cqw;
   text-align: center;
   opacity: 0;
   transform: scale(.94);
@@ -466,7 +479,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 
 .rv {
   opacity: 0;
-  transform: translateY(3cqw);
+  transform: translateY(2.5cqw);
   filter: blur(4px);
 }
 .go .rv {
@@ -477,23 +490,23 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 
 .wo {
   font: 700 3.2cqw/1 Cinzel, serif;
-  letter-spacing: .3em;
+  letter-spacing: .28em;
   color: #4a0e17;
-  padding-left: .3em;
+  padding-left: .28em;
   white-space: nowrap;
 }
 .go .wo {
   animation: settle 1s cubic-bezier(.22, 1, .36, 1) forwards, track 2.2s cubic-bezier(.16, 1, .3, 1) forwards;
   animation-delay: .35s;
 }
-@keyframes track { from { letter-spacing: .7em; } to { letter-spacing: .3em; } }
+@keyframes track { from { letter-spacing: .6em; } to { letter-spacing: .28em; } }
 
 .orn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.4cqw;
-  margin: 1.6cqw 0 2cqw;
+  margin: 1.4cqw 0 1.8cqw;
   width: 46cqw;
 }
 .orn i {
@@ -532,9 +545,9 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   min-width: 0;
 }
 .amp {
-  font: 400 9.5cqw/1 'Great Vibes', cursive;
+  font: 400 9cqw/1 'Great Vibes', cursive;
   color: #8c5d19;
-  padding-top: 6.5cqw;
+  padding-top: 6cqw;
   text-shadow: 0 .3cqw .6cqw rgba(120, 80, 10, .35);
 }
 .go .amp { animation: amp 1.4s cubic-bezier(.22, 1, .36, 1) 1.0s both; }
@@ -542,8 +555,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 
 .ph {
   position: relative;
-  width: 23cqw;
-  height: 23cqw;
+  width: 22cqw;
+  height: 22cqw;
   border-radius: 50%;
   box-shadow: 0 1.4cqw 3cqw rgba(70, 40, 5, .45);
   opacity: 0;
@@ -566,13 +579,13 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 @keyframes spin { to { transform: rotate(360deg); } }
 .ph div {
   position: absolute;
-  inset: .95cqw;
+  inset: .9cqw;
   border-radius: 50%;
   overflow: hidden;
   background: radial-gradient(#fff6df, #ecd6a0);
   display: grid;
   place-items: center;
-  border: .4cqw solid #fff7e0;
+  border: .35cqw solid #fff7e0;
 }
 .ph img {
   width: 100%;
@@ -581,7 +594,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   display: block;
 }
 .ph span {
-  font: 400 12.5cqw/1 'Great Vibes', cursive;
+  font: 400 11cqw/1 'Great Vibes', cursive;
   color: #7a1220;
 }
 
@@ -593,7 +606,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   margin-bottom: .2cqw;
 }
 .nm {
-  font: 400 10.5cqw/1.1 'Great Vibes', cursive;
+  font: 400 10cqw/1.1 'Great Vibes', cursive;
   color: #3d0714;
   white-space: nowrap;
   max-width: 100%;
@@ -612,21 +625,21 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   margin-bottom: .2cqw;
 }
 .fa {
-  font: 700 4.2cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 4cqw/1.2 'Cormorant Garamond', serif;
   color: #2b1204;
   max-width: 100%;
   overflow-wrap: anywhere;
   margin-bottom: .2cqw;
 }
 .ad {
-  font: 600 3.2cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 3cqw/1.2 'Cormorant Garamond', serif;
   color: #4a1c0d;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 
 .p2-quote {
-  margin-top: 2cqw;
+  margin-top: 1.8cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -635,25 +648,24 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   border-top: 1px solid rgba(140, 93, 25, 0.45);
 }
 .p2-ornament {
-  font-size: 3.2cqw;
+  font-size: 3cqw;
   color: #8c5d19;
   line-height: 1;
-  margin-bottom: .6cqw;
+  margin-bottom: .4cqw;
 }
 .p2-quote-text {
-  font: 600 italic 3.8cqw/1.25 'Cormorant Garamond', serif;
+  font: 600 italic 3.6cqw/1.25 'Cormorant Garamond', serif;
   color: #4a1c0d;
   text-align: center;
 }
 
 /* ==========================================================================
-   PAGE 3: SAVE THE DATE (Clean Header & Royal Interactive Calendar)
-   Circle Medallion Removed as Requested
+   PAGE 3: SAVE THE DATE & CALENDAR
    ========================================================================== */
 .p3-inner {
   position: absolute;
   inset: 0;
-  padding: 4cqw 6cqw;
+  padding: 4cqw 6cqw 14cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -676,13 +688,13 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   margin-bottom: .6cqw;
 }
 .std-title {
-  font: 700 9cqw/1 Cinzel, serif;
+  font: 700 8.5cqw/1 Cinzel, serif;
   letter-spacing: .12em;
   color: #4a0e17;
   text-shadow: 0 1px 2px rgba(214, 168, 60, 0.4);
 }
 
-/* Calendar Card (Screenshot 1) */
+/* Calendar Card */
 .cal-card {
   width: 100%;
   max-width: 88cqw;
@@ -690,7 +702,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   background: linear-gradient(180deg, #3d0c15 0%, #1f040a 100%);
   border: 1.5px solid rgba(214, 168, 60, 0.65);
   box-shadow: 0 6cqw 14cqw rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(255, 220, 140, 0.2);
-  padding: 4cqw 4.5cqw;
+  padding: 3.8cqw 4.5cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -702,7 +714,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   margin-bottom: 2cqw;
 }
 .cal-month-name {
-  font: 700 6cqw/1 Cinzel, serif;
+  font: 700 5.6cqw/1 Cinzel, serif;
   letter-spacing: .16em;
   color: #f7de8e;
 }
@@ -719,15 +731,15 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   text-align: center;
   font: 700 2.8cqw/1 Cinzel, serif;
   color: #d4a736;
-  margin-bottom: 2cqw;
+  margin-bottom: 1.8cqw;
 }
 .cal-grid {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1.8cqw .4cqw;
+  gap: 1.6cqw .4cqw;
   text-align: center;
-  margin-bottom: 2.5cqw;
+  margin-bottom: 2.2cqw;
 }
 .cal-day-cell {
   position: relative;
@@ -735,7 +747,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 6.4cqw;
+  height: 6.2cqw;
 }
 .cal-day-num {
   font: 600 3.4cqw/1 'Cormorant Garamond', serif;
@@ -744,7 +756,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .cal-day-cell.wedding-day .cal-heart {
   position: absolute;
   top: -1.6cqw;
-  font-size: 2.4cqw;
+  font-size: 2.2cqw;
   color: #ff9eaf;
   filter: drop-shadow(0 0 4px #ff5376);
   animation: heartPulse 1.8s ease-in-out infinite;
@@ -754,28 +766,28 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   50% { transform: scale(1.35); }
 }
 .cal-day-num.active {
-  width: 7cqw;
-  height: 7cqw;
+  width: 6.8cqw;
+  height: 6.8cqw;
   border-radius: 50%;
   background: radial-gradient(circle, #fff3c4, #d4a736 70%, #9a6f1c);
   color: #1a0808;
   font-weight: 700;
-  font-size: 3.6cqw;
+  font-size: 3.5cqw;
   display: grid;
   place-items: center;
   box-shadow: 0 0 18px rgba(255, 215, 0, 0.85);
 }
 .cal-time-note {
-  font: 500 italic 4cqw/1.2 'Cormorant Garamond', serif;
+  font: 500 italic 3.8cqw/1.2 'Cormorant Garamond', serif;
   color: #f7de8e;
-  margin-bottom: 2.5cqw;
+  margin-bottom: 2.2cqw;
 }
 .gold-cal-btn {
   background: linear-gradient(135deg, #f0d27a, #b8872a 60%, #875e14);
   color: #fff;
-  font: 700 2.8cqw/1 Cinzel, serif;
+  font: 700 2.6cqw/1 Cinzel, serif;
   letter-spacing: .14em;
-  padding: 2.2cqw 6cqw;
+  padding: 2cqw 5cqw;
   border-radius: 50px;
   text-decoration: none;
   display: inline-flex;
@@ -787,13 +799,12 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 
 /* ==========================================================================
-   PAGE 4: COUNTDOWN ONLY (Duplicate Names, Parents & Venue Removed)
-   Dedicated Live Countdown & Guest Honor Badge
+   PAGE 4: COUNTDOWN ONLY (Pure Live Countdown & Guest Honor Badge)
    ========================================================================== */
 .p4-inner {
   position: absolute;
   inset: 0;
-  padding: 4cqw 6cqw;
+  padding: 4cqw 6cqw 14cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -809,13 +820,13 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   background: linear-gradient(180deg, rgba(60, 10, 20, 0.96), rgba(35, 5, 12, 0.98));
   border: 1.5px solid rgba(214, 168, 60, 0.65);
   box-shadow: 0 6cqw 16cqw rgba(40, 6, 12, 0.55), inset 0 0 0 1px rgba(255, 230, 160, 0.2);
-  padding: 6cqw 4.5cqw;
+  padding: 5.5cqw 4.5cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 .cd-header-kicker {
-  font: 700 3cqw/1 Cinzel, serif;
+  font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .25em;
   color: #d4a736;
   text-transform: uppercase;
@@ -828,51 +839,51 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   margin-bottom: 1.4cqw;
 }
 .cd-target-date {
-  font: 600 3.8cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 3.6cqw/1.2 'Cormorant Garamond', serif;
   color: #fff3c4;
   background: rgba(30, 4, 10, 0.6);
   padding: .8cqw 3cqw;
   border-radius: 50px;
   border: 1px solid rgba(214, 168, 60, 0.35);
-  margin-bottom: 3.5cqw;
+  margin-bottom: 3.2cqw;
 }
 
 /* Countdown Grid */
 .cd-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2.4cqw;
+  gap: 2.2cqw;
   width: 100%;
-  margin-bottom: 3.5cqw;
+  margin-bottom: 3.2cqw;
 }
 .cd-box {
   background: rgba(30, 4, 10, 0.92);
   border: 1.5px solid rgba(214, 168, 60, 0.6);
-  border-radius: 2.8cqw;
-  padding: 3cqw 1cqw;
+  border-radius: 2.6cqw;
+  padding: 2.8cqw 1cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: inset 0 0 14px rgba(0, 0, 0, .7), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 .cd-val {
-  font: 700 7cqw/1 'Cormorant Garamond', serif;
+  font: 700 6.5cqw/1 'Cormorant Garamond', serif;
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 215, 120, 0.7);
 }
 .cd-lbl {
-  font: 700 2.4cqw/1 Cinzel, serif;
+  font: 700 2.2cqw/1 Cinzel, serif;
   letter-spacing: .15em;
   color: #f0c966;
   margin-top: .6cqw;
 }
 .story-guest-badge {
   display: inline-block;
-  padding: 1.6cqw 5.5cqw;
+  padding: 1.5cqw 5cqw;
   border-radius: 50px;
   border: 1.5px solid rgba(214, 168, 60, 0.65);
   background: rgba(74, 14, 27, 0.75);
-  font: 700 3cqw/1 Cinzel, serif;
+  font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .15em;
   color: #f7de8e;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
@@ -884,7 +895,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .p5-prog-inner {
   position: absolute;
   inset: 0;
-  padding: 3.5cqw 5cqw 4cqw;
+  padding: 3.5cqw 5cqw 14cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -915,7 +926,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   text-shadow: 0 1px 2px rgba(214, 168, 60, 0.4);
 }
 .prog-subtitle {
-  font: 600 italic 3.4cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 italic 3.2cqw/1.2 'Cormorant Garamond', serif;
   color: #5a2512;
   margin-top: .4cqw;
 }
@@ -927,10 +938,10 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   gap: 2.8cqw;
   width: 100%;
   max-width: 88cqw;
-  max-height: 106cqw;
+  max-height: 68cqh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 1cqw 1cqw 5cqw;
+  padding: 1cqw 1cqw 6cqw;
   scrollbar-width: thin;
   scrollbar-color: rgba(214, 168, 60, 0.5) transparent;
 }
@@ -948,17 +959,17 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   border: 1.5px solid rgba(214, 168, 60, 0.7);
   box-shadow: 0 6px 20px rgba(50, 8, 14, 0.4), inset 0 0 0 1px rgba(255, 230, 160, 0.2);
   border-radius: 3.5cqw;
-  padding: 3cqw;
+  padding: 2.8cqw;
   display: flex;
   flex-direction: row;
-  gap: 3.2cqw;
+  gap: 3cqw;
   align-items: center;
   text-align: left;
   flex-shrink: 0;
 }
 .prog-img-majestic-wrap {
-  width: 28cqw;
-  height: 28cqw;
+  width: 26cqw;
+  height: 26cqw;
   border-radius: 2.5cqw;
   overflow: hidden;
   border: 1.5px solid rgba(214, 168, 60, 0.6);
@@ -980,7 +991,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   flex: 1;
 }
 .prog-name-majestic {
-  font: 700 4.8cqw/1.1 Cinzel, serif;
+  font: 700 4.6cqw/1.1 Cinzel, serif;
   color: #f7de8e;
   letter-spacing: .03em;
 }
@@ -1024,7 +1035,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .p6-inner {
   position: absolute;
   inset: 0;
-  padding: 4cqw 5cqw;
+  padding: 4cqw 5cqw 14cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1070,7 +1081,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .venue-arch-frame {
   position: relative;
   width: 100%;
-  height: 52cqw;
+  height: 48cqw;
   border-radius: 20cqw 20cqw 2cqw 2cqw;
   border: .4cqw solid rgba(214, 168, 60, 0.75);
   overflow: hidden;
@@ -1107,12 +1118,12 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .venue-dest-card {
   position: relative;
   width: 100%;
-  height: 52cqw;
+  height: 48cqw;
   border-radius: 3.5cqw;
   background: linear-gradient(135deg, rgba(60, 10, 20, 0.96), rgba(30, 4, 10, 0.98));
   border: 1.5px solid rgba(214, 168, 60, 0.6);
   box-shadow: 0 4cqw 8cqw rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 230, 160, 0.2);
-  padding: 3cqw 2.5cqw;
+  padding: 2.8cqw 2.5cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1158,7 +1169,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   border: 1px solid rgba(255, 230, 160, 0.5);
 }
 
-/* Family Signature & Audio Controls */
+/* Family Signature & Clean Bottom Actions */
 .venue-signature {
   display: flex;
   flex-direction: column;
@@ -1182,32 +1193,93 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .venue-bottom-actions {
   display: flex;
-  gap: 2.5cqw;
   align-items: center;
   justify-content: center;
   margin-top: 1cqw;
 }
 .start-again-btn {
-  background: rgba(255, 250, 240, 0.85);
-  border: 1px solid rgba(140, 93, 25, 0.45);
+  background: rgba(255, 250, 240, 0.9);
+  border: 1px solid rgba(140, 93, 25, 0.5);
   border-radius: 50px;
-  padding: 1.2cqw 4.5cqw;
+  padding: 1.2cqw 5cqw;
   font: 700 2.6cqw/1 Cinzel, serif;
   letter-spacing: .15em;
   color: #4a0e17;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
-.music-toggle-btn {
-  background: linear-gradient(135deg, rgba(65, 12, 22, 0.95), rgba(35, 5, 12, 0.98));
-  border: 1px solid rgba(214, 168, 60, 0.6);
+
+/* ==========================================================================
+   FLOATING BUTTON NAVIGATION BAR
+   Hidden on Page 1 (closed envelope), reveals smoothly after opening
+   5 Core Action Items matching Reference Design: DATES, STORY, EVENTS, VENUE, MUSIC
+   ========================================================================== */
+.bottom-nav-bar {
+  position: absolute;
+  bottom: 2.5cqw;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(255, 252, 246, 0.96);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
   border-radius: 50px;
-  padding: 1.2cqw 4cqw;
-  font: 700 2.4cqw/1 Cinzel, serif;
-  letter-spacing: .12em;
-  color: #f7de8e;
+  border: 1px solid rgba(214, 168, 60, 0.7);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 3.2cqw;
+  padding: 1.4cqw 3.8cqw;
+  z-index: 25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .6s ease, transform .6s cubic-bezier(.16, 1, .3, 1);
+}
+.go .bottom-nav-bar {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.bnav-btn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3cqw;
+  color: #4a0e17;
+  text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 0;
+  transition: transform .15s ease;
+}
+.bnav-btn:active {
+  transform: scale(0.92);
+}
+.bnav-icon {
+  font-size: 3.4cqw;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+.bnav-label {
+  font: 700 2cqw/1 Cinzel, serif;
+  letter-spacing: .08em;
+  color: #4a0e17;
+  text-transform: uppercase;
+  margin-top: .15cqw;
+}
+
+@media (max-width: 680px) {
+  .bottom-nav-bar {
+    bottom: max(14px, env(safe-area-inset-bottom, 14px));
+    padding: 8px 14px;
+    gap: 13px;
+  }
+  .bnav-icon {
+    font-size: 16px;
+  }
+  .bnav-label {
+    font-size: 9.5px;
+  }
 }
 
 /* ==========================================================================
@@ -1321,8 +1393,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   position: absolute;
   top: 0;
   width: 100cqw;
-  height: 150cqw;
-  background: var(--envelope) 0 0/100% 100% no-repeat;
+  height: 100%;
+  background: var(--envelope) center/cover no-repeat;
 }
 #dL .sheet { left: 0; }
 #dR .sheet { left: calc(-1cqw*var(--sx) + .1cqw); }
@@ -1353,7 +1425,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .nmI {
   top: 37.4%;
-  font: 400 14cqw/1.1 'Great Vibes', cursive;
+  font: 400 13cqw/1.1 'Great Vibes', cursive;
   padding: 0 1cqw;
   color: transparent;
   background: linear-gradient(100deg, #7a1220 0 42%, #f0c966 50%, #7a1220 58% 100%) 120% 0/260% 100%;
@@ -1389,13 +1461,13 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .gI {
   top: 75.7%;
-  font: 700 6.4cqw/1.1 'Cormorant Garamond', serif;
+  font: 700 6.2cqw/1.1 'Cormorant Garamond', serif;
   color: #2b1204;
   animation-delay: 1.5s!important;
 }
 .pI {
   top: 79.7%;
-  font: 700 4.6cqw/1 'Cormorant Garamond', serif;
+  font: 700 4.4cqw/1 'Cormorant Garamond', serif;
   color: #4a1a0a;
   animation-delay: 1.7s!important;
 }
@@ -1412,7 +1484,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   justify-content: center;
   gap: 2cqw;
   overflow: hidden;
-  font: 700 3.5cqw/1 'Cormorant Garamond', serif;
+  font: 700 3.2cqw/1 'Cormorant Garamond', serif;
   color: #f6dfa0;
   letter-spacing: .02em;
   background: linear-gradient(180deg, #8a1527, #5c0b18);
@@ -1703,7 +1775,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
             <div class="orn"><i></i><b></b><i></i></div>
           </div>
 
-          <!-- Calendar Card (Screenshot 1) -->
+          <!-- Calendar Card -->
           <div class="cal-card">
             <div class="cal-header">
               <div class="cal-month-name">${monthName}</div>
@@ -1830,19 +1902,42 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
             </div>
           </div>
 
-          <!-- Family Signature & Clean Bottom Actions -->
+          <!-- Family Signature -->
           <div class="venue-signature">
             <div class="sig-prefix">With love, affection, and best wishes,</div>
             <div class="sig-name">${esc(familySignature)}</div>
             <div class="sig-sub">We eagerly look forward to celebrating with you!</div>
             <div class="venue-bottom-actions">
               <button type="button" class="start-again-btn" data-restart>Start Again ↻</button>
-              <button type="button" class="music-toggle-btn" id="t03-music-btn">🎵 Music Toggle</button>
             </div>
           </div>
         </div>
       </section>
     </div>
+
+    <!-- Floating Navigation Bar (Only visible after opening, matches Image 8) -->
+    <nav class="bottom-nav-bar" id="t03-bottom-nav" aria-label="Invitation navigation">
+      <button type="button" class="bnav-btn" data-nav="dates">
+        <span class="bnav-icon">📅</span>
+        <span class="bnav-label">DATES</span>
+      </button>
+      <button type="button" class="bnav-btn" data-nav="story">
+        <span class="bnav-icon">💌</span>
+        <span class="bnav-label">STORY</span>
+      </button>
+      <button type="button" class="bnav-btn" data-nav="events">
+        <span class="bnav-icon">✨</span>
+        <span class="bnav-label">EVENTS</span>
+      </button>
+      <button type="button" class="bnav-btn" data-nav="venue">
+        <span class="bnav-icon">📍</span>
+        <span class="bnav-label">VENUE</span>
+      </button>
+      <button type="button" class="bnav-btn" id="t03-nav-music">
+        <span class="bnav-icon" id="t03-music-icon">🎵</span>
+        <span class="bnav-label" id="t03-music-label">MUSIC</span>
+      </button>
+    </nav>
 
     <!-- Entrance Wax-Seal Envelope Intro Animation (wedding-invite-v2.html) -->
     <div id="intro">
@@ -1913,11 +2008,13 @@ export function mount(root, { guest, wedding, events } = {}) {
   const hs = typeof root.querySelector === 'function' ? root.querySelector('#hs') : null;
   const hp = typeof root.querySelector === 'function' ? root.querySelector('#hp') : null;
   const fxCanvas = typeof root.querySelector === 'function' ? root.querySelector('#fx') : null;
-  const musicToggleBtn = typeof root.querySelector === 'function' ? root.querySelector('#t03-music-btn') : null;
+  const navMusicBtn = typeof root.querySelector === 'function' ? root.querySelector('#t03-nav-music') : null;
+  const navMusicIcon = typeof root.querySelector === 'function' ? root.querySelector('#t03-music-icon') : null;
+  const navMusicLabel = typeof root.querySelector === 'function' ? root.querySelector('#t03-music-label') : null;
 
   let countdownTimer = null;
-  let audioEl = null;
-  let isAudioPlaying = false;
+  let internalAudio = null;
+  let isMuted = false;
   let opened = false;
   const cleanups = [];
   const timers = [];
@@ -1928,7 +2025,7 @@ export function mount(root, { guest, wedding, events } = {}) {
     return tid;
   };
 
-  // 1. Text Fitting with safe padding & bounds
+  // 1. Text Fitting with safe bounds
   const fitTo = (el, lim, min) => {
     if (!el || !el.textContent || !st) return;
     el.style.fontSize = '';
@@ -1961,50 +2058,87 @@ export function mount(root, { guest, wedding, events } = {}) {
   }
   setTimeout(fitAll, 50);
 
-  // 2. Audio playback with synchronous tap unlock
+  // 2. Single Unified Audio Controller (Prevents double audio playing)
   const musicWrapper = typeof root.querySelector === 'function' ? root.querySelector('.t03-wrapper') : null;
   const musicUrl = musicWrapper?.getAttribute('data-music') || '';
 
-  const initAudio = () => {
-    if (typeof Audio === 'undefined' || !musicUrl || audioEl) return;
-    try {
-      audioEl = new Audio();
-      audioEl.loop = true;
-      audioEl.preload = 'auto';
-      audioEl.src = musicUrl;
-    } catch (_) {}
-  };
-
-  const playAudio = () => {
-    initAudio();
-    if (!audioEl) return;
-    try {
-      const p = audioEl.play();
-      if (p && typeof p.then === 'function') {
-        p.then(() => {
-          isAudioPlaying = true;
-          if (musicToggleBtn) musicToggleBtn.textContent = '🎵 Music: ON';
-        }).catch(() => {
-          isAudioPlaying = false;
-          if (musicToggleBtn) musicToggleBtn.textContent = '🎵 Music: OFF';
-        });
+  const updateNavMusicUi = (playing) => {
+    if (navMusicIcon && navMusicLabel) {
+      if (playing) {
+        navMusicIcon.textContent = '🎵';
+        navMusicLabel.textContent = 'MUSIC';
+      } else {
+        navMusicIcon.textContent = '🔇';
+        navMusicLabel.textContent = 'MUTED';
       }
-    } catch (_) {}
-  };
-
-  const toggleAudio = () => {
-    initAudio();
-    if (!audioEl) return;
-    if (isAudioPlaying) {
-      audioEl.pause();
-      isAudioPlaying = false;
-      if (musicToggleBtn) musicToggleBtn.textContent = '🎵 Music: OFF';
-    } else {
-      playAudio();
     }
   };
 
-  if (musicToggleBtn) musicToggleBtn.addEventListener('click', toggleAudio);
+  const playMusic = () => {
+    // A. Use global player from index.html if available to ensure single audio track
+    if (typeof window !== 'undefined' && typeof window.__startWeddingMusic === 'function') {
+      try {
+        window.__startWeddingMusic(true);
+        isMuted = false;
+        updateNavMusicUi(true);
+        return;
+      } catch (_) {}
+    }
+
+    // B. Fallback to standalone audio element if running isolated
+    if (typeof Audio === 'undefined' || !musicUrl) return;
+    if (!internalAudio) {
+      try {
+        internalAudio = new Audio(musicUrl);
+        internalAudio.loop = true;
+        internalAudio.preload = 'auto';
+        internalAudio.volume = 0.35;
+      } catch (_) {}
+    }
+    if (internalAudio && internalAudio.paused) {
+      internalAudio.play().then(() => {
+        isMuted = false;
+        updateNavMusicUi(true);
+      }).catch(() => {});
+    }
+  };
+
+  const pauseMusic = () => {
+    if (typeof window !== 'undefined' && typeof window.__stopWeddingMusic === 'function') {
+      try {
+        window.__stopWeddingMusic();
+        isMuted = true;
+        updateNavMusicUi(false);
+        return;
+      } catch (_) {}
+    }
+    if (internalAudio && !internalAudio.paused) {
+      internalAudio.pause();
+      isMuted = true;
+      updateNavMusicUi(false);
+    }
+  };
+
+  const toggleMusic = () => {
+    let currentlyPlaying = false;
+    if (typeof window !== 'undefined' && typeof window.__isWeddingMusicPlaying === 'function') {
+      try {
+        currentlyPlaying = window.__isWeddingMusicPlaying();
+      } catch (_) {}
+    } else if (internalAudio) {
+      currentlyPlaying = !internalAudio.paused;
+    } else {
+      currentlyPlaying = !isMuted;
+    }
+
+    if (currentlyPlaying) {
+      pauseMusic();
+    } else {
+      playMusic();
+    }
+  };
+
+  if (navMusicBtn) navMusicBtn.addEventListener('click', toggleMusic);
 
   // 3. Canvas FX: Fairy dust, red wax crumbs & gold sparks
   let FX = null;
@@ -2157,7 +2291,7 @@ export function mount(root, { guest, wedding, events } = {}) {
     opened = true;
     if (!st || !intro) return;
 
-    playAudio();
+    playMusic();
 
     const W = st.clientWidth || 360;
     const seamX = W * .4912, sealY = (st.clientHeight || 540) * .583;
@@ -2188,9 +2322,6 @@ export function mount(root, { guest, wedding, events } = {}) {
 
     after(4800, () => {
       if (intro && intro.parentNode) intro.remove();
-      if (sc) {
-        sc.style.overflowY = 'auto';
-      }
       fitAll();
     });
   }
@@ -2218,7 +2349,7 @@ export function mount(root, { guest, wedding, events } = {}) {
       entries.forEach(x => {
         if (x.isIntersecting) x.target.classList.add('in');
       });
-    }, { root: sc, threshold: .4 });
+    }, { root: sc, threshold: .35 });
 
     if (typeof root.querySelectorAll === 'function') {
       root.querySelectorAll('.pg.bl').forEach(p => io.observe(p));
@@ -2226,7 +2357,34 @@ export function mount(root, { guest, wedding, events } = {}) {
     cleanups.push(() => io.disconnect());
   }
 
-  // 8. Start Again Button
+  // 8. Navigation Bar Smooth Scrolling (DATES, STORY, EVENTS, VENUE)
+  if (typeof root.querySelectorAll === 'function' && sc) {
+    root.querySelectorAll('[data-nav]').forEach(btn => {
+      const target = btn.getAttribute('data-nav');
+      btn.addEventListener('click', (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (target === 'dates') {
+          const p3 = root.querySelector('#p3');
+          if (p3) p3.scrollIntoView({ behavior: 'smooth' });
+        } else if (target === 'story' || target === 'couple') {
+          const p2 = root.querySelector('#p2');
+          if (p2) p2.scrollIntoView({ behavior: 'smooth' });
+        } else if (target === 'events' || target === 'programme') {
+          const p5 = root.querySelector('#p5');
+          if (p5) p5.scrollIntoView({ behavior: 'smooth' });
+        } else if (target === 'venue') {
+          const p6 = root.querySelector('#p6');
+          if (p6) p6.scrollIntoView({ behavior: 'smooth' });
+        } else if (target === 'date') {
+          // If legacy data-nav="date", smoothly scroll to Programme / Events (#p5)
+          const pProg = root.querySelector('#p5') || root.querySelector('#p3');
+          if (pProg) pProg.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  // 9. Start Again Button
   const restartBtn = typeof root.querySelector === 'function' ? root.querySelector('[data-restart]') : null;
   if (restartBtn && sc) {
     restartBtn.addEventListener('click', () => {
@@ -2235,7 +2393,7 @@ export function mount(root, { guest, wedding, events } = {}) {
     });
   }
 
-  // 9. Live Countdown Timer
+  // 10. Live Countdown Timer
   const cdContainer = typeof root.querySelector === 'function' ? root.querySelector('#t03-countdown') : null;
   if (cdContainer) {
     const whenAttr = cdContainer.getAttribute('data-when');
@@ -2275,7 +2433,7 @@ export function mount(root, { guest, wedding, events } = {}) {
     }
   }
 
-  // 10. Boot / Envelope Presentation
+  // 11. Boot / Envelope Presentation
   const showIntro = () => {
     fitAll();
     if (intro) intro.classList.add('rd');
@@ -2302,8 +2460,11 @@ export function mount(root, { guest, wedding, events } = {}) {
   return () => {
     cleanups.forEach(fn => { try { fn(); } catch (_) {} });
     timers.forEach(t => clearTimeout(t));
-    if (audioEl) {
-      try { audioEl.pause(); } catch (_) {}
+    if (internalAudio) {
+      try { internalAudio.pause(); } catch (_) {}
+    }
+    if (typeof window !== 'undefined' && typeof window.__stopWeddingMusic === 'function') {
+      try { window.__stopWeddingMusic(); } catch (_) {}
     }
     if (FX) FX.stop();
   };
