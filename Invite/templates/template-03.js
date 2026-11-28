@@ -208,13 +208,39 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   const brideFirst = clean(w.name_order) !== 'groom_first';
 
   // Photos
-  const customBridePhoto = safeImg(w.bride_photo || w.image2 || storedBride);
-  const customGroomPhoto = safeImg(w.groom_photo || w.image1 || storedGroom);
-  const customVenuePhoto = safeImg(w.venue_photo || w.image4 || storedVenue);
+  const customBridePhoto = safeImg(
+    w.bride_photo
+    || w.bride_photo_url
+    || w.bride_image
+    || w.photo_bride
+    || w.image2
+    || storedBride
+    || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : '')
+  );
+  const customGroomPhoto = safeImg(
+    w.groom_photo
+    || w.groom_photo_url
+    || w.groom_image
+    || w.photo_groom
+    || w.image1
+    || storedGroom
+    || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : '')
+  );
+  const customVenuePhoto = safeImg(
+    w.venue_photo
+    || w.venue_photo_url
+    || w.venue_image
+    || w.banquet_photo
+    || w.banquet_image
+    || w.photo_venue
+    || w.image4
+    || storedVenue
+    || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : '')
+  );
 
   const bridePhoto = customBridePhoto || './assets/template-06-bride.webp';
   const groomPhoto = customGroomPhoto || './assets/template-06-groom.webp';
-  const venuePhoto = customVenuePhoto || '';
+  const venuePhoto = customVenuePhoto || './assets/template-06-shubho-bibaho.webp';
 
   // Parents & Family Details
   const brideParents = clean(w.bride_parents || w.bride_father || '');
@@ -450,12 +476,12 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 
 .card {
   position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 6%;
-  bottom: 12%;
+  left: 4.5%;
+  right: 4.5%;
+  top: 3.5%;
+  bottom: 11%;
   border-radius: 4cqw;
-  background: rgba(255, 250, 240, 0.92);
+  background: rgba(255, 250, 240, 0.94);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
   backdrop-filter: blur(14px) saturate(1.15);
   border: .35cqw solid rgba(201, 160, 70, 0.88);
@@ -465,13 +491,16 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 3cqw 3cqw;
+  justify-content: space-evenly;
+  padding: 2.2cqw 3cqw;
   text-align: center;
   opacity: 0;
   transform: scale(.94);
   color: #2b1204;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.card::-webkit-scrollbar { display: none; }
 .go .card {
   animation: cardin 1.3s cubic-bezier(.16, 1, .3, 1) forwards;
 }
@@ -555,13 +584,14 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 
 .ph {
   position: relative;
-  width: 22cqw;
-  height: 22cqw;
+  width: clamp(52px, 17.5cqw, 82px);
+  height: clamp(52px, 17.5cqw, 82px);
   border-radius: 50%;
-  box-shadow: 0 1.4cqw 3cqw rgba(70, 40, 5, .45);
+  box-shadow: 0 1.2cqw 2.8cqw rgba(70, 40, 5, .45);
   opacity: 0;
   transform: scale(.4) rotate(-90deg);
-  margin-bottom: 1cqw;
+  margin-bottom: .6cqw;
+  flex-shrink: 0;
 }
 .go .ph {
   animation: phin 1.4s cubic-bezier(.22, 1.3, .4, 1) forwards;
@@ -599,96 +629,104 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 
 .role-lbl {
-  font: 700 2.8cqw/1 Cinzel, serif;
-  letter-spacing: .22cqw;
+  font: 700 clamp(9px, 2.2cqw, 12px)/1 Cinzel, serif;
+  letter-spacing: .2em;
   color: #8c5d19;
   text-transform: uppercase;
-  margin-bottom: .2cqw;
+  margin-bottom: .15cqw;
 }
 .nm {
-  font: 400 10cqw/1.1 'Great Vibes', cursive;
+  font: 400 clamp(18px, 6.2cqw, 26px)/1.15 'Great Vibes', cursive;
   color: #3d0714;
   white-space: nowrap;
   max-width: 100%;
   filter: drop-shadow(0 .2cqw .25cqw rgba(140, 93, 25, 0.5));
-  margin-bottom: .2cqw;
+  margin-bottom: .15cqw;
 }
 .t {
   text-align: center;
   line-height: 1.25;
 }
 .rel {
-  font: 700 2.5cqw/1 Cinzel, serif;
-  letter-spacing: .15cqw;
+  font: 700 clamp(8.5px, 2cqw, 11px)/1 Cinzel, serif;
+  letter-spacing: .12em;
   color: #6b3e14;
   text-transform: lowercase;
-  margin-bottom: .2cqw;
+  margin-bottom: .1cqw;
 }
 .fa {
-  font: 700 4cqw/1.2 'Cormorant Garamond', serif;
+  font: 700 clamp(11.5px, 3.2cqw, 15px)/1.2 'Cormorant Garamond', serif;
   color: #2b1204;
   max-width: 100%;
   overflow-wrap: anywhere;
-  margin-bottom: .2cqw;
+  margin-bottom: .15cqw;
+  display: block;
+  visibility: visible;
 }
 .ad {
-  font: 600 3cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 clamp(10.5px, 2.6cqw, 13px)/1.2 'Cormorant Garamond', serif;
   color: #4a1c0d;
   max-width: 100%;
   overflow-wrap: anywhere;
+  display: block;
+  visibility: visible;
 }
 
 .p2-quote {
-  margin-top: 1.8cqw;
+  margin-top: 1.2cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 90%;
-  padding-top: 1.2cqw;
+  padding-top: .8cqw;
   border-top: 1px solid rgba(140, 93, 25, 0.45);
 }
 .p2-ornament {
-  font-size: 3cqw;
+  font-size: 2.8cqw;
   color: #8c5d19;
   line-height: 1;
-  margin-bottom: .4cqw;
+  margin-bottom: .3cqw;
 }
 .p2-quote-text {
-  font: 600 italic 3.6cqw/1.25 'Cormorant Garamond', serif;
+  font: 600 italic clamp(11px, 2.8cqw, 14px)/1.25 'Cormorant Garamond', serif;
   color: #4a1c0d;
   text-align: center;
 }
 
 /* ==========================================================================
-   PAGE 3: SAVE THE DATE & CALENDAR
+   PAGE 3: SAVE THE DATE, CALENDAR & COUNTDOWN (COMBINED)
    ========================================================================== */
 .p3-inner {
   position: absolute;
   inset: 0;
-  padding: 4cqw 6cqw 14cqw;
+  padding: 3cqw 4cqw 12cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 3.5cqw;
+  justify-content: flex-start;
+  gap: 2cqw;
   text-align: center;
   z-index: 2;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.p3-inner::-webkit-scrollbar { display: none; }
 
 .std-header {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 1cqw;
 }
 .std-kicker {
   font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .25em;
   color: #8c5d19;
   text-transform: uppercase;
-  margin-bottom: .6cqw;
+  margin-bottom: .4cqw;
 }
 .std-title {
-  font: 700 8.5cqw/1 Cinzel, serif;
+  font: 700 7.5cqw/1 Cinzel, serif;
   letter-spacing: .12em;
   color: #4a0e17;
   text-shadow: 0 1px 2px rgba(214, 168, 60, 0.4);
@@ -702,10 +740,34 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   background: linear-gradient(180deg, #3d0c15 0%, #1f040a 100%);
   border: 1.5px solid rgba(214, 168, 60, 0.65);
   box-shadow: 0 6cqw 14cqw rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(255, 220, 140, 0.2);
-  padding: 3.8cqw 4.5cqw;
+  padding: 3cqw 4cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.cal-combined-card {
+  max-height: 82cqh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.cal-combined-card::-webkit-scrollbar { display: none; }
+
+.cal-cd-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqw;
+  width: 85%;
+  margin: 2cqw 0 1.5cqw;
+}
+.cal-cd-divider i {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 168, 60, 0.6), transparent);
+}
+.cal-cd-divider b {
+  font-size: 2.5cqw;
+  color: #d4a736;
 }
 .cal-header {
   display: flex;
@@ -1280,6 +1342,132 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   .bnav-label {
     font-size: 9.5px;
   }
+  .card {
+    left: 3.5% !important;
+    right: 3.5% !important;
+    top: 2% !important;
+    bottom: 9.5% !important;
+    padding: 8px 10px !important;
+    justify-content: space-evenly !important;
+  }
+  .ph {
+    width: 58px !important;
+    height: 58px !important;
+    margin-bottom: 3px !important;
+  }
+  .role-lbl {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+  .nm {
+    font-size: 20px !important;
+    margin-bottom: 2px !important;
+  }
+  .rel {
+    font-size: 9px !important;
+    margin-bottom: 1px !important;
+  }
+  .fa {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 2px !important;
+    color: #2b1204 !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  .ad {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    color: #4a1c0d !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  .p2-header {
+    margin-bottom: 4px !important;
+  }
+  .kick {
+    font-size: 11px !important;
+  }
+  .sub-kick {
+    font-size: 9.5px !important;
+  }
+  .journey-tag {
+    font-size: 10px !important;
+  }
+  .p2-quote {
+    padding-top: 4px !important;
+    margin-top: 4px !important;
+  }
+  .p2-quote-text {
+    font-size: 11px !important;
+  }
+  .cal-combined-card {
+    max-height: 80cqh !important;
+    padding: 12px 14px !important;
+  }
+  .cal-header .cal-month-name {
+    font-size: 19px !important;
+  }
+  .cal-header .cal-year-num {
+    font-size: 12px !important;
+  }
+  .cal-grid {
+    gap: 4px 2px !important;
+  }
+  .cal-day-cell {
+    height: 24px !important;
+  }
+  .cal-day-num {
+    font-size: 12px !important;
+  }
+  .cal-day-num.active {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+  }
+  .cd-grid {
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+  .cd-box {
+    padding: 6px 4px !important;
+  }
+  .cd-val {
+    font-size: 18px !important;
+  }
+  .cd-lbl {
+    font-size: 8.5px !important;
+  }
+  .cd-header-title {
+    font-size: 16px !important;
+  }
+  .cd-target-date {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+  .venue-showcase-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    max-height: 74cqh !important;
+    overflow-y: auto !important;
+    scrollbar-width: none !important;
+  }
+  .venue-arch-frame {
+    height: 180px !important;
+    width: 180px !important;
+    margin: 0 auto !important;
+  }
+  .venue-dest-card {
+    height: auto !important;
+    min-height: 160px !important;
+    padding: 12px !important;
+  }
+  .venue-title {
+    font-size: 22px !important;
+  }
+  .venue-subtitle {
+    font-size: 12px !important;
+  }
 }
 
 /* ==========================================================================
@@ -1765,7 +1953,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
         </div>
       </section>
 
-      <!-- Page 3: Save The Date & Interactive Calendar (Circle Medallion Removed) -->
+      <!-- Page 3: Save The Date, Interactive Calendar & Countdown (Combined on One Page) -->
       <section class="pg bl" id="p3">
         <div class="bgl"></div>
         <div class="p3-inner">
@@ -1775,8 +1963,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
             <div class="orn"><i></i><b></b><i></i></div>
           </div>
 
-          <!-- Calendar Card -->
-          <div class="cal-card">
+          <!-- Combined Calendar & Countdown Card -->
+          <div class="cal-card cal-combined-card">
             <div class="cal-header">
               <div class="cal-month-name">${monthName}</div>
               <div class="cal-year-num">${year}</div>
@@ -1796,15 +1984,13 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
             </a>` : `
             <div class="cal-time-note"><em>${dateLong}</em></div>
             `}
-          </div>
-        </div>
-      </section>
 
-      <!-- Page 4: Pure Countdown Card (Duplicate Names & Venue Removed) -->
-      <section class="pg bl" id="p4">
-        <div class="bgl"></div>
-        <div class="p4-inner">
-          <div class="countdown-sole-card">
+            <!-- Elegant Divider -->
+            <div class="cal-cd-divider">
+              <i></i><b>✦</b><i></i>
+            </div>
+
+            <!-- The Celebration Begins In Countdown -->
             <div class="cd-header-kicker">COUNTDOWN TO THE BIG DAY</div>
             <div class="cd-header-title">The Celebration Begins In</div>
             <div class="cd-target-date">🗓️ ${dateLong}${timeStr ? ' · ⏰ ' + timeStr : ''}</div>
@@ -1822,8 +2008,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
         </div>
       </section>
 
-      <!-- Page 5: Wedding Programme (ALL Events Displayed in Vertical Scroll) -->
-      <section class="pg bl" id="p5">
+      <!-- Page 4: Wedding Programme (ALL Events Displayed in Vertical Scroll) -->
+      <section class="pg bl" id="p4">
         <div class="bgl"></div>
         <div class="p5-prog-inner">
           <div class="prog-page-header">
@@ -1860,8 +2046,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
         </div>
       </section>
 
-      <!-- Page 6: The Venue Showcase (Screenshot 2) -->
-      <section class="pg bl" id="p6">
+      <!-- Page 5: The Venue Showcase (Screenshot 2) -->
+      <section class="pg bl" id="p5">
         <div class="bgl"></div>
         <div class="p6-inner">
           <div class="venue-header">
@@ -1874,13 +2060,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
           <div class="venue-showcase-grid">
             <!-- Left Arched Window (Screenshot 2) -->
             <div class="venue-arch-frame">
-              ${venuePhoto ? `
-                <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-arch-img" />
-              ` : `
-                <div class="venue-arch-fallback">
-                  <span class="arch-monogram">🏛️</span>
-                </div>
-              `}
+              <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-arch-img" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
               <div class="venue-arch-label">${esc(primaryVenueTitle)}</div>
             </div>
 
@@ -2370,14 +2550,14 @@ export function mount(root, { guest, wedding, events } = {}) {
           const p2 = root.querySelector('#p2');
           if (p2) p2.scrollIntoView({ behavior: 'smooth' });
         } else if (target === 'events' || target === 'programme') {
-          const p5 = root.querySelector('#p5');
-          if (p5) p5.scrollIntoView({ behavior: 'smooth' });
+          const p4 = root.querySelector('#p4') || root.querySelector('#p5');
+          if (p4) p4.scrollIntoView({ behavior: 'smooth' });
         } else if (target === 'venue') {
-          const p6 = root.querySelector('#p6');
-          if (p6) p6.scrollIntoView({ behavior: 'smooth' });
+          const p5 = root.querySelector('#p5') || root.querySelector('#p6');
+          if (p5) p5.scrollIntoView({ behavior: 'smooth' });
         } else if (target === 'date') {
-          // If legacy data-nav="date", smoothly scroll to Programme / Events (#p5)
-          const pProg = root.querySelector('#p5') || root.querySelector('#p3');
+          // If legacy data-nav="date", smoothly scroll to Programme / Events (#p4)
+          const pProg = root.querySelector('#p4') || root.querySelector('#p3');
           if (pProg) pProg.scrollIntoView({ behavior: 'smooth' });
         }
       });

@@ -156,13 +156,13 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
   const brideFirst = clean(w.name_order) !== 'groom_first';
 
   // Photos
-  const customBridePhoto = safeImg(w.bride_photo || w.image2 || storedBride);
-  const customGroomPhoto = safeImg(w.groom_photo || w.image1 || storedGroom);
-  const customVenuePhoto = safeImg(w.venue_photo || w.image4 || storedVenue);
+  const customBridePhoto = safeImg(w.bride_photo || w.bride_photo_url || w.bride_image || w.photo_bride || w.image2 || storedBride || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : ''));
+  const customGroomPhoto = safeImg(w.groom_photo || w.groom_photo_url || w.groom_image || w.photo_groom || w.image1 || storedGroom || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : ''));
+  const customVenuePhoto = safeImg(w.venue_photo || w.venue_photo_url || w.venue_image || w.banquet_photo || w.banquet_image || w.photo_venue || w.image4 || storedVenue || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : ''));
 
   const bridePhoto = customBridePhoto || './assets/template-06-bride.webp';
   const groomPhoto = customGroomPhoto || './assets/template-06-groom.webp';
-  const venuePhoto = customVenuePhoto || '';
+  const venuePhoto = customVenuePhoto || './assets/template-06-shubho-bibaho.webp';
 
   // Parents & Family Details
   const brideParents = clean(w.bride_parents || w.bride_father || '');
@@ -1279,13 +1279,9 @@ export default function renderT04({ guest, wedding, events = [] } = {}) {
           <div class="sub-kick">${esc(primaryVenueTitle)}</div>
           ${secondaryAddress ? `<div class="venue-loc-sub">${esc(secondaryAddress)}</div>` : ''}
           <div class="div"></div>
-          ${venuePhoto ? `
           <div class="venue-photo-wrap">
-            <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-img" />
-          </div>` : `
-          <div class="venue-arch-wrap">
-            <div class="venue-arch-icon">🏛️</div>
-          </div>`}
+            <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-img" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
+          </div>
           <div class="venue-address-text">
             <p class="venue-name-bold">${esc(primaryVenueTitle)}</p>
             ${secondaryAddress ? `<p class="venue-full-addr">📍 ${esc(secondaryAddress)}</p>` : ''}

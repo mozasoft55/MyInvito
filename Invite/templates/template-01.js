@@ -177,13 +177,13 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
   const brideFirst = clean(w.name_order) !== 'groom_first';
 
   // Photos
-  const customBridePhoto = safeImg(w.bride_photo || w.image2 || storedBride);
-  const customGroomPhoto = safeImg(w.groom_photo || w.image1 || storedGroom);
-  const customVenuePhoto = safeImg(w.venue_photo || w.image4 || storedVenue);
+  const customBridePhoto = safeImg(w.bride_photo || w.bride_photo_url || w.bride_image || w.photo_bride || w.image2 || storedBride || (orderRef ? getStoredPhoto(`wedding_bride_photo_${orderRef}`) : ''));
+  const customGroomPhoto = safeImg(w.groom_photo || w.groom_photo_url || w.groom_image || w.photo_groom || w.image1 || storedGroom || (orderRef ? getStoredPhoto(`wedding_groom_photo_${orderRef}`) : ''));
+  const customVenuePhoto = safeImg(w.venue_photo || w.venue_photo_url || w.venue_image || w.banquet_photo || w.banquet_image || w.photo_venue || w.image4 || storedVenue || (orderRef ? getStoredPhoto(`wedding_venue_photo_${orderRef}`) : ''));
 
   const bridePhoto = customBridePhoto || './assets/template-06-bride.webp';
   const groomPhoto = customGroomPhoto || './assets/template-06-groom.webp';
-  const venuePhoto = customVenuePhoto || '';
+  const venuePhoto = customVenuePhoto || './assets/template-06-shubho-bibaho.webp';
 
   // Parents & Family Details
   const brideParents = clean(w.bride_parents || w.bride_father || '');
@@ -325,6 +325,63 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
     height: 100dvh !important;
     min-height: 100dvh !important;
     box-shadow: none !important;
+  }
+  .card {
+    left: 4% !important;
+    right: 4% !important;
+    max-height: 94% !important;
+    padding: 10px 12px !important;
+    justify-content: space-evenly !important;
+  }
+  .ph {
+    width: 58px !important;
+    height: 58px !important;
+    margin-bottom: 4px !important;
+  }
+  .role-lbl {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+  }
+  .nm {
+    font-size: 20px !important;
+    margin-bottom: 2px !important;
+  }
+  .rel {
+    font-size: 9.5px !important;
+    margin-bottom: 1px !important;
+  }
+  .fa {
+    font-size: 12.5px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 2px !important;
+    color: #2b1204 !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  .ad {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    color: #3b1f0b !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+  .p2-header {
+    margin-bottom: 6px !important;
+  }
+  .kick {
+    font-size: 12px !important;
+  }
+  .sub-kick {
+    font-size: 10.5px !important;
+  }
+  .journey-tag {
+    font-size: 11px !important;
+  }
+  .p2-quote {
+    padding-top: 6px !important;
+  }
+  .p2-quote-text {
+    font-size: 11.5px !important;
   }
 }
 .scroller {
@@ -1314,13 +1371,9 @@ export default function renderT01({ guest, wedding, events = [] } = {}) {
           <div class="kick">CELEBRATION VENUE</div>
           <div class="sub-kick">${esc(primaryVenueTitle)}</div>
           <div class="orn"><i></i><b></b><i></i></div>
-          ${venuePhoto ? `
           <div class="venue-photo-wrap">
-            <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-img" />
-          </div>` : `
-          <div class="venue-arch-wrap">
-            <div class="venue-arch-icon">🏛️</div>
-          </div>`}
+            <img src="${esc(venuePhoto)}" alt="${esc(primaryVenueTitle)}" class="venue-img" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
+          </div>
           <div class="venue-address-text">
             ${secondaryAddress ? `<p class="venue-full-addr">📍 ${esc(secondaryAddress)}</p>` : ''}
             ${timeStr ? `<p class="venue-timing">⏰ ${esc(timeStr)}</p>` : ''}
