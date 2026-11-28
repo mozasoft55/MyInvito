@@ -339,7 +339,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   width: min(66.667dvh, 100vw);
   height: min(100dvh, 150vw);
   font-family: 'Cormorant Garamond', Georgia, serif;
-  color: #f6dfa0;
+  color: #2b1204;
   box-shadow: 0 0 5cqw rgba(0, 0, 0, .8);
 }
 
@@ -408,10 +408,10 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   position: absolute;
   left: 7%;
   right: 7%;
-  top: 10%;
-  bottom: 10%;
+  top: 9%;
+  bottom: 9%;
   border-radius: 4cqw;
-  background: rgba(255, 250, 240, 0.88);
+  background: rgba(255, 250, 240, 0.90);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
   backdrop-filter: blur(14px) saturate(1.15);
   border: .35cqw solid rgba(201, 160, 70, 0.88);
@@ -446,9 +446,9 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 @keyframes settle { to { opacity: 1; transform: none; filter: none; } }
 
 .wo {
-  font: 600 2.9cqw/1 Cinzel, serif;
+  font: 700 3.2cqw/1 Cinzel, serif;
   letter-spacing: .3em;
-  color: #5a3a08;
+  color: #4a0e17;
   padding-left: .3em;
   white-space: nowrap;
 }
@@ -463,26 +463,26 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   align-items: center;
   justify-content: center;
   gap: 1.4cqw;
-  margin: 1.8cqw 0 2.2cqw;
-  width: 44cqw;
+  margin: 1.6cqw 0 2cqw;
+  width: 46cqw;
 }
 .orn i {
   flex: 1;
-  height: .28cqw;
-  background: linear-gradient(90deg, transparent, #b8872a, #f2d37a);
+  height: .3cqw;
+  background: linear-gradient(90deg, transparent, #8c5d19, #4a0e17);
   transform: scaleX(0);
   transform-origin: 100% 50%;
 }
 .orn i:last-child {
   transform-origin: 0 50%;
-  background: linear-gradient(270deg, transparent, #b8872a, #f2d37a);
+  background: linear-gradient(270deg, transparent, #8c5d19, #4a0e17);
 }
 .orn b {
-  width: 1.6cqw;
-  height: 1.6cqw;
+  width: 1.8cqw;
+  height: 1.8cqw;
   transform: rotate(45deg) scale(0);
-  background: linear-gradient(135deg, #f6dc8a, #a8741c);
-  box-shadow: 0 0 1.6cqw rgba(214, 168, 60, .7);
+  background: linear-gradient(135deg, #d8a038, #5a0e1c);
+  box-shadow: 0 0 1.2cqw rgba(140, 93, 25, .6);
 }
 .go .orn i { animation: draw 1.2s cubic-bezier(.22, 1, .36, 1) .9s forwards; }
 .go .orn b { animation: gem 1s cubic-bezier(.3, 1.6, .5, 1) .8s forwards; }
@@ -503,7 +503,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .amp {
   font: 400 9.5cqw/1 'Great Vibes', cursive;
-  color: #b8872a;
+  color: #8c5d19;
   padding-top: 6.5cqw;
   text-shadow: 0 .3cqw .6cqw rgba(120, 80, 10, .35);
 }
@@ -558,16 +558,16 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .role-lbl {
   font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .22cqw;
-  color: #b8892b;
+  color: #8c5d19;
   text-transform: uppercase;
   margin-bottom: .2cqw;
 }
 .nm {
   font: 400 10.5cqw/1.1 'Great Vibes', cursive;
-  color: #0b1740;
+  color: #3d0714;
   white-space: nowrap;
   max-width: 100%;
-  filter: drop-shadow(0 .2cqw .25cqw rgba(201, 162, 74, 0.65));
+  filter: drop-shadow(0 .2cqw .25cqw rgba(140, 93, 25, 0.5));
   margin-bottom: .2cqw;
 }
 .t {
@@ -590,7 +590,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .ad {
   font: 600 3.2cqw/1.2 'Cormorant Garamond', serif;
-  color: #3b1f0b;
+  color: #4a1c0d;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
@@ -602,17 +602,17 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   align-items: center;
   width: 90%;
   padding-top: 1.2cqw;
-  border-top: 1px solid rgba(201, 162, 74, 0.45);
+  border-top: 1px solid rgba(140, 93, 25, 0.45);
 }
 .p2-ornament {
   font-size: 3.2cqw;
-  color: #b8892b;
+  color: #8c5d19;
   line-height: 1;
   margin-bottom: .6cqw;
 }
 .p2-quote-text {
-  font: 500 italic 3.6cqw/1.25 'Cormorant Garamond', serif;
-  color: #5a3a08;
+  font: 600 italic 3.8cqw/1.25 'Cormorant Garamond', serif;
+  color: #4a1c0d;
   text-align: center;
 }
 
@@ -622,7 +622,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 .p3-inner {
   position: absolute;
   inset: 0;
-  padding: 4cqw 6cqw;
+  padding: 3cqw 6cqw 12cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -637,20 +637,20 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   align-items: center;
 }
 .std-kicker {
-  font: 600 2.8cqw/1 Cinzel, serif;
+  font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .25em;
-  color: #d4a736;
+  color: #8c5d19;
   text-transform: uppercase;
   margin-bottom: .6cqw;
 }
 .std-title {
-  font: 700 8cqw/1 Cinzel, serif;
+  font: 700 8.5cqw/1 Cinzel, serif;
   letter-spacing: .12em;
-  color: #f7de8e;
-  text-shadow: 0 .4cqw 1cqw rgba(0, 0, 0, .6);
+  color: #4a0e17;
+  text-shadow: 0 1px 2px rgba(214, 168, 60, 0.4);
 }
 
-/* Rotating Circular Stamp Badge (Screenshot 0) */
+/* Rotating Circular Stamp Badge (High Contrast Royal Crimson Disc) */
 .stamp-wrap {
   position: relative;
   width: 42cqw;
@@ -664,8 +664,9 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 1.5px solid rgba(214, 168, 60, 0.7);
-  box-shadow: 0 0 20px rgba(214, 168, 60, 0.25);
+  background: radial-gradient(circle at 40% 40%, #5a0e1c 0%, #35050e 75%, #1f0208 100%);
+  border: 2px solid #c9a046;
+  box-shadow: 0 8px 24px rgba(60, 8, 16, 0.45), inset 0 0 15px rgba(255, 215, 120, 0.35);
   display: grid;
   place-items: center;
 }
@@ -681,16 +682,16 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   to { transform: rotate(360deg); }
 }
 .stamp-rot-text {
-  font: 600 11px Cinzel, serif;
+  font: 700 11px Cinzel, serif;
   fill: #f6dfa0;
-  letter-spacing: 2px;
+  letter-spacing: 2.2px;
 }
 .stamp-inner-dots {
   position: absolute;
   width: 27cqw;
   height: 27cqw;
   border-radius: 50%;
-  border: 1.5px dotted rgba(214, 168, 60, 0.7);
+  border: 1.5px dotted rgba(246, 223, 160, 0.85);
   pointer-events: none;
 }
 .stamp-center-content {
@@ -702,20 +703,20 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   line-height: 1;
 }
 .stamp-day-text {
-  font: 600 2.8cqw/1 Cinzel, serif;
+  font: 700 3cqw/1 Cinzel, serif;
   letter-spacing: .22em;
   color: #f6dfa0;
   margin-bottom: .4cqw;
 }
 .stamp-date-num {
-  font: 700 11.5cqw/1 'Cormorant Garamond', serif;
-  color: #f7de8e;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, .8);
+  font: 700 12cqw/1 'Cormorant Garamond', serif;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(255, 215, 120, 0.85);
 }
 .stamp-my-text {
-  font: 600 2.6cqw/1 Cinzel, serif;
+  font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .18em;
-  color: #d4a736;
+  color: #f0c966;
   margin-top: .4cqw;
 }
 
@@ -725,8 +726,8 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   max-width: 86cqw;
   border-radius: 4cqw;
   background: linear-gradient(180deg, #3d0c15 0%, #1f040a 100%);
-  border: 1px solid rgba(214, 168, 60, 0.45);
-  box-shadow: 0 4cqw 10cqw rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 220, 140, 0.15);
+  border: 1.5px solid rgba(214, 168, 60, 0.6);
+  box-shadow: 0 4cqw 10cqw rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 220, 140, 0.2);
   padding: 3.5cqw 4cqw;
   display: flex;
   flex-direction: column;
@@ -754,7 +755,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font: 600 2.6cqw/1 Cinzel, serif;
+  font: 700 2.8cqw/1 Cinzel, serif;
   color: #d4a736;
   margin-bottom: 2cqw;
 }
@@ -824,38 +825,37 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 
 /* ==========================================================================
-   PAGE 4: PROGRAMME & STORY (Screenshot 3 & Ceremony Cards)
+   PAGE 4: OUR STORY & COUNTDOWN (No Repeated Date Ribbon, Pure Celebration)
    ========================================================================== */
 .p4-inner {
   position: absolute;
   inset: 0;
-  padding: 3cqw 5cqw;
+  padding: 4cqw 6cqw 12cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
+  justify-content: center;
   text-align: center;
   z-index: 2;
 }
 
-/* Story Card (Screenshot 3) */
 .story-card {
   width: 100%;
   max-width: 88cqw;
   border-radius: 4cqw;
-  background: linear-gradient(180deg, rgba(60, 10, 20, 0.95), rgba(35, 5, 12, 0.96));
-  border: 1px solid rgba(214, 168, 60, 0.45);
-  box-shadow: 0 4cqw 10cqw rgba(0, 0, 0, 0.6);
-  padding: 3cqw 3.5cqw;
+  background: linear-gradient(180deg, rgba(60, 10, 20, 0.96), rgba(35, 5, 12, 0.98));
+  border: 1.5px solid rgba(214, 168, 60, 0.6);
+  box-shadow: 0 6px 24px rgba(40, 6, 12, 0.5), inset 0 0 0 1px rgba(255, 230, 160, 0.2);
+  padding: 5cqw 4cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 .story-names {
-  font: 400 12cqw/1 'Great Vibes', cursive;
+  font: 400 13cqw/1.1 'Great Vibes', cursive;
   color: #f7de8e;
   text-shadow: 0 2px 8px rgba(0, 0, 0, .7);
-  margin-bottom: .6cqw;
+  margin-bottom: 1.2cqw;
 }
 .story-names em {
   font-style: normal;
@@ -863,177 +863,240 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   padding: 0 .1em;
 }
 .story-parents {
-  font: 600 2.8cqw/1.3 'Cormorant Garamond', serif;
+  font: 600 3.2cqw/1.3 'Cormorant Garamond', serif;
   color: #eeddb2;
-  margin-bottom: 1.2cqw;
+  margin-bottom: 1.8cqw;
 }
 .story-parents b {
-  color: #fff;
+  color: #ffffff;
   font-weight: 700;
 }
 .story-invitation-text {
-  font: 500 italic 3.4cqw/1.25 'Cormorant Garamond', serif;
+  font: 500 italic 3.8cqw/1.3 'Cormorant Garamond', serif;
   color: #f6dfa0;
-  margin-bottom: 1.5cqw;
-  max-width: 90%;
-}
-.story-date-ribbon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2cqw;
-  width: 100%;
-  padding: .8cqw 0;
-  border-top: 1px solid rgba(214, 168, 60, 0.4);
-  border-bottom: 1px solid rgba(214, 168, 60, 0.4);
-  margin-bottom: 1.2cqw;
-}
-.sdr-day {
-  font: 600 2.6cqw/1 Cinzel, serif;
-  letter-spacing: .2em;
-  color: #f6dfa0;
-  text-transform: uppercase;
-}
-.sdr-bar {
-  color: #d4a736;
-  font-size: 3cqw;
-}
-.sdr-num {
-  font: 700 8.5cqw/1 'Cormorant Garamond', serif;
-  color: #f7de8e;
-}
-.sdr-mo {
-  font: 600 2.6cqw/1 Cinzel, serif;
-  letter-spacing: .2em;
-  color: #f6dfa0;
-  text-transform: uppercase;
+  margin-bottom: 2.4cqw;
+  max-width: 92%;
 }
 .story-venue-sub {
-  font: 600 3.2cqw/1.2 'Cormorant Garamond', serif;
-  color: #eeddb2;
-  margin-bottom: 2cqw;
+  font: 600 3.8cqw/1.2 'Cormorant Garamond', serif;
+  color: #ffd27a;
+  margin-bottom: 3cqw;
+  padding: .8cqw 3cqw;
+  background: rgba(30, 4, 10, 0.6);
+  border-radius: 50px;
+  border: 1px solid rgba(214, 168, 60, 0.35);
 }
 
 /* Countdown Grid */
+.cd-section-title {
+  font: 700 2.4cqw/1 Cinzel, serif;
+  letter-spacing: .2em;
+  color: #d4a736;
+  text-transform: uppercase;
+  margin-bottom: 1.6cqw;
+}
 .cd-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2cqw;
+  gap: 2.2cqw;
   width: 100%;
-  margin-bottom: 2cqw;
+  margin-bottom: 3cqw;
 }
 .cd-box {
-  background: rgba(40, 8, 14, 0.85);
-  border: 1px solid rgba(214, 168, 60, 0.45);
-  border-radius: 2.2cqw;
-  padding: 1.8cqw 1cqw;
+  background: rgba(30, 4, 10, 0.9);
+  border: 1.5px solid rgba(214, 168, 60, 0.55);
+  border-radius: 2.5cqw;
+  padding: 2.5cqw 1cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, .4);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, .6), 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 .cd-val {
-  font: 700 5.5cqw/1 'Cormorant Garamond', serif;
-  color: #f7de8e;
+  font: 700 6.5cqw/1 'Cormorant Garamond', serif;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 215, 120, 0.6);
 }
 .cd-lbl {
-  font: 600 2cqw/1 Cinzel, serif;
+  font: 700 2.2cqw/1 Cinzel, serif;
   letter-spacing: .15em;
-  color: #d4a736;
-  margin-top: .4cqw;
+  color: #f0c966;
+  margin-top: .6cqw;
 }
 .story-guest-badge {
   display: inline-block;
-  padding: 1.2cqw 4.5cqw;
+  padding: 1.5cqw 5cqw;
   border-radius: 50px;
-  border: 1px solid rgba(214, 168, 60, 0.5);
-  background: rgba(60, 10, 20, 0.6);
-  font: 700 2.6cqw/1 Cinzel, serif;
+  border: 1.5px solid rgba(214, 168, 60, 0.6);
+  background: rgba(74, 14, 27, 0.7);
+  font: 700 2.8cqw/1 Cinzel, serif;
   letter-spacing: .15em;
   color: #f7de8e;
+  margin-bottom: 1.5cqw;
 }
-
-/* Programme Ceremonies Scroll */
-.prog-header {
-  margin-top: 1cqw;
-}
-.prog-kicker {
+.story-scroll-cue {
   font: 600 2.6cqw/1 Cinzel, serif;
-  letter-spacing: .22em;
+  letter-spacing: .18em;
   color: #d4a736;
+  text-transform: uppercase;
+  cursor: pointer;
+  animation: bounceCue 2s infinite ease-in-out;
 }
-.prog-title {
-  font: 700 4.6cqw/1 Cinzel, serif;
-  color: #f7de8e;
-}
-.prog-cards-scroll {
-  display: flex;
-  gap: 3cqw;
-  overflow-x: auto;
-  width: 100%;
-  padding: 1cqw 0 2cqw;
-  scrollbar-width: none;
-}
-.prog-cards-scroll::-webkit-scrollbar { display: none; }
-.prog-card {
-  flex: 0 0 80cqw;
-  background: linear-gradient(180deg, #380812, #20040a);
-  border: 1px solid rgba(214, 168, 60, 0.45);
-  border-radius: 3cqw;
-  padding: 2.5cqw;
-  display: flex;
-  gap: 3cqw;
-  align-items: center;
-  text-align: left;
-}
-.prog-img-wrap {
-  width: 24cqw;
-  height: 24cqw;
-  border-radius: 2cqw;
-  overflow: hidden;
-  border: 1px solid rgba(214, 168, 60, 0.5);
-  flex-shrink: 0;
-}
-.prog-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.prog-details {
-  display: flex;
-  flex-direction: column;
-  gap: .6cqw;
-  min-width: 0;
-}
-.prog-name {
-  font: 700 4.2cqw/1.1 Cinzel, serif;
-  color: #f7de8e;
-}
-.prog-datetime {
-  font: 600 3cqw/1.2 'Cormorant Garamond', serif;
-  color: #eeddb2;
-}
-.prog-venue {
-  font: 500 2.8cqw/1.2 'Cormorant Garamond', serif;
-  color: #d4a736;
-}
-.prog-note {
-  font: 500 italic 2.6cqw/1.2 'Cormorant Garamond', serif;
-  color: #eeddb2;
-}
-.prog-cal-link {
-  font: 600 2.4cqw/1 Cinzel, serif;
-  color: #f7de8e;
-  text-decoration: none;
+@keyframes bounceCue {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
 }
 
 /* ==========================================================================
-   PAGE 5: THE VENUE (Screenshot 2: Arched Window Showcase & Destination Card)
+   PAGE 5: WEDDING PROGRAMME (Dedicated Majestic Showcase, Large & Prominent)
    ========================================================================== */
-.p5-inner {
+.p5-prog-inner {
   position: absolute;
   inset: 0;
-  padding: 4cqw 5cqw;
+  padding: 3cqw 5cqw 12cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  z-index: 2;
+}
+
+.prog-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1cqw;
+}
+.prog-kicker {
+  font: 700 2.8cqw/1 Cinzel, serif;
+  letter-spacing: .25em;
+  color: #8c5d19;
+  text-transform: uppercase;
+  margin-bottom: .6cqw;
+}
+.prog-title {
+  font: 700 7.5cqw/1 Cinzel, serif;
+  letter-spacing: .12em;
+  color: #4a0e17;
+  text-shadow: 0 1px 2px rgba(214, 168, 60, 0.4);
+}
+.prog-subtitle {
+  font: 600 italic 3.4cqw/1.2 'Cormorant Garamond', serif;
+  color: #5a2512;
+  margin-top: .4cqw;
+}
+
+/* Ceremony Cards Presentation */
+.prog-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3cqw;
+  width: 100%;
+  max-width: 88cqw;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+}
+.prog-card-majestic {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(65, 12, 22, 0.96) 0%, rgba(35, 5, 12, 0.98) 100%);
+  border: 1.5px solid rgba(214, 168, 60, 0.7);
+  box-shadow: 0 6px 20px rgba(50, 8, 14, 0.4), inset 0 0 0 1px rgba(255, 230, 160, 0.2);
+  border-radius: 4cqw;
+  padding: 3.5cqw;
+  display: flex;
+  flex-direction: row;
+  gap: 3.5cqw;
+  align-items: center;
+  text-align: left;
+}
+.prog-img-majestic-wrap {
+  width: 32cqw;
+  height: 32cqw;
+  border-radius: 3cqw;
+  overflow: hidden;
+  border: 1.5px solid rgba(214, 168, 60, 0.6);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: #1f0208;
+}
+.prog-img-majestic {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.prog-info-majestic {
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
+  min-width: 0;
+  flex: 1;
+}
+.prog-name-majestic {
+  font: 700 5.4cqw/1.1 Cinzel, serif;
+  color: #f7de8e;
+  letter-spacing: .04em;
+}
+.prog-datetime-majestic {
+  font: 600 3.6cqw/1.2 'Cormorant Garamond', serif;
+  color: #fff3c4;
+  background: rgba(30, 4, 10, 0.6);
+  padding: .6cqw 1.8cqw;
+  border-radius: 6px;
+  border: 1px solid rgba(214, 168, 60, 0.35);
+  width: fit-content;
+}
+.prog-venue-majestic {
+  font: 600 3.4cqw/1.2 'Cormorant Garamond', serif;
+  color: #ffd27a;
+}
+.prog-note-majestic {
+  font: 500 italic 3.2cqw/1.25 'Cormorant Garamond', serif;
+  color: #eeddb2;
+}
+.prog-btn-cal {
+  background: linear-gradient(135deg, #f0d27a, #b8872a 60%, #875e14);
+  color: #fff;
+  font: 700 2.4cqw/1 Cinzel, serif;
+  letter-spacing: .12em;
+  padding: 1.4cqw 3.6cqw;
+  border-radius: 50px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 230, 160, 0.5);
+  width: fit-content;
+  margin-top: .4cqw;
+}
+
+/* Horizontal slider if multiple events */
+.prog-cards-multi-scroll {
+  display: flex;
+  gap: 3.5cqw;
+  overflow-x: auto;
+  width: 100%;
+  max-width: 90cqw;
+  padding: 1cqw 0 2cqw;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.prog-cards-multi-scroll::-webkit-scrollbar { display: none; }
+.prog-cards-multi-scroll .prog-card-majestic {
+  flex: 0 0 88cqw;
+  scroll-snap-align: center;
+}
+
+/* ==========================================================================
+   PAGE 6: THE VENUE (Arched Window Showcase & Destination Card)
+   ========================================================================== */
+.p6-inner {
+  position: absolute;
+  inset: 0;
+  padding: 3cqw 5cqw 12cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1047,15 +1110,23 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
 }
+.venue-kicker {
+  font: 700 2.8cqw/1 Cinzel, serif;
+  letter-spacing: .25em;
+  color: #8c5d19;
+  text-transform: uppercase;
+  margin-bottom: .4cqw;
+}
 .venue-title {
-  font: 700 7.5cqw/1 Cinzel, serif;
+  font: 700 8cqw/1 Cinzel, serif;
   letter-spacing: .18em;
-  color: #f7de8e;
+  color: #4a0e17;
+  text-shadow: 0 1px 2px rgba(214, 168, 60, 0.4);
   margin-bottom: .6cqw;
 }
 .venue-subtitle {
-  font: 500 italic 3.4cqw/1.2 'Cormorant Garamond', serif;
-  color: #eeddb2;
+  font: 600 italic 3.6cqw/1.2 'Cormorant Garamond', serif;
+  color: #5a2512;
 }
 
 /* Side-by-side or Stacked Layout matching Screenshot 2 */
@@ -1073,7 +1144,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   width: 100%;
   height: 52cqw;
   border-radius: 20cqw 20cqw 2cqw 2cqw;
-  border: .4cqw solid rgba(214, 168, 60, 0.7);
+  border: .4cqw solid rgba(214, 168, 60, 0.75);
   overflow: hidden;
   box-shadow: 0 4cqw 8cqw rgba(0, 0, 0, 0.6);
   background: #2a060d;
@@ -1110,9 +1181,9 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   width: 100%;
   height: 52cqw;
   border-radius: 3.5cqw;
-  background: linear-gradient(135deg, rgba(60, 10, 20, 0.95), rgba(30, 4, 10, 0.98));
-  border: 1px solid rgba(214, 168, 60, 0.5);
-  box-shadow: 0 4cqw 8cqw rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, rgba(60, 10, 20, 0.96), rgba(30, 4, 10, 0.98));
+  border: 1.5px solid rgba(214, 168, 60, 0.6);
+  box-shadow: 0 4cqw 8cqw rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 230, 160, 0.2);
   padding: 3cqw 2.5cqw;
   display: flex;
   flex-direction: column;
@@ -1121,23 +1192,23 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   text-align: center;
 }
 .dest-kicker {
-  font: 600 2.2cqw/1 Cinzel, serif;
+  font: 700 2.4cqw/1 Cinzel, serif;
   letter-spacing: .2em;
   color: #d4a736;
   margin-bottom: 1cqw;
 }
 .dest-title {
-  font: 700 5.2cqw/1.1 Cinzel, serif;
+  font: 700 5.4cqw/1.1 Cinzel, serif;
   color: #f7de8e;
   margin-bottom: 1cqw;
 }
 .dest-address {
-  font: 600 3.2cqw/1.2 'Cormorant Garamond', serif;
+  font: 600 3.4cqw/1.2 'Cormorant Garamond', serif;
   color: #eeddb2;
   margin-bottom: 1.2cqw;
 }
 .dest-time-ribbon {
-  font: 500 italic 3cqw/1.2 'Cormorant Garamond', serif;
+  font: 500 italic 3.2cqw/1.2 'Cormorant Garamond', serif;
   color: #f6dfa0;
   margin-bottom: 2cqw;
 }
@@ -1165,30 +1236,33 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   gap: .6cqw;
-  border-top: 1px solid rgba(214, 168, 60, 0.35);
+  border-top: 1px solid rgba(140, 93, 25, 0.45);
   padding-top: 1.5cqw;
   width: 100%;
 }
 .sig-prefix {
-  font: 500 italic 3.2cqw/1.2 'Cormorant Garamond', serif;
-  color: #eeddb2;
+  font: 600 italic 3.4cqw/1.2 'Cormorant Garamond', serif;
+  color: #5a2512;
 }
 .sig-name {
-  font: 700 4.4cqw/1.1 Cinzel, serif;
-  color: #f7de8e;
+  font: 700 4.8cqw/1.1 Cinzel, serif;
+  color: #4a0e17;
 }
 .sig-sub {
-  font: 500 italic 2.8cqw/1.2 'Cormorant Garamond', serif;
-  color: #d4a736;
+  font: 600 italic 3cqw/1.2 'Cormorant Garamond', serif;
+  color: #8c5d19;
 }
 .start-again-btn {
-  background: none;
-  border: none;
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(140, 93, 25, 0.45);
+  border-radius: 50px;
+  padding: 1cqw 4cqw;
   font: 700 2.6cqw/1 Cinzel, serif;
   letter-spacing: .15em;
-  color: #f7de8e;
+  color: #4a0e17;
   cursor: pointer;
   margin-top: .8cqw;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* ==========================================================================
@@ -1208,17 +1282,17 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .floating-music-pill {
   pointer-events: auto;
-  background: rgba(30, 4, 10, 0.85);
-  border: 1px solid rgba(214, 168, 60, 0.6);
+  background: rgba(45, 8, 16, 0.92);
+  border: 1px solid rgba(214, 168, 60, 0.7);
   border-radius: 50px;
-  padding: 1cqw 3cqw;
+  padding: 1cqw 3.5cqw;
   display: inline-flex;
   align-items: center;
   gap: 1.5cqw;
   color: #f7de8e;
-  font: 600 2.6cqw/1 Cinzel, serif;
+  font: 700 2.6cqw/1 Cinzel, serif;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.55);
 }
 .music-indicator-dot {
   width: 2cqw;
@@ -1233,14 +1307,14 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .bottom-nav-bar {
   pointer-events: auto;
-  background: rgba(255, 250, 240, 0.94);
+  background: rgba(255, 250, 240, 0.95);
   border-radius: 50px;
-  border: 1px solid rgba(201, 160, 70, 0.5);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(201, 160, 70, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
-  gap: 4cqw;
-  padding: 1.5cqw 5cqw;
+  gap: 3.5cqw;
+  padding: 1.5cqw 4.5cqw;
 }
 .bnav-btn {
   background: none;
@@ -1249,7 +1323,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
   flex-direction: column;
   align-items: center;
   gap: .4cqw;
-  color: #5a3a08;
+  color: #4a0e17;
   text-decoration: none;
   cursor: pointer;
 }
@@ -1258,7 +1332,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
 }
 .bnav-label {
   font: 700 2.2cqw/1 Cinzel, serif;
-  color: #5a3a08;
+  color: #4a0e17;
 }
 
 /* ==========================================================================
@@ -1754,7 +1828,7 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
             <div class="orn"><i></i><b></b><i></i></div>
           </div>
 
-          <!-- Rotating Circular Date Medallion (Screenshot 0) -->
+          <!-- Rotating Circular Date Medallion (High Contrast Royal Crimson Disc) -->
           <div class="stamp-wrap">
             <div class="stamp-circle">
               <svg class="stamp-text-svg" viewBox="0 0 200 200">
@@ -1799,11 +1873,10 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
         </div>
       </section>
 
-      <!-- Page 4: Programme & Story Countdown (Screenshot 3) -->
+      <!-- Page 4: Our Story & Live Countdown (Repeat Date Removed) -->
       <section class="pg bl" id="p4">
         <div class="bgl"></div>
         <div class="p4-inner">
-          <!-- Story Card (Screenshot 3) -->
           <div class="story-card">
             <div class="story-names">${esc(groomName)} <em>&amp;</em> ${esc(brideName)}</div>
             <div class="story-parents">
@@ -1815,17 +1888,10 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
               ${esc(invocation)}
             </p>
 
-            <!-- Date Ribbon Divider -->
-            <div class="story-date-ribbon">
-              <span class="sdr-day">${dayName}</span>
-              <span class="sdr-bar">|</span>
-              <span class="sdr-num">${targetDay}</span>
-              <span class="sdr-bar">|</span>
-              <span class="sdr-mo">${monthShort} ${year}</span>
-            </div>
-            <div class="story-venue-sub">${esc(primaryVenueTitle)}${cityName ? ', ' + esc(cityName) : ''}${timeStr ? ' · ' + esc(timeStr) : ''}</div>
+            <div class="story-venue-sub">📍 ${esc(primaryVenueTitle)}${cityName ? ', ' + esc(cityName) : ''}${timeStr ? ' · ' + esc(timeStr) : ''}</div>
 
             <!-- Live Countdown Timer -->
+            <div class="cd-section-title">Countdown to the Celebrations</div>
             <div class="cd-grid" id="t03-countdown" data-when="${countdownTimestamp || ''}" data-target="${countdownTarget}">
               <div class="cd-box"><span class="cd-val" data-cd="days" data-u="d">00</span><span class="cd-lbl">DAYS</span></div>
               <div class="cd-box"><span class="cd-val" data-cd="hours" data-u="h">00</span><span class="cd-lbl">HRS</span></div>
@@ -1834,45 +1900,81 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
             </div>
 
             <div class="story-guest-badge">INVITED: ${esc(guestDisplayName)}</div>
-          </div>
-
-          <!-- Programme Ceremonies List -->
-          <div class="prog-header">
-            <div class="prog-kicker">WEDDING PROGRAMME</div>
-            <div class="prog-title">Sacred Ceremonies &amp; Celebrations</div>
-            <div class="orn"><i></i><b></b><i></i></div>
-          </div>
-          <div class="prog-cards-scroll">
-            ${eventList.map((e, idx) => {
-              const eName = clean(e.event_name) || clean(e.name) || clean(e.title) || `Ceremony ${idx + 1}`;
-              const eDateStr = formatEventDate(e.event_date || rawDate);
-              const eTimeStr = formatTime(e.event_time || rawTime);
-              const eVenue = clean(e.venue) || clean(e.venue_title) || primaryVenueTitle;
-              const eNote = clean(e.note) || clean(e.comment) || clean(e.description) || venueComment;
-              const evImg = getEventPhoto(e, idx);
-              return `
-              <div class="prog-card">
-                <div class="prog-img-wrap">
-                  <img src="${esc(evImg)}" alt="${esc(eName)}" class="prog-img" loading="lazy" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
-                </div>
-                <div class="prog-details">
-                  <div class="prog-name">${esc(eName)}</div>
-                  ${(eDateStr || eTimeStr) ? `<div class="prog-datetime">🗓️ ${esc(eDateStr)}${eTimeStr ? ' • ⏰ ' + esc(eTimeStr) : ''}</div>` : ''}
-                  ${eVenue ? `<div class="prog-venue">📍 ${esc(eVenue)}</div>` : ''}
-                  ${eNote ? `<div class="prog-note">“${esc(eNote)}”</div>` : ''}
-                  ${gcalUrl ? `<a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="prog-cal-link">📅 Add To Calendar</a>` : ''}
-                </div>
-              </div>`;
-            }).join('')}
+            <div class="story-scroll-cue" data-nav="programme">✦ VIEW WEDDING PROGRAMME ↓ ✦</div>
           </div>
         </div>
       </section>
 
-      <!-- Page 5: The Venue Showcase (Screenshot 2) -->
+      <!-- Page 5: Wedding Programme (Dedicated Majestic Showcase, Large & Clear) -->
       <section class="pg bl" id="p5">
         <div class="bgl"></div>
-        <div class="p5-inner">
+        <div class="p5-prog-inner">
+          <div class="prog-page-header">
+            <div class="prog-kicker">AUSPICIOUS MUHURAT</div>
+            <div class="prog-title">WEDDING PROGRAMME</div>
+            <div class="prog-subtitle">Sacred rituals, joyous festivities, and cherished celebrations.</div>
+            <div class="orn"><i></i><b></b><i></i></div>
+          </div>
+
+          <!-- Prominent Ceremony Cards -->
+          <div class="prog-cards-container">
+            ${eventList.length > 1 ? `
+              <div class="prog-cards-multi-scroll">
+                ${eventList.map((e, idx) => {
+                  const eName = clean(e.event_name) || clean(e.name) || clean(e.title) || `Ceremony ${idx + 1}`;
+                  const eDateStr = formatEventDate(e.event_date || rawDate);
+                  const eTimeStr = formatTime(e.event_time || rawTime);
+                  const eVenue = clean(e.venue) || clean(e.venue_title) || primaryVenueTitle;
+                  const eNote = clean(e.note) || clean(e.comment) || clean(e.description) || venueComment;
+                  const evImg = getEventPhoto(e, idx);
+                  return `
+                  <div class="prog-card-majestic">
+                    <div class="prog-img-majestic-wrap">
+                      <img src="${esc(evImg)}" alt="${esc(eName)}" class="prog-img-majestic" loading="lazy" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
+                    </div>
+                    <div class="prog-info-majestic">
+                      <div class="prog-name-majestic">${esc(eName)}</div>
+                      ${(eDateStr || eTimeStr) ? `<div class="prog-datetime-majestic">🗓️ ${esc(eDateStr)}${eTimeStr ? ' • ⏰ ' + esc(eTimeStr) : ''}</div>` : ''}
+                      ${eVenue ? `<div class="prog-venue-majestic">📍 ${esc(eVenue)}</div>` : ''}
+                      ${eNote ? `<div class="prog-note-majestic">“${esc(eNote)}”</div>` : ''}
+                      ${gcalUrl ? `<a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="prog-btn-cal">✦ ADD TO CALENDAR</a>` : ''}
+                    </div>
+                  </div>`;
+                }).join('')}
+              </div>
+            ` : `
+              ${eventList.map((e, idx) => {
+                const eName = clean(e.event_name) || clean(e.name) || clean(e.title) || 'Shubho Bibaho';
+                const eDateStr = formatEventDate(e.event_date || rawDate);
+                const eTimeStr = formatTime(e.event_time || rawTime);
+                const eVenue = clean(e.venue) || clean(e.venue_title) || primaryVenueTitle;
+                const eNote = clean(e.note) || clean(e.comment) || clean(e.description) || venueComment;
+                const evImg = getEventPhoto(e, idx);
+                return `
+                <div class="prog-card-majestic">
+                  <div class="prog-img-majestic-wrap">
+                    <img src="${esc(evImg)}" alt="${esc(eName)}" class="prog-img-majestic" loading="lazy" onerror="this.src='./assets/template-06-shubho-bibaho.webp';" />
+                  </div>
+                  <div class="prog-info-majestic">
+                    <div class="prog-name-majestic">${esc(eName)}</div>
+                    ${(eDateStr || eTimeStr) ? `<div class="prog-datetime-majestic">🗓️ ${esc(eDateStr)}${eTimeStr ? ' • ⏰ ' + esc(eTimeStr) : ''}</div>` : ''}
+                    ${eVenue ? `<div class="prog-venue-majestic">📍 ${esc(eVenue)}</div>` : ''}
+                    ${eNote ? `<div class="prog-note-majestic">“${esc(eNote)}”</div>` : ''}
+                    ${gcalUrl ? `<a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="prog-btn-cal">✦ ADD TO CALENDAR</a>` : ''}
+                  </div>
+                </div>`;
+              }).join('')}
+            `}
+          </div>
+        </div>
+      </section>
+
+      <!-- Page 6: The Venue Showcase (Screenshot 2) -->
+      <section class="pg bl" id="p6">
+        <div class="bgl"></div>
+        <div class="p6-inner">
           <div class="venue-header">
+            <div class="venue-kicker">THE WEDDING DESTINATION</div>
             <div class="venue-title">THE VENUE</div>
             <div class="venue-subtitle">A beautiful setting for a celebration close to our hearts.</div>
             <div class="orn"><i></i><b></b><i></i></div>
@@ -1983,17 +2085,21 @@ export default function renderT03({ guest, wedding, events = [] } = {}) {
       </button>
 
       <nav class="bottom-nav-bar" aria-label="Invitation navigation">
-        <button type="button" class="bnav-btn" data-nav="rsvp">
-          <span class="bnav-icon">✉️</span>
-          <span class="bnav-label">RSVP</span>
-        </button>
-        <a href="${esc(mapUrl)}" target="_blank" rel="noopener noreferrer" class="bnav-btn">
-          <span class="bnav-icon">📍</span>
-          <span class="bnav-label">Map</span>
-        </a>
         <button type="button" class="bnav-btn" data-nav="dates">
           <span class="bnav-icon">📅</span>
           <span class="bnav-label">Dates</span>
+        </button>
+        <button type="button" class="bnav-btn" data-nav="story">
+          <span class="bnav-icon">💌</span>
+          <span class="bnav-label">Story</span>
+        </button>
+        <button type="button" class="bnav-btn" data-nav="programme">
+          <span class="bnav-icon">✨</span>
+          <span class="bnav-label">Events</span>
+        </button>
+        <button type="button" class="bnav-btn" data-nav="venue">
+          <span class="bnav-icon">📍</span>
+          <span class="bnav-label">Venue</span>
         </button>
         <button type="button" class="bnav-btn" id="t03-bnav-music">
           <span class="bnav-icon">🎵</span>
@@ -2330,13 +2436,13 @@ export function mount(root, { guest, wedding, events } = {}) {
     cleanups.push(() => st.removeEventListener('pointermove', onMove));
   }
 
-  // 7. Pages 3-5 IntersectionObserver for gentle reveals
+  // 7. Pages IntersectionObserver for gentle reveals
   if (typeof IntersectionObserver !== 'undefined' && sc) {
     const io = new IntersectionObserver(entries => {
       entries.forEach(x => {
         if (x.isIntersecting) x.target.classList.add('in');
       });
-    }, { root: sc, threshold: .55 });
+    }, { root: sc, threshold: .4 });
 
     if (typeof root.querySelectorAll === 'function') {
       root.querySelectorAll('.pg.bl').forEach(p => io.observe(p));
@@ -2352,9 +2458,15 @@ export function mount(root, { guest, wedding, events } = {}) {
         if (target === 'dates') {
           const p3 = root.querySelector('#p3');
           if (p3) p3.scrollIntoView({ behavior: 'smooth' });
-        } else if (target === 'rsvp') {
+        } else if (target === 'story') {
           const p4 = root.querySelector('#p4');
           if (p4) p4.scrollIntoView({ behavior: 'smooth' });
+        } else if (target === 'programme') {
+          const p5 = root.querySelector('#p5');
+          if (p5) p5.scrollIntoView({ behavior: 'smooth' });
+        } else if (target === 'venue') {
+          const p6 = root.querySelector('#p6');
+          if (p6) p6.scrollIntoView({ behavior: 'smooth' });
         }
       });
     });
